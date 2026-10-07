@@ -435,6 +435,7 @@
     function render3D(){
       if(!depthEnabled)return;
       const focusedPerson=selected!==null&&!points.every(n=>visible.has(n.id))&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
+      const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       stage.classList.toggle('high-zoom-labels',threeZoom>=3);
       threeScene.style.setProperty('--three-label-zoom',labelZoom(threeZoom).toFixed(2));
       threeSvg.setAttribute('viewBox',`0 0 ${width} ${height}`);
@@ -477,7 +478,7 @@
       const separated=(a,b,gap=0)=>a.x+a.w+gap<=b.x||b.x+b.w+gap<=a.x||a.y+a.h+gap<=b.y||b.y+b.h+gap<=a.y;
       for(const n of [threeCenter,...chapters.filter(c=>c!==threeCenter)]){
         const b=threeNodes.get(n.id),p=pos[n.id],show=visible.has(n.id)&&p.x>-150&&p.x<width+150&&p.y>-60&&p.y<height+60;b.hidden=!show;if(!show)continue;
-        b.classList.toggle('selected',selected===n.id);b.setAttribute('aria-expanded',String(expanded.has(n.id)));b.querySelector('small').hidden=!expanded.has(n.id);
+        b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-chapter-past',personChapter!==null&&n.chapter!==personChapter);b.setAttribute('aria-expanded',String(expanded.has(n.id)));b.querySelector('small').hidden=!expanded.has(n.id);
         const w=b.offsetWidth,h=b.offsetHeight,c=pos[threeCenter.id],dx=p.x-c.x,dy=p.y-c.y,m=Math.max(1,Math.hypot(dx,dy)),ux=dx/m,uy=dy/m;
         const positions=[[p.x,p.y]];for(const distance of [24,48,72,96])positions.push([p.x+ux*distance,p.y+uy*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+uy*distance,p.y-ux*distance]);
         let chosen=null;for(const [x,y] of positions){const box={x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16};if(box.x<8||box.y<8||box.x+box.w>width-8||box.y+box.h>height-8)continue;if(boxes.every(other=>separated(box,other,8))){chosen={x,y,box};break}}
@@ -501,6 +502,7 @@
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
       const allConnected=points.every(n=>visible.has(n.id));
       const focusedPerson=selected!==null&&!allConnected&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
+      const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       stage.classList.toggle('all-connected',allConnected);
       stage.classList.toggle('chapter-only',expanded.size===0);
       stage.classList.toggle('person-focus',focusedPerson!==null);
@@ -537,7 +539,7 @@
       q('.chapter-nav').querySelectorAll('[data-chapter]').forEach(b=>b.setAttribute('aria-current',String(selected!==null&&nodes[selected].chapter===nodes[Number(b.dataset.chapter)].chapter)));
       for(const c of chapters){
         const {region,heading,members}=areas.get(c.id),x=c.x*k+ox,y=c.y*k+oy;
-        heading.classList.toggle('selected',selected===c.id);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';
+        heading.classList.toggle('selected',selected===c.id);heading.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);region.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';
         const w=heading.offsetWidth,h=heading.offsetHeight;
         const box={x:x-w/2,y:y-h/2,w,h};heading.style.left=box.x+'px';heading.style.top=box.y+'px';
         boxes.push({x:box.x-9,y:box.y-10,w:w+18,h:h+20});
