@@ -150,9 +150,7 @@
       visible=new Set(chapters.map(n=>n.id));
       for(const chapter of chapters){
         if(!expanded.has(chapter.id))continue;
-        const people=children(chapter.id);
-        const lastOpened=people.reduce((last,person,index)=>expanded.has(person.id)?index:last,-1);
-        for(const person of people.slice(0,Math.min(people.length,lastOpened+2)))visible.add(person.id);
+        for(const person of children(chapter.id))visible.add(person.id);
       }
       for(const n of points)if(n.kind!=='person'&&visible.has(n.parent)&&expanded.has(n.parent))visible.add(n.id);
     }
