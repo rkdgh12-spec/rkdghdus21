@@ -416,6 +416,7 @@
       const lineage=emphasis===null?new Set():new Set(ancestors(emphasis));
       const selectedBranch=emphasis===null?new Set():descendants(emphasis);
       const hoverChapter=hovered!==null&&nodes[hovered].kind==='chapter'?hovered:null;
+      stage.classList.toggle('chapter-hover',hoverChapter!==null);
       const connectedQuestions=new Set();
       edges.forEach((e,i)=>{
         const l=paths[i],a=nodes[e.source],b=nodes[e.target],shown=visible.has(e.source)&&visible.has(e.target);
