@@ -428,6 +428,7 @@
     }
     function render3D(){
       if(!depthEnabled)return;
+      const focusedChapter=selected!==null&&!points.every(n=>visible.has(n.id))?nodes[selected].chapter:null;
       stage.classList.toggle('high-zoom-labels',threeZoom>=3);
       threeScene.style.setProperty('--three-label-zoom',labelZoom(threeZoom).toFixed(2));
       threeSvg.setAttribute('viewBox',`0 0 ${width} ${height}`);
@@ -470,7 +471,7 @@
       const separated=(a,b,gap=0)=>a.x+a.w+gap<=b.x||b.x+b.w+gap<=a.x||a.y+a.h+gap<=b.y||b.y+b.h+gap<=a.y;
       for(const n of [threeCenter,...chapters.filter(c=>c!==threeCenter)]){
         const b=threeNodes.get(n.id),p=pos[n.id],show=visible.has(n.id)&&p.x>-150&&p.x<width+150&&p.y>-60&&p.y<height+60;b.hidden=!show;if(!show)continue;
-        b.classList.toggle('selected',selected===n.id);b.setAttribute('aria-expanded',String(expanded.has(n.id)));b.querySelector('small').hidden=!expanded.has(n.id);
+        b.classList.toggle('selected',selected===n.id);b.classList.toggle('chapter-current',focusedChapter===n.chapter);b.classList.toggle('chapter-past',focusedChapter!==null&&focusedChapter!==n.chapter);b.setAttribute('aria-expanded',String(expanded.has(n.id)));b.querySelector('small').hidden=!expanded.has(n.id);
         const w=b.offsetWidth,h=b.offsetHeight,c=pos[threeCenter.id],dx=p.x-c.x,dy=p.y-c.y,m=Math.max(1,Math.hypot(dx,dy)),ux=dx/m,uy=dy/m;
         const positions=[[p.x,p.y]];for(const distance of [24,48,72,96])positions.push([p.x+ux*distance,p.y+uy*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+uy*distance,p.y-ux*distance]);
         let chosen=null;for(const [x,y] of positions){const box={x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16};if(box.x<8||box.y<8||box.x+box.w>width-8||box.y+box.h>height-8)continue;if(boxes.every(other=>separated(box,other,8))){chosen={x,y,box};break}}
@@ -480,7 +481,7 @@
       const labelPriority=n=>n.id===selected?0:n.kind==='person'?1:n.kind==='concept'?2:selectedBranch.has(n.id)?3:connectedQuestions.has(n.id)?4:n.kind==='subconcept'?5:6;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
-        b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(10000-p.d));b.classList.toggle('selected',selected===n.id);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
+        b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(10000-p.d));b.classList.toggle('selected',selected===n.id);b.classList.toggle('chapter-current',focusedChapter===n.chapter);b.classList.toggle('chapter-past',focusedChapter!==null&&focusedChapter!==n.chapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='block';label.style.width='max-content';const lw=label.offsetWidth,lh=label.offsetHeight,candidates=[];
         for(const gap of [10,18,26,36,50,66]){const diagonal=gap*.71;candidates.push([x+gap,y-lh/2],[x-lw-gap,y-lh/2],[x-lw/2,y+gap],[x-lw/2,y-lh-gap],[x+diagonal,y+diagonal],[x-lw-diagonal,y+diagonal],[x+diagonal,y-lh-diagonal],[x-lw-diagonal,y-lh-diagonal])}
         let choice=null;for(const [lx,ly] of candidates){const box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}}
@@ -493,8 +494,10 @@
       flatPlane.style.setProperty('--flat-label-zoom',labelZoom(k/fitK).toFixed(2));
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
       const allConnected=points.every(n=>visible.has(n.id));
+      const focusedChapter=selected!==null&&!allConnected?nodes[selected].chapter:null;
       stage.classList.toggle('all-connected',allConnected);
       stage.classList.toggle('chapter-only',expanded.size===0);
+      stage.classList.toggle('chapter-focus',focusedChapter!==null);
       if(!allConnected)hovered=null;
       const emphasis=allConnected&&hovered!==null?hovered:selected;
       const lineage=emphasis===null?new Set():new Set(ancestors(emphasis));
@@ -509,6 +512,9 @@
         if(shown&&linkedMeaning){if(a.kind==='question')connectedQuestions.add(e.source);if(b.kind==='question')connectedQuestions.add(e.target)}
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
         l.style.display=shown?'':'none';l.setAttribute('d',connectionPath(e));
+        l.classList.toggle('chapter-current',focusedChapter!==null&&a.chapter===focusedChapter&&b.chapter===focusedChapter);
+        l.classList.toggle('chapter-cross',focusedChapter!==null&&((a.chapter===focusedChapter)!==(b.chapter===focusedChapter)));
+        l.classList.toggle('chapter-past',focusedChapter!==null&&a.chapter!==focusedChapter&&b.chapter!==focusedChapter);
         l.classList.toggle('branch',e.kind==='hierarchy'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
         l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning||(hoverChapter!==null&&(selectedBranch.has(e.source)||selectedBranch.has(e.target))));
         if(newlyShown&&!reducedMotion){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
@@ -525,7 +531,7 @@
       q('.chapter-nav').querySelectorAll('[data-chapter]').forEach(b=>b.setAttribute('aria-current',String(selected!==null&&nodes[selected].chapter===nodes[Number(b.dataset.chapter)].chapter)));
       for(const c of chapters){
         const {region,heading,members}=areas.get(c.id),x=c.x*k+ox,y=c.y*k+oy;
-        heading.classList.toggle('selected',selected===c.id);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';
+        heading.classList.toggle('selected',selected===c.id);heading.classList.toggle('chapter-current',focusedChapter===c.chapter);heading.classList.toggle('chapter-past',focusedChapter!==null&&focusedChapter!==c.chapter);region.classList.toggle('chapter-current',focusedChapter===c.chapter);region.classList.toggle('chapter-past',focusedChapter!==null&&focusedChapter!==c.chapter);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';
         const w=heading.offsetWidth,h=heading.offsetHeight;
         const box={x:x-w/2,y:y-h/2,w,h};heading.style.left=box.x+'px';heading.style.top=box.y+'px';
         boxes.push({x:box.x-9,y:box.y-10,w:w+18,h:h+20});
@@ -556,7 +562,7 @@
       const ordered=[...points].sort((a,b)=>labelPriority(a)-labelPriority(b));
       for(const n of ordered){
         const {b,label}=elems.get(n.id),x=n.x*k+ox,y=n.y*k+oy;
-        b.style.left=x+'px';b.style.top=y+'px';b.classList.toggle('selected',selected===n.id);b.hidden=!visible.has(n.id)||x<0||x>width||y<0||y>height;
+        b.style.left=x+'px';b.style.top=y+'px';b.classList.toggle('selected',selected===n.id);b.classList.toggle('chapter-current',focusedChapter===n.chapter);b.classList.toggle('chapter-past',focusedChapter!==null&&focusedChapter!==n.chapter);b.hidden=!visible.has(n.id)||x<0||x>width||y<0||y>height;
         b.classList.toggle('connected',connectedQuestions.has(n.id));
         if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='none';
