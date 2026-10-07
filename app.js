@@ -461,7 +461,7 @@
       let ground=`<defs><radialGradient id="three-outer-shade" cx="35%" cy="28%" r="78%"><stop offset="0" style="stop-color:var(--secondary);stop-opacity:.01"/><stop offset="1" style="stop-color:var(--secondary);stop-opacity:.08"/></radialGradient><radialGradient id="three-core-shade" cx="33%" cy="25%" r="76%"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.03"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:.15"/></radialGradient></defs>`,stems='',links='';
       ground+=volume(outerBoundary,'outer',-110,510);
       if(allConnected)ground+=volume(coreBoundary,'core',-45,450);
-      for(const n of points){if(!visible.has(n.id))continue;const a=pos[n.id],b=project(n.x,n.y);stems+=`<path class="three-stem" d="M${a.x},${a.y}L${b.x},${b.y}"/>`}
+       for(const n of points){if(!visible.has(n.id))continue;const a=pos[n.id],b=project(n.x,n.y);stems+=`<path class="three-stem${activeChapter!==null&&n.chapter!==activeChapter?' chapter-past':''}" d="M${a.x},${a.y}L${b.x},${b.y}"/>`}
       for(const [i,e] of edges.entries()){
         if(!visible.has(e.source)||!visible.has(e.target))continue;
         const path=paths[i],length=path.getTotalLength();if(!length)continue;
@@ -523,6 +523,8 @@
         l.classList.toggle('person-current',focusedPerson!==null&&a.person===focusedPerson&&b.person===focusedPerson);
         l.classList.toggle('person-cross',focusedPerson!==null&&((a.person===focusedPerson)!==(b.person===focusedPerson)));
         l.classList.toggle('person-past',focusedPerson!==null&&a.person!==focusedPerson&&b.person!==focusedPerson);
+        l.classList.toggle('chapter-past',activeChapter!==null&&a.chapter!==activeChapter&&b.chapter!==activeChapter);
+        l.classList.toggle('chapter-cross',activeChapter!==null&&(a.chapter===activeChapter)!==(b.chapter===activeChapter));
         l.classList.toggle('branch',e.kind==='hierarchy'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
         l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning||(hoverChapter!==null&&(selectedBranch.has(e.source)||selectedBranch.has(e.target))));
         if(newlyShown&&!reducedMotion){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
