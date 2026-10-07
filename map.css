@@ -1,5 +1,5 @@
 
-    #forum-source-network{--paper:light-dark(#fff,#181a1c);--ink:light-dark(#202428,#eef0f2);--concept-ink:light-dark(#47535e,#c2cbd3);--lower-ink:light-dark(#2d5a73,#9fc9dc);--secondary:light-dark(#56616b,#aeb9c3);--line:light-dark(#b7bdc4,#606872);--faint:light-dark(#e4e7ea,#333a42);--accent:light-dark(#007d83,#6ed0d1);color:var(--ink);background:var(--paper);font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;padding:20px 12px 12px;border-radius:0}
+    #forum-source-network{--paper:light-dark(#fff,#181a1c);--ink:light-dark(#202428,#eef0f2);--concept-ink:light-dark(#47535e,#c2cbd3);--lower-ink:light-dark(#5a3d58,#d4b4ce);--secondary:light-dark(#56616b,#aeb9c3);--line:light-dark(#b7bdc4,#606872);--faint:light-dark(#e4e7ea,#333a42);--accent:light-dark(#007d83,#6ed0d1);color:var(--ink);background:var(--paper);font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;padding:20px 12px 12px;border-radius:0}
     #forum-source-network{--chapter-ink:light-dark(#176b78,#82cbd5)}
     #forum-source-network *{box-sizing:border-box}
     #forum-source-network .header{display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:0 8px 14px}
