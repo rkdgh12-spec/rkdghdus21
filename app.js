@@ -3,6 +3,27 @@
     const root=document.getElementById('forum-source-network');
     const data=window.FORUM_DATA;
     const nodes=data.nodes,edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter');
+    const coreConnections=[
+      [134,147,'물질을 판단하고 사유하는 창작'],[134,150,'물질의 판단과 감각적 사고'],
+      [134,148,'물질을 통해 세계를 읽는 태도'],[135,147,'물질의 성질에서 시작되는 사유'],
+      [135,148,'물질의 성질과 세계를 다르게 보는 경험'],[137,151,'직접 만드는 경험과 감각의 형성'],
+      [137,157,'직접 만들기와 창작 교육'],[138,150,'손으로 알게 되는 것과 감각적 사고'],
+      [138,148,'직접 작업하며 얻는 물질의 이해'],[138,151,'직접 경험에서 형성되는 감각'],
+      [140,150,'우연과 감각적 사고'],[140,151,'우연을 통한 감각의 형성'],
+      [141,151,'만남을 받아들이는 태도와 경험'],[143,156,'창작의 지속과 창작 교육'],
+      [143,159,'지속되는 창작과 예술의 가치'],[144,156,'작업을 지속하게 하는 교육'],
+      [144,157,'지속적인 작업과 만들기·담론·비평'],[147,150,'물질적 사유와 감각적 사고'],
+      [148,151,'물질을 통한 세계 경험과 감각'],[153,159,'김종영의 작업과 예술의 가치'],
+      [154,159,'시대와 자기 이해, 예술의 가치'],[136,149,'물질을 다루는 경험에 관한 질문'],
+      [139,152,'직접 경험과 감각에 관한 질문'],[145,158,'창작의 지속과 교육에 관한 질문']
+    ];
+    const edgeKeys=new Set(edges.map(e=>[e.source,e.target].sort((a,b)=>a-b).join(':')));
+    for(const [source,target,reason] of coreConnections){
+      const key=[source,target].sort((a,b)=>a-b).join(':');
+      if(edgeKeys.has(key))continue;
+      const kind=nodes[source].kind==='question'?'question-related':'semantic';
+      edges.push({source,target,kind,core:true,reason});edgeKeys.add(key);
+    }
     const chapters=nodes.filter(n=>n.kind==='chapter'),points=nodes.filter(n=>n.kind!=='chapter');
     const stage=root.querySelector('.stage'),svg=root.querySelector('.wires'),layer=root.querySelector('.node-layer'),detail=root.querySelector('.detail');
     const kindNames={chapter:'주제 영역',person:'인물',concept:'개념어',subconcept:'하위개념어',question:'인터뷰 질문'};
