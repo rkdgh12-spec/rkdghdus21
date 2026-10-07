@@ -138,6 +138,9 @@
 #forum-source-network .stage.person-focus .dot.person-past{opacity:.33}
 #forum-source-network .stage .dot.chapter-past{opacity:.33}
 #forum-source-network .stage .dot.chapter-past:is(:hover,:focus-visible){opacity:1}
+#forum-source-network .stage.chapter-focus .area-heading.chapter-other{opacity:.33}
+#forum-source-network .stage.chapter-focus .area-heading.chapter-other:is(:hover,:focus-visible){opacity:1}
+#forum-source-network .stage.chapter-focus .region.chapter-other{opacity:.2}
 #forum-source-network .stage .dot.person.dim:is(:hover,:focus-visible),#forum-source-network .stage.person-focus .dot.person.person-past:is(:hover,:focus-visible){opacity:1}
 #forum-source-network .stage.person-focus .area-heading.person-chapter-past{opacity:.33}
 #forum-source-network .stage .area-heading.dim:is(:hover,:focus-visible),#forum-source-network .stage.person-focus .area-heading.person-chapter-past:is(:hover,:focus-visible){opacity:1}
@@ -145,6 +148,8 @@
 #forum-source-network .stage.person-focus .links.person-past{opacity:.12}
 #forum-source-network .stage .links.chapter-past{opacity:.1}
 #forum-source-network .stage .links.chapter-cross{opacity:.2}
+#forum-source-network .stage.chapter-focus .links.chapter-past{opacity:.1;stroke:var(--secondary)}
+#forum-source-network .stage.chapter-focus .links.chapter-cross{opacity:.2;stroke:var(--secondary)}
 #forum-source-network .stage .three-stem.chapter-past{opacity:.2}
 #forum-source-network .stage.person-focus .links.person-current:not(.active){stroke:var(--accent);stroke-width:1.05;opacity:.78}
 #forum-source-network .stage.person-focus .links.person-cross:not(.active){stroke:var(--accent);stroke-width:.75;opacity:.42}
