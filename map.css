@@ -129,4 +129,13 @@
     #forum-source-network .stage .area-heading{max-width:none}
     #forum-source-network .stage .area-heading>*{max-width:none;white-space:nowrap}
   
+#forum-source-network .stage.chapter-focus :is(.dot,.area-heading).chapter-past{opacity:.33}
+#forum-source-network .stage.chapter-focus .region.chapter-past{opacity:.3}
+#forum-source-network .stage.chapter-focus .links.chapter-past{opacity:.12}
+#forum-source-network .stage.chapter-focus .links.chapter-current:not(.active){stroke:var(--accent);stroke-width:1.05;opacity:.78}
+#forum-source-network .stage.chapter-focus .links.chapter-cross:not(.active){stroke:var(--accent);stroke-width:.75;opacity:.42}
+#forum-source-network .stage.chapter-focus .dot.chapter-current .node-mark{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent),0 0 12px color-mix(in srgb,var(--accent) 28%,transparent)}
+#forum-source-network .stage.chapter-focus .dot.chapter-current .node-label{color:var(--chapter-ink);font-weight:700}
+#forum-source-network .stage.chapter-focus .area-heading.chapter-current :is(.chapter-number,strong,small){color:var(--chapter-ink);font-weight:800;text-shadow:0 0 10px color-mix(in srgb,var(--accent) 28%,transparent),2px 0 var(--paper),-2px 0 var(--paper)}
+#forum-source-network .stage.chapter-focus .region.chapter-current{fill:color-mix(in srgb,var(--accent) 9%,var(--paper));stroke:color-mix(in srgb,var(--accent) 25%,transparent)}
 
