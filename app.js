@@ -7,7 +7,7 @@
     const stage=root.querySelector('.stage'),svg=root.querySelector('.wires'),layer=root.querySelector('.node-layer'),detail=root.querySelector('.detail');
     const kindNames={chapter:'주제 영역',person:'인물',concept:'개념어',subconcept:'하위개념어',question:'인터뷰 질문'};
     const NS='http://www.w3.org/2000/svg';
-    let width=stage.clientWidth,height=stage.clientHeight,k=1,fitK=1,ox=0,oy=0,selected=null,drag=null;
+    let width=stage.clientWidth,height=stage.clientHeight,k=1,fitK=1,ox=0,oy=0,selected=null,hovered=null,drag=null;
     let expanded=new Set(),visible=new Set(chapters.map(n=>n.id)),cueIndex=-1,currentQuestion=null,presentationMode=true,depthEnabled=false;
     const children=id=>nodes.filter(n=>n.parent===id);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -27,6 +27,11 @@
     }
     const ancestors=id=>{const arr=[];while(id!==null){arr.unshift(id);id=nodes[id].parent;}return arr};
     const descendants=id=>{const set=new Set([id]);for(const n of nodes)if(n.parent!==null&&set.has(n.parent))set.add(n.id);return set};
+    function setHovered(id){
+      const next=points.every(n=>visible.has(n.id))?id:null;
+      if(hovered===next)return;
+      hovered=next;render();
+    }
     const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const displayLabel=n=>n.kind==='chapter'?`제${n.chapter}장 · ${n.label}`:n.label;
     const dialog=q('#interview-dialog'),video=q('#interview-video'),panel=q('.detail-panel');
@@ -48,7 +53,7 @@
     for(const c of [...chapters].sort((a,b)=>(a.chapter===5)-(b.chapter===5))){
       if(c.chapter===5){coreHalo=document.createElementNS(NS,'path');coreHalo.setAttribute('class','core-halo');coreHalo.setAttribute('aria-hidden','true');svg.append(coreHalo)}
       const region=document.createElementNS(NS,'path');region.setAttribute('class','region'+(c.chapter===5?' core':''));svg.append(region);
-      const heading=document.createElement('button');heading.type='button';heading.className='area-heading cursor-interaction'+(c.chapter===5?' core':'');heading.innerHTML='<span class="chapter-number">제'+esc(c.chapter)+'장</span><strong>'+esc(c.label)+'</strong><small hidden>'+esc(c.subtitle)+'</small>';heading.setAttribute('aria-label',displayLabel(c));heading.setAttribute('aria-expanded','false');heading.addEventListener('pointerdown',e=>e.stopPropagation());heading.addEventListener('click',()=>select(c.id));layer.append(heading);
+      const heading=document.createElement('button');heading.type='button';heading.className='area-heading cursor-interaction'+(c.chapter===5?' core':'');heading.innerHTML='<span class="chapter-number">제'+esc(c.chapter)+'장</span><strong>'+esc(c.label)+'</strong><small hidden>'+esc(c.subtitle)+'</small>';heading.setAttribute('aria-label',displayLabel(c));heading.setAttribute('aria-expanded','false');heading.addEventListener('pointerdown',e=>e.stopPropagation());heading.addEventListener('pointerenter',()=>setHovered(c.id));heading.addEventListener('pointerleave',()=>setHovered(null));heading.addEventListener('click',()=>select(c.id));layer.append(heading);
       areas.set(c.id,{region,heading,members:points.filter(n=>n.chapter===c.chapter)});
     }
     for(const e of edges){
@@ -64,7 +69,7 @@
       b.setAttribute('aria-label',kindNames[n.kind]+' '+(n.person?n.person+' / ':'')+(n.question||n.label));b.setAttribute('data-tooltip',n.question||(n.label+(n.subtitle?' · '+n.subtitle:'')));
       b.title=n.question||(n.person&&n.kind!=='person'?n.person+' · ':'')+n.label;
       const mark=document.createElement('span');mark.className='node-mark';b.append(mark);
-      b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',()=>select(n.id));
+      b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',()=>select(n.id));
       const label=document.createElement('span');label.className='node-label '+n.kind;
       const labelText=document.createElement('span');labelText.className='node-label-text';labelText.textContent=n.label;label.append(labelText);b.append(label);
       if(n.kind!=='question')b.setAttribute('aria-expanded','false');
@@ -335,7 +340,7 @@
       if(n.kind==='chapter')b.innerHTML='<span class="chapter-number">제'+esc(n.chapter)+'장</span><strong>'+esc(n.label)+'</strong><small hidden>'+esc(n.subtitle)+'</small>';
       else{b.style.setProperty('--diameter',({person:6.5,concept:4.2,subconcept:3,question:3.5})[n.kind]+'px');const mark=document.createElement('span');mark.className='node-mark';const label=document.createElement('span');label.className='node-label '+n.kind;const labelText=document.createElement('span');labelText.className='node-label-text';labelText.textContent=n.label;label.append(labelText);b.append(mark,label)}
       if(n.kind!=='question')b.setAttribute('aria-expanded','false');
-      b.addEventListener('pointerdown',e=>{if(e.button!==1)e.stopPropagation()});b.addEventListener('click',()=>select(n.id));threeLayer.append(b);threeNodes.set(n.id,b);
+      b.addEventListener('pointerdown',e=>{if(e.button!==1)e.stopPropagation()});b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',()=>select(n.id));threeLayer.append(b);threeNodes.set(n.id,b);
     }
     function render3D(){
       if(!depthEnabled)return;
@@ -406,17 +411,20 @@
       const allConnected=points.every(n=>visible.has(n.id));
       stage.classList.toggle('all-connected',allConnected);
       stage.classList.toggle('chapter-only',expanded.size===0);
-      const lineage=selected===null?new Set():new Set(ancestors(selected));
-      const selectedBranch=selected===null?new Set():descendants(selected);
+      if(!allConnected)hovered=null;
+      const emphasis=allConnected&&hovered!==null?hovered:selected;
+      const lineage=emphasis===null?new Set():new Set(ancestors(emphasis));
+      const selectedBranch=emphasis===null?new Set():descendants(emphasis);
+      const hoverChapter=hovered!==null&&nodes[hovered].kind==='chapter'?hovered:null;
       const connectedQuestions=new Set();
       edges.forEach((e,i)=>{
         const l=paths[i],a=nodes[e.source],b=nodes[e.target],shown=visible.has(e.source)&&visible.has(e.target);
-        const linkedMeaning=e.kind!=='hierarchy'&&(e.source===selected||e.target===selected);
+        const linkedMeaning=e.kind!=='hierarchy'&&(e.source===emphasis||e.target===emphasis);
         if(shown&&linkedMeaning){if(a.kind==='question')connectedQuestions.add(e.source);if(b.kind==='question')connectedQuestions.add(e.target)}
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
         l.style.display=shown?'':'none';l.setAttribute('d',connectionPath(e));
         l.classList.toggle('branch',e.kind==='hierarchy'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
-        l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning);
+        l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning||(hoverChapter!==null&&(selectedBranch.has(e.source)||selectedBranch.has(e.target))));
         if(newlyShown&&!reducedMotion){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
       });
       if(allConnected&&!networkContours)networkContours=connectedContours();
