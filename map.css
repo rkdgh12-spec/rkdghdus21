@@ -64,6 +64,12 @@
     #forum-source-network .stage.core-chapter-hover .links.active{stroke-width:1.05;opacity:.8}
     #forum-source-network .stage.core-chapter-hover .links.semantic.active,#forum-source-network .stage.core-chapter-hover .links.question-related.active{stroke-width:.95;opacity:.76}
     #forum-source-network .links.dim{opacity:.1}
+    #forum-source-network .stage.all-connected .links:not(.active){opacity:.44}
+    #forum-source-network .stage.all-connected .links.related:not(.active){opacity:.2}
+    #forum-source-network .stage.all-connected .links.semantic:not(.active){opacity:.29}
+    #forum-source-network .stage.all-connected .links.semantic.core:not(.active){opacity:.43}
+    #forum-source-network .stage.all-connected .links.question-related:not(.active){opacity:.26}
+    #forum-source-network .stage.all-connected .links.question-related.core:not(.active){opacity:.39}
     #forum-source-network .dot{position:absolute;display:grid;place-items:center;width:28px;height:28px;transform:translate(-50%,-50%);padding:0;border:0;background:transparent;border-radius:50%;z-index:3}
     #forum-source-network .node-mark{display:block;width:var(--diameter);height:var(--diameter);border-radius:50%;background:var(--ink);border:1px solid transparent}
     #forum-source-network .dot.concept .node-mark{background:var(--secondary)}
