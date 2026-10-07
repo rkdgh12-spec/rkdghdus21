@@ -207,7 +207,11 @@
     function introduction(person){return {id:'intro-'+person.id,kind:'introduction',parent:person.id,person:person.label,chapter:person.chapter,label:'Q1',topic:'자기소개',question:'Q1. 현재 어떤 일을 하고 계신지, 본인의 활동을 중심으로 소개해 주세요.'}}
     function personQuestions(name){const person=points.find(n=>n.kind==='person'&&n.label===name);return [...(person?[introduction(person)]:[]),...points.filter(n=>n.kind==='question'&&n.person===name&&n.label!=='Q1')]}
     function assetURL(value){if(typeof value!=='string'||!value.trim())return '';try{const u=new URL(value,location.href);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}}
-    function stopVideo(){video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load()}
+    function exitVideoFullscreen(){
+      if(document.fullscreenElement===video)document.exitFullscreen().catch(()=>{});
+      else if(video.webkitDisplayingFullscreen&&typeof video.webkitExitFullscreen==='function')video.webkitExitFullscreen();
+    }
+    function stopVideo(){exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
     function openEpilogue(index){const n=epilogueQuestions[index];if(n)openInterview(n,'epilogue')}
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
     function openInterviewStep(n,mode='person'){
@@ -224,7 +228,7 @@
       q('#interview-question').textContent=n.question;
       q('#interview-concepts').replaceChildren();
       for(const id of (isEpilogue?[]:n.kind==='introduction'?children(n.parent).map(x=>x.id):ancestors(n.id)).filter(id=>['concept','subconcept'].includes(nodes[id].kind))){const t=document.createElement('span');t.textContent=nodes[id].label;q('#interview-concepts').append(t)}
-      const src=assetURL(media.src);video.hidden=!src;q('#video-empty').hidden=!!src;q('#video-error').hidden=true;
+      const src=assetURL(media.src);video.hidden=!src;q('#interview-play').hidden=!src;q('#video-empty').hidden=!!src;q('#video-error').hidden=true;
       if(src){video.src=src;const poster=assetURL(media.poster);if(poster)video.poster=poster;video.style.objectFit=media.fit==='cover'?'cover':'contain';video.style.objectPosition=media.position||'center';
         for(const [i,caption] of (media.captions||[]).entries()){const url=assetURL(caption.src);if(!url)continue;const track=document.createElement('track');track.kind='subtitles';track.label=caption.label||'한국어';track.srclang=caption.language||'ko';track.src=url;track.default=i===0;video.append(track)}
         video.load();
@@ -245,6 +249,23 @@
     function closeInterview(){recordStep(()=>{stopVideo();dialog.close()})}
     q('#interview-close').addEventListener('click',closeInterview);dialog.addEventListener('close',()=>{if(!dialog.open)stopVideo()});dialog.addEventListener('cancel',e=>{e.preventDefault();closeInterview()});dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeInterview()}});
     video.addEventListener('error',()=>{if(video.getAttribute('src'))q('#video-error').hidden=false});
+    q('#interview-play').addEventListener('click',()=>{
+      if(!video.getAttribute('src'))return;
+      if(typeof video.requestFullscreen==='function')video.requestFullscreen().catch(()=>{});
+      else if(typeof video.webkitEnterFullscreen==='function')video.webkitEnterFullscreen();
+      video.play().catch(()=>{});
+    });
+    video.addEventListener('play',async()=>{
+      q('#interview-play').hidden=true;
+      if(!video.getAttribute('src')||document.fullscreenElement===video||video.webkitDisplayingFullscreen)return;
+      try{
+        if(typeof video.requestFullscreen==='function')await video.requestFullscreen();
+        else if(typeof video.webkitEnterFullscreen==='function')video.webkitEnterFullscreen();
+      }catch{
+        try{if(typeof video.webkitEnterFullscreen==='function')video.webkitEnterFullscreen()}catch{}
+      }
+    });
+    video.addEventListener('ended',()=>{exitVideoFullscreen();q('#interview-play').hidden=false});
     q('.detail-close').addEventListener('click',()=>recordStep(()=>{panel.hidden=true}));
     function updateCue(){q('#sequence-count').textContent=(cueIndex+1)+' / '+cues.length;q('#sequence-label').textContent=cueIndex<0?'주제 선택부터 시작합니다':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0;q('#sequence-next').disabled=cueIndex>=cues.length-1}
     function runCue(index){return recordStep(()=>runCueStep(index))}
