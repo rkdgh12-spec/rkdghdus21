@@ -134,5 +134,4 @@
 #forum-source-network .stage.person-focus .links.person-current:not(.active){stroke:var(--accent);stroke-width:1.05;opacity:.78}
 #forum-source-network .stage.person-focus .links.person-cross:not(.active){stroke:var(--accent);stroke-width:.75;opacity:.42}
 #forum-source-network .stage.person-focus .dot.person-current .node-mark{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent),0 0 12px color-mix(in srgb,var(--accent) 28%,transparent)}
-#forum-source-network .stage.person-focus .dot.person-current .node-label{color:var(--chapter-ink);font-weight:700}
 
