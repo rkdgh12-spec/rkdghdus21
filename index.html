@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>조각의 확장: 새로운 지형 속 창작의 의미</title>
+<meta name="description" content="조각의 확장: 새로운 지형 속 창작의 의미 — 서울대학교 미술대학 개교 80주년 포럼.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M7 9L24 8L16 25Z' fill='none' stroke='%23176b78' stroke-width='1.4'/%3E%3Ccircle cx='7' cy='9' r='3'/%3E%3Ccircle cx='24' cy='8' r='3'/%3E%3Ccircle cx='16' cy='25' r='3' fill='%23176b78'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="map.css?v=hover-24-1"><link rel="stylesheet" href="site.css?v=cover-map-3">
+<script src="data.js?v=click-nav-2" defer></script><script src="media.js?v=click-nav-2" defer></script><script src="profiles.js?v=click-nav-2" defer></script><script src="epilogue.js?v=click-nav-2" defer></script><script src="app.js?v=nowrap-zoom-2" defer></script>
+</head><body><main id="forum-source-network">
+  <section class="intro" aria-labelledby="intro-title">
+    <div class="intro-top"><span>서울대학교 미술대학</span><span>개교 80주년 포럼 · 조소과</span></div>
+    <div class="history-controls intro-history" aria-label="시작 화면 단계 이동"><button type="button" data-history="-1" disabled>뒤로가기</button><button type="button" data-history="1" disabled>앞으로가기</button></div>
+    <div class="intro-center"><h1 id="intro-title">조각의 확장</h1><p class="intro-description">새로운 지형 속 창작의 의미</p><div class="intro-actions"><button type="button" id="enter-presentation">발표 순서로 시작</button><button type="button" id="enter-explore">자유롭게 탐색</button><button type="button" id="enter-resume" hidden>이어서 보기</button></div></div>
+    <div class="intro-bottom"><span>다섯 개의 주제 · 열 명의 인물</span><span>다시, 조각으로</span></div>
+  </section>
+  <div class="map-shell" inert>
+  <div class="header">
+    <div class="brand"><button type="button" id="forum-home" aria-label="시작 화면으로"><h2>조각의 확장</h2></button><p class="subtitle">서울대학교 미술대학 개교 80주년 포럼</p></div>
+    <div class="tools">
+      <div class="history-controls" aria-label="탐색 단계 이동"><button type="button" class="control" data-history="-1" disabled>뒤로가기</button><button type="button" class="control" data-history="1" disabled>앞으로가기</button><span class="history-count" data-history-count></span></div>
+      <button type="button" class="control" id="forum-minus" aria-label="축소">−</button>
+      <button type="button" class="control" id="forum-plus" aria-label="확대">＋</button>
+      <button type="button" class="control" id="forum-reset">처음부터</button>
+      <button type="button" class="control fit" id="forum-fit">전체 연결</button>
+      <button type="button" class="control" id="forum-depth" aria-pressed="false">3D 보기</button>
+      <button type="button" class="control" id="forum-fullscreen">전체 화면</button>
+    </div>
+  </div>
+  <nav class="chapter-nav" aria-label="포럼 주제"></nav>
+  <div class="stage" aria-label="포럼 주제와 인물, 개념어, 하위개념어, 인터뷰 질문의 연결 지도">
+    <div class="map-plane">
+      <svg class="wires" role="img" aria-label="항목별 소속, 인물 간 관련성, 개념과 질문 사이의 의미 연결"></svg>
+      <div class="node-layer"></div>
+    </div>
+    <div class="three-scene" hidden><svg class="three-wires" aria-hidden="true"></svg><div class="three-nodes"></div></div>
+    <p class="depth-hint" hidden>드래그하여 이동 · 휠 버튼 드래그로 회전 · 휠로 확대</p>
+  </div>
+  <div class="presentation-bar"><div><span class="mode-label">클릭 단계</span><span id="cue-label" aria-live="polite">주제 선택</span></div><div class="presentation-actions"><button type="button" id="cue-prev" data-history="-1" disabled>뒤로가기</button><span id="cue-count">0 / 0</span><button type="button" id="cue-next" data-history="1" disabled>앞으로가기</button></div></div>
+  <div class="sequence-controls"><span>발표 순서</span><span id="sequence-label">주제 선택부터 시작합니다</span><div><button type="button" id="sequence-prev" disabled>이전 순서</button><span id="sequence-count">0 / 27</span><button type="button" id="sequence-next">다음 순서 펼치기</button></div></div>
+  <div class="legend"><span><i class="l1"></i>주제 영역</span><span><i class="l2"></i>인물</span><span><i class="l3"></i>개념어</span><span><i class="l4"></i>하위개념어</span><span><i class="l5"></i>인터뷰 질문</span><span><i class="cross"></i>인물 간 연결</span><span><i class="meaning"></i>의미 연결 · 중앙 핵심</span><span><i class="question-cross"></i>질문 간 연결</span></div>
+  <div class="meta"><span class="counts">제목을 누르면 인물이 나타납니다.</span><span>확대 · 드래그 · 차례로 펼치기</span></div>
+  <aside class="detail-panel" hidden aria-label="선택한 항목"><div class="detail-toolbar"><div class="history-controls" aria-label="항목 단계 이동"><button type="button" data-history="-1" disabled>뒤로가기</button><button type="button" data-history="1" disabled>앞으로가기</button></div><button type="button" class="detail-close" aria-label="항목 설명 닫기">닫기</button></div><div class="detail" aria-live="polite"></div></aside>
+  </div>
+  <dialog id="interview-dialog" aria-labelledby="interview-title">
+    <div class="interview-history"><div class="history-controls" aria-label="인터뷰 탐색 단계 이동"><button type="button" data-history="-1" disabled>뒤로가기</button><button type="button" data-history="1" disabled>앞으로가기</button></div><span class="history-count" data-history-count></span></div>
+    <section id="epilogue-collection" hidden><p class="interview-kicker">에필로그 · 연결되는 지형</p><h2>조소과 교육의 앞으로</h2><p>계속 지켜야 할 가치, 새롭게 시도할 교육</p><div id="epilogue-people" role="tablist" aria-label="교육에 관한 인물별 인터뷰"></div></section>
+    <div id="interview-content">
+    <div class="interview-header"><div><span id="interview-person"></span><div id="interview-profile" class="person-profile"></div></div><button type="button" id="interview-close">지도로 돌아가기</button></div>
+    <div class="interview-layout"><div class="interview-media"><video id="interview-video" controls playsinline preload="none" hidden></video><div id="video-empty"><span class="empty-mark" aria-hidden="true">◯</span><strong>영상 준비 중</strong><p>인터뷰 영상은 추후 공개됩니다.</p></div><p id="video-error" role="alert" hidden>영상을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p></div><div class="interview-copy"><p class="interview-kicker" id="interview-chapter"></p><h2 id="interview-title"></h2><p id="interview-question"></p><div id="interview-concepts" class="interview-tags"></div><details id="transcript-section" hidden><summary>인터뷰 전문</summary><div id="interview-transcript"></div></details></div></div>
+    <div class="interview-footer"><div><span class="mode-label">이어지는 질문</span><div id="interview-related"></div></div><div class="interview-step"><button type="button" id="question-prev">이전 질문</button><span id="question-count"></span><button type="button" id="question-next">다음 질문</button></div></div>
+    </div>
+  </dialog>
+  <div class="sr-only" role="status" id="map-status"></div>
+</main></body></html>
+
+
+
+
+
+
+
+
