@@ -131,6 +131,7 @@
   
 #forum-source-network .stage.person-focus .dot.person-past{opacity:.33}
 #forum-source-network .stage.person-focus .area-heading.person-chapter-past{opacity:.33}
+#forum-source-network .stage .area-heading.dim:is(:hover,:focus-visible),#forum-source-network .stage.person-focus .area-heading.person-chapter-past:is(:hover,:focus-visible){opacity:1}
 #forum-source-network .stage.person-focus .region.person-chapter-past{opacity:.2}
 #forum-source-network .stage.person-focus .links.person-past{opacity:.12}
 #forum-source-network .stage.person-focus .links.person-current:not(.active){stroke:var(--accent);stroke-width:1.05;opacity:.78}
