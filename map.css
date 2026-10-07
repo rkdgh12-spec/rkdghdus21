@@ -61,6 +61,8 @@
     #forum-source-network .links.question-related.active{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:none;opacity:1}
     #forum-source-network .stage.chapter-hover .links.active{stroke-width:.9;opacity:.75}
     #forum-source-network .stage.chapter-hover .links.semantic.active,#forum-source-network .stage.chapter-hover .links.question-related.active{stroke-width:.8;opacity:.69}
+    #forum-source-network .stage.core-chapter-hover .links.active{stroke-width:1.05;opacity:.8}
+    #forum-source-network .stage.core-chapter-hover .links.semantic.active,#forum-source-network .stage.core-chapter-hover .links.question-related.active{stroke-width:.95;opacity:.76}
     #forum-source-network .links.dim{opacity:.1}
     #forum-source-network .dot{position:absolute;display:grid;place-items:center;width:28px;height:28px;transform:translate(-50%,-50%);padding:0;border:0;background:transparent;border-radius:50%;z-index:3}
     #forum-source-network .node-mark{display:block;width:var(--diameter);height:var(--diameter);border-radius:50%;background:var(--ink);border:1px solid transparent}
