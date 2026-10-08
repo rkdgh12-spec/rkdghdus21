@@ -71,6 +71,7 @@
     #forum-source-network .stage.all-connected .links.question-related:not(.active){opacity:.26}
     #forum-source-network .stage.all-connected .links.question-related.core:not(.active){opacity:.39}
     #forum-source-network .dot{position:absolute;display:grid;place-items:center;width:28px;height:28px;transform:translate(-50%,-50%);padding:0;border:0;background:transparent;border-radius:50%;z-index:3}
+    #forum-source-network .dot.person{z-index:7}
     #forum-source-network .node-mark{display:block;width:var(--diameter);height:var(--diameter);border-radius:50%;background:var(--ink);border:1px solid transparent}
     #forum-source-network .dot.concept .node-mark{background:var(--secondary)}
     #forum-source-network .dot.subconcept .node-mark{background:var(--line)}
@@ -99,6 +100,7 @@
     #forum-source-network .node-label-text,#forum-source-network .area-heading>span,#forum-source-network .area-heading>strong,#forum-source-network .area-heading>small{transform-origin:center;transition:transform 140ms ease,-webkit-text-stroke-width 140ms ease}
     @media(hover:hover) and (pointer:fine){
       #forum-source-network .dot:hover{z-index:4}
+      #forum-source-network .dot.person:hover{z-index:8}
       #forum-source-network .area-heading:hover{z-index:6}
       #forum-source-network .node-label:hover .node-label-text,#forum-source-network .area-heading:hover>span,#forum-source-network .area-heading:hover>strong,#forum-source-network .area-heading:hover>small{transform:scale(1.24);-webkit-text-stroke:.24px currentColor}
       #forum-source-network .stage.all-connected .area-heading.core:hover strong,#forum-source-network .stage.all-connected .area-heading.core:hover small{-webkit-text-stroke:.3px currentColor}
