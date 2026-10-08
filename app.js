@@ -157,7 +157,7 @@
     function select(id){return recordStep(()=>selectStep(id))}
     function selectStep(id){
       const before=new Set(visible);selected=id;
-      if(nodes[id].kind==='chapter')for(const n of points)if(n.chapter!==nodes[id].chapter)for(const animation of elems.get(n.id).b.getAnimations())animation.cancel();
+      if(['chapter','person'].includes(nodes[id].kind))for(const n of points)if(n.chapter!==nodes[id].chapter)for(const animation of elems.get(n.id).b.getAnimations())animation.cancel();
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
       updateVisible();showDetail(nodes[id]);render();save();
@@ -465,7 +465,7 @@
       let ground=`<defs><radialGradient id="three-outer-shade" cx="35%" cy="28%" r="78%"><stop offset="0" style="stop-color:var(--secondary);stop-opacity:.01"/><stop offset="1" style="stop-color:var(--secondary);stop-opacity:.08"/></radialGradient><radialGradient id="three-core-shade" cx="33%" cy="25%" r="76%"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.03"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:.15"/></radialGradient></defs>`,stems='',links='';
       ground+=volume(outerBoundary,'outer',-110,510);
       if(allConnected)ground+=volume(coreBoundary,'core',-45,450);
-       for(const n of points){if(!visible.has(n.id))continue;const a=pos[n.id],b=project(n.x,n.y);stems+=`<path class="three-stem${activeChapter!==null&&n.chapter!==activeChapter?' chapter-past':''}${branchKeep!==null&&n.chapter!==personChapter?' branch-other-chapter':''}" d="M${a.x},${a.y}L${b.x},${b.y}"/>`}
+       for(const n of points){if(!visible.has(n.id))continue;const a=pos[n.id],b=project(n.x,n.y);stems+=`<path class="three-stem${activeChapter!==null&&n.chapter!==activeChapter?' chapter-past':''}${focusedPerson!==null&&n.chapter!==personChapter?' person-other-chapter':''}" d="M${a.x},${a.y}L${b.x},${b.y}"/>`}
       for(const [i,e] of edges.entries()){
         if(!visible.has(e.source)||!visible.has(e.target))continue;
         const path=paths[i],length=path.getTotalLength();if(!length)continue;
@@ -530,6 +530,7 @@
         l.classList.toggle('person-current',focusedPerson!==null&&a.person===focusedPerson&&b.person===focusedPerson);
         l.classList.toggle('person-cross',focusedPerson!==null&&((a.person===focusedPerson)!==(b.person===focusedPerson)));
         l.classList.toggle('person-past',focusedPerson!==null&&a.person!==focusedPerson&&b.person!==focusedPerson);
+        l.classList.toggle('person-other-chapter',focusedPerson!==null&&(a.chapter!==personChapter||b.chapter!==personChapter));
         l.classList.toggle('chapter-past',activeChapter!==null&&a.chapter!==activeChapter&&b.chapter!==activeChapter);
         l.classList.toggle('chapter-cross',activeChapter!==null&&(a.chapter===activeChapter)!==(b.chapter===activeChapter));
         l.classList.toggle('branch-past',branchKeep!==null&&((a.person===focusedPerson&&!branchKeep.has(a.id))||(b.person===focusedPerson&&!branchKeep.has(b.id))));
@@ -539,7 +540,7 @@
         l.classList.toggle('branch-local-other',branchKeep!==null&&!branchRoute&&a.chapter===personChapter&&b.chapter===personChapter);
         l.classList.toggle('branch',e.kind==='hierarchy'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
         l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning||(hoverChapter!==null&&(selectedBranch.has(e.source)||selectedBranch.has(e.target))));
-        if((activeChapter!==null&&(l.classList.contains('chapter-past')||l.classList.contains('chapter-cross')))||(branchKeep!==null&&!branchRoute))for(const animation of l.getAnimations())animation.cancel();
+        if((activeChapter!==null&&(l.classList.contains('chapter-past')||l.classList.contains('chapter-cross')))||l.classList.contains('person-other-chapter')||(branchKeep!==null&&!branchRoute))for(const animation of l.getAnimations())animation.cancel();
         if(newlyShown&&!reducedMotion){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
       });
       if(allConnected&&!networkContours)networkContours=connectedContours();
