@@ -153,6 +153,7 @@
 #forum-source-network .stage .three-stem.chapter-past{opacity:.2}
 #forum-source-network .stage.person-focus .links.person-current:not(.active){stroke:var(--accent);stroke-width:1.05;opacity:.78}
 #forum-source-network .stage.person-focus .links.person-cross:not(.active){stroke:var(--accent);stroke-width:.75;opacity:.42}
+#forum-source-network .stage.person-focus:not(.branch-focus) .links.person-cross:not(.person-other-chapter):is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.8;opacity:.26}
 #forum-source-network .stage.person-focus .dot.person-current .node-mark{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent),0 0 12px color-mix(in srgb,var(--accent) 28%,transparent)}
 #forum-source-network .stage.branch-focus .dot.branch-past{opacity:.28}
 #forum-source-network .stage.branch-focus .dot.branch-past:is(:hover,:focus-visible){opacity:1}
