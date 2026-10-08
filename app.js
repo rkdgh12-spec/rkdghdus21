@@ -434,7 +434,7 @@
     }
     function render3D(){
       if(!depthEnabled)return;
-      const focusedPerson=selected!==null&&!points.every(n=>visible.has(n.id))&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
+      const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'&&(!points.every(n=>visible.has(n.id))||nodes[selected].kind==='person')?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
       const branchKeep=focusedPerson!==null&&['concept','subconcept','question'].includes(nodes[selected].kind)?new Set([...ancestors(selected),...descendants(selected)]):null;
@@ -504,7 +504,7 @@
       flatPlane.style.setProperty('--flat-label-zoom',labelZoom(k/fitK).toFixed(2));
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
       const allConnected=points.every(n=>visible.has(n.id));
-      const focusedPerson=selected!==null&&!allConnected&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
+      const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'&&(!allConnected||nodes[selected].kind==='person')?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
       const branchKeep=focusedPerson!==null&&['concept','subconcept','question'].includes(nodes[selected].kind)?new Set([...ancestors(selected),...descendants(selected)]):null;
