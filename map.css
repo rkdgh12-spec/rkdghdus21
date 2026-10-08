@@ -162,7 +162,7 @@
 #forum-source-network .stage.branch-focus .area-heading.person-chapter-past{opacity:.18}
 #forum-source-network .stage.branch-focus .three-stem.branch-other-chapter{opacity:.1}
 #forum-source-network .stage.branch-focus .links.branch-local-other:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.7;opacity:.16}
-#forum-source-network .stage.branch-focus .links.branch-other-chapter:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.7;opacity:.07}
-#forum-source-network .stage.person-focus .links.person-other-chapter:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.7;opacity:.09}
+#forum-source-network .stage.branch-focus .links.branch-other-chapter:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.8;opacity:.26}
+#forum-source-network .stage.person-focus .links.person-other-chapter:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.8;opacity:.26}
 #forum-source-network .stage.person-focus .three-stem.person-other-chapter{opacity:.12}
 
