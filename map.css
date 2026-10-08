@@ -176,7 +176,7 @@
 #forum-source-network .stage.branch-focus .links.branch-other-chapter.person-past:is(.active,:not(.active)){opacity:.1}
 #forum-source-network .stage.all-connected.chapter-focus .links.chapter-past:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.8;opacity:.1}
 #forum-source-network .stage.all-connected.chapter-focus .links.chapter-cross:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.8;opacity:.2}
-#forum-source-network .stage.person-focus:not(.branch-focus) .person-past-layer{opacity:.1}
-#forum-source-network .stage.person-focus:not(.branch-focus) .person-cross-layer{opacity:.2}
+#forum-source-network .stage.person-focus:not(.branch-focus) .person-past-layer{opacity:.06}
+#forum-source-network .stage.person-focus:not(.branch-focus) .person-cross-layer{opacity:.12}
 #forum-source-network .stage.person-focus:not(.branch-focus) .person-past-layer .links,#forum-source-network .stage.person-focus:not(.branch-focus) .person-cross-layer .links{opacity:1!important;stroke:var(--secondary);stroke-width:.8}
 
