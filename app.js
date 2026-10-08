@@ -70,13 +70,11 @@
     const stage=root.querySelector('.stage'),svg=root.querySelector('.wires'),layer=root.querySelector('.node-layer'),detail=root.querySelector('.detail');
     const kindNames={chapter:'주제 영역',person:'인물',concept:'개념어',subconcept:'하위개념어',question:'인터뷰 질문'};
     const NS='http://www.w3.org/2000/svg';
-    let width=stage.clientWidth,height=stage.clientHeight,k=1,fitK=1,ox=0,oy=0,selected=null,hovered=null,drag=null,elastic=null,elasticFrame=0;
+    let width=stage.clientWidth,height=stage.clientHeight,k=1,fitK=1,ox=0,oy=0,selected=null,hovered=null,drag=null;
     let expanded=new Set(),visible=new Set(chapters.map(n=>n.id)),cueIndex=-1,currentQuestion=null,presentationMode=true,depthEnabled=false;
     const children=id=>nodes.filter(n=>n.parent===id);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elems=new Map(),paths=[],areas=new Map();
-    const edgeIndicesByNode=new Map(nodes.map(n=>[n.id,[]]));
-    edges.forEach((e,i)=>{edgeIndicesByNode.get(e.source).push(i);edgeIndicesByNode.get(e.target).push(i)});
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
@@ -132,43 +130,12 @@
       t.textContent=e.kind!=='hierarchy'?edgeLabel(a)+' ↔ '+edgeLabel(b)+' · '+e.reason:edgeLabel(a)+' → '+edgeLabel(b);
       l.append(t);personCurrentLayer.append(l);paths.push(l);
     }
-    function elasticTick(){
-      elasticFrame=0;if(!elastic)return;
-      const s=elastic;s.vx=(s.vx+(s.targetX-s.x)*.16)*.73;s.vy=(s.vy+(s.targetY-s.y)*.16)*.73;s.x+=s.vx;s.y+=s.vy;
-      for(const i of edgeIndicesByNode.get(s.id))if(paths[i].style.display!=='none')paths[i].setAttribute('d',connectionPath(edges[i]));
-      const offset=s.x.toFixed(2)+'px '+s.y.toFixed(2)+'px';elems.get(s.id)?.b.style.setProperty('translate',offset);threeNodes.get(s.id)?.style.setProperty('translate',offset);
-      if(depthEnabled)render3D();
-      if(Math.abs(s.targetX-s.x)+Math.abs(s.targetY-s.y)+Math.abs(s.vx)+Math.abs(s.vy)>.35)elasticFrame=requestAnimationFrame(elasticTick);
-      else if(s.pointerId===null){elastic=null;for(const i of edgeIndicesByNode.get(s.id))if(paths[i].style.display!=='none')paths[i].setAttribute('d',connectionPath(edges[i]));elems.get(s.id)?.b.style.removeProperty('translate');threeNodes.get(s.id)?.style.removeProperty('translate');s.button.classList.remove('elastic-grab');if(depthEnabled)render3D()}
-    }
-    function beginElastic(e,n,b){
-      if(e.button!==0||reducedMotion)return;
-      if(elastic){const previous=elastic;elastic=null;previous.button.classList.remove('elastic-grab');elems.get(previous.id)?.b.style.removeProperty('translate');threeNodes.get(previous.id)?.style.removeProperty('translate');for(const i of edgeIndicesByNode.get(previous.id))if(paths[i].style.display!=='none')paths[i].setAttribute('d',connectionPath(edges[i]))}
-      elastic={id:n.id,button:b,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,x:0,y:0,vx:0,vy:0,targetX:0,targetY:0,moved:false};
-      b.classList.add('elastic-grab');b.setPointerCapture(e.pointerId);
-      if(!elasticFrame)elasticFrame=requestAnimationFrame(elasticTick);
-    }
-    function moveElastic(e){
-      if(!elastic||elastic.pointerId!==e.pointerId)return;
-      const dx=e.clientX-elastic.startX,dy=e.clientY-elastic.startY;
-      if(Math.hypot(dx,dy)>3)elastic.moved=true;
-      if(!elastic.moved)return;
-      const distance=Math.hypot(dx,dy),scale=Math.min(1,90/Math.max(1,distance*.48));
-      elastic.targetX=dx*.48*scale;elastic.targetY=dy*.48*scale;
-      if(!elasticFrame)elasticFrame=requestAnimationFrame(elasticTick);
-    }
-    function endElastic(e,b){
-      if(!elastic||elastic.pointerId!==e.pointerId)return;
-      if(elastic.moved){b.dataset.suppressClick='true';setTimeout(()=>{delete b.dataset.suppressClick},0)}
-      elastic.pointerId=null;elastic.targetX=0;elastic.targetY=0;
-      if(!elasticFrame)elasticFrame=requestAnimationFrame(elasticTick);
-    }
     for(const n of points){
       const b=document.createElement('button');b.type='button';b.className='dot '+n.kind+' cursor-interaction';b.style.setProperty('--diameter',({person:6.5,concept:4.2,subconcept:3,question:3.5})[n.kind]+'px');
       b.setAttribute('aria-label',kindNames[n.kind]+' '+(n.person?n.person+' / ':'')+(n.question||n.label));b.setAttribute('data-tooltip',n.question||(n.label+(n.subtitle?' · '+n.subtitle:'')));
       b.title=n.question||(n.person&&n.kind!=='person'?n.person+' · ':'')+n.label;
       const mark=document.createElement('span');mark.className='node-mark';b.append(mark);
-      b.addEventListener('pointerdown',e=>{e.stopPropagation();beginElastic(e,n,b)});b.addEventListener('pointermove',moveElastic);b.addEventListener('pointerup',e=>endElastic(e,b));b.addEventListener('pointercancel',e=>endElastic(e,b));b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',e=>{if(b.dataset.suppressClick){e.preventDefault();delete b.dataset.suppressClick;return}select(n.id)});
+      b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',()=>select(n.id));
       const label=document.createElement('span');label.className='node-label '+n.kind;
       const labelText=document.createElement('span');labelText.className='node-label-text';labelText.textContent=n.label;label.append(labelText);b.append(label);
       if(n.kind!=='question')b.setAttribute('aria-expanded','false');
@@ -439,14 +406,9 @@
     function connectionPath(e){
       const a=nodes[e.source],b=nodes[e.target],center=chapters.find(c=>c.chapter===5);
       const point=(x,y)=>(x*k+ox).toFixed(2)+','+(y*k+oy).toFixed(2);
-      const ax=elastic?.id===e.source?elastic.x/k:0,ay=elastic?.id===e.source?elastic.y/k:0;
-      const ex=elastic?.id===e.target?elastic.x/k:0,ey=elastic?.id===e.target?elastic.y/k:0;
       const dx=b.x-a.x,dy=b.y-a.y,distance=Math.hypot(dx,dy);
       const seed=((Math.min(e.source,e.target)*73856093)^(Math.max(e.source,e.target)*19349663))>>>0;
-      if(distance<.001||e.kind==='hierarchy'||seed%5<3){
-        if(!ax&&!ay&&!ex&&!ey)return 'M'+point(a.x,a.y)+'L'+point(b.x,b.y);
-        return 'M'+point(a.x+ax,a.y+ay)+'Q'+point((a.x+b.x)/2+(ax+ex)*.32,(a.y+b.y)/2+(ay+ey)*.32)+' '+point(b.x+ex,b.y+ey);
-      }
+      if(distance<.001||e.kind==='hierarchy'||seed%5<3)return 'M'+point(a.x,a.y)+'L'+point(b.x,b.y);
       const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,nx=-dy/distance,ny=dx/distance;
       let bx,by;
       if(e.core||(a.chapter!==b.chapter&&distance>600)){
@@ -460,7 +422,7 @@
         const bend=Math.min(26,distance*.035)*(seed%2?1:-1);
         bx=nx*bend;by=ny*bend;
       }
-      return 'M'+point(a.x+ax,a.y+ay)+'Q'+point(mx+bx*2+(ax+ex)*.32,my+by*2+(ay+ey)*.32)+' '+point(b.x+ex,b.y+ey);
+      return 'M'+point(a.x,a.y)+'Q'+point(mx+bx*2,my+by*2)+' '+point(b.x,b.y);
     }
     const threeCenter=chapters.find(n=>n.chapter===5);
     const threeHeight=n=>({chapter:0,person:120,concept:210,subconcept:300,question:355})[n.kind]+(n.coreLayout?40:0);
@@ -471,7 +433,7 @@
       if(n.kind==='chapter')b.innerHTML='<span class="chapter-number">제'+esc(n.chapter)+'장</span><strong>'+esc(n.label)+'</strong><small hidden>'+esc(n.subtitle)+'</small>';
       else{b.style.setProperty('--diameter',({person:6.5,concept:4.2,subconcept:3,question:3.5})[n.kind]+'px');const mark=document.createElement('span');mark.className='node-mark';const label=document.createElement('span');label.className='node-label '+n.kind;const labelText=document.createElement('span');labelText.className='node-label-text';labelText.textContent=n.label;label.append(labelText);b.append(mark,label)}
       if(n.kind!=='question')b.setAttribute('aria-expanded','false');
-      b.addEventListener('pointerdown',e=>{if(e.button!==1){e.stopPropagation();beginElastic(e,n,b)}});b.addEventListener('pointermove',moveElastic);b.addEventListener('pointerup',e=>endElastic(e,b));b.addEventListener('pointercancel',e=>endElastic(e,b));b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',e=>{if(b.dataset.suppressClick){e.preventDefault();delete b.dataset.suppressClick;return}select(n.id)});threeLayer.append(b);threeNodes.set(n.id,b);
+      b.addEventListener('pointerdown',e=>{if(e.button!==1)e.stopPropagation()});b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',()=>select(n.id));threeLayer.append(b);threeNodes.set(n.id,b);
     }
     function render3D(){
       if(!depthEnabled)return;
