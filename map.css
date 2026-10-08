@@ -179,4 +179,6 @@
 #forum-source-network .stage.person-focus:not(.branch-focus) .person-past-layer{opacity:.06}
 #forum-source-network .stage.person-focus:not(.branch-focus) .person-cross-layer{opacity:.12}
 #forum-source-network .stage.person-focus:not(.branch-focus) .person-past-layer .links,#forum-source-network .stage.person-focus:not(.branch-focus) .person-cross-layer .links{opacity:1!important;stroke:var(--secondary);stroke-width:.8}
+#forum-source-network .dot.elastic-grab{z-index:9;cursor:grabbing}
+#forum-source-network .dot.elastic-grab .node-mark{box-shadow:0 3px 9px color-mix(in srgb,var(--accent) 24%,transparent)}
 
