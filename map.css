@@ -157,4 +157,11 @@
 #forum-source-network .stage.branch-focus .dot.branch-past{opacity:.28}
 #forum-source-network .stage.branch-focus .dot.branch-past:is(:hover,:focus-visible){opacity:1}
 #forum-source-network .stage.branch-focus .links.branch-past:not(.active),#forum-source-network .stage.branch-focus .links.branch-past.active{stroke:var(--secondary);stroke-width:.7;opacity:.12}
+#forum-source-network .stage.branch-focus .dot.branch-other-chapter{opacity:.13}
+#forum-source-network .stage.branch-focus .dot.branch-other-chapter:is(:hover,:focus-visible){opacity:1}
+#forum-source-network .stage.branch-focus .area-heading.person-chapter-past{opacity:.18}
+#forum-source-network .stage.branch-focus .three-stem.branch-other-chapter{opacity:.1}
+#forum-source-network .stage.branch-focus .links.branch-route:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.85;stroke-dasharray:none;opacity:.58}
+#forum-source-network .stage.branch-focus .links.branch-local-other:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.7;opacity:.16}
+#forum-source-network .stage.branch-focus .links.branch-other-chapter:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.7;opacity:.07}
 
