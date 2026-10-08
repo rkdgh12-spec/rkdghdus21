@@ -119,13 +119,16 @@
       const heading=document.createElement('button');heading.type='button';heading.className='area-heading cursor-interaction'+(c.chapter===5?' core':'');heading.innerHTML='<span class="chapter-number">제'+esc(c.chapter)+'장</span><strong>'+esc(c.label)+'</strong><small hidden>'+esc(c.subtitle)+'</small>';heading.setAttribute('aria-label',displayLabel(c));heading.setAttribute('aria-expanded','false');heading.addEventListener('pointerdown',e=>e.stopPropagation());heading.addEventListener('pointerenter',()=>setHovered(c.id));heading.addEventListener('pointerleave',()=>setHovered(null));heading.addEventListener('click',()=>select(c.id));layer.append(heading);
       areas.set(c.id,{region,heading,members:points.filter(n=>n.chapter===c.chapter)});
     }
+    const personPastLayer=document.createElementNS(NS,'g'),personCrossLayer=document.createElementNS(NS,'g'),personCurrentLayer=document.createElementNS(NS,'g');
+    personPastLayer.setAttribute('class','person-past-layer');personCrossLayer.setAttribute('class','person-cross-layer');personCurrentLayer.setAttribute('class','person-current-layer');
+    svg.append(personPastLayer,personCrossLayer,personCurrentLayer);
     for(const e of edges){
       const l=document.createElementNS(NS,'path');l.classList.add('links');
       if(e.kind!=='hierarchy')l.classList.add(e.kind);if(e.core)l.classList.add('core');
       const t=document.createElementNS(NS,'title'),a=nodes[e.source],b=nodes[e.target];
       const edgeLabel=n=>n.kind==='question'?n.person+' · '+n.label:n.label;
       t.textContent=e.kind!=='hierarchy'?edgeLabel(a)+' ↔ '+edgeLabel(b)+' · '+e.reason:edgeLabel(a)+' → '+edgeLabel(b);
-      l.append(t);svg.append(l);paths.push(l);
+      l.append(t);personCurrentLayer.append(l);paths.push(l);
     }
     for(const n of points){
       const b=document.createElement('button');b.type='button';b.className='dot '+n.kind+' cursor-interaction';b.style.setProperty('--diameter',({person:6.5,concept:4.2,subconcept:3,question:3.5})[n.kind]+'px');
@@ -462,19 +465,23 @@
         const rings=levels.map(([unit,radius])=>boundary.map(([x,y])=>project(cx+(x-cx)*radius,cy+(y-cy)*radius,(bottom+top)/2+unit*(top-bottom)/2)));
         return `<path class="three-volume ${kind}" d="${softPath(rings.flat().map(p=>[p.x,p.y]))}"/>`;
       };
-      let ground=`<defs><radialGradient id="three-outer-shade" cx="35%" cy="28%" r="78%"><stop offset="0" style="stop-color:var(--secondary);stop-opacity:.01"/><stop offset="1" style="stop-color:var(--secondary);stop-opacity:.08"/></radialGradient><radialGradient id="three-core-shade" cx="33%" cy="25%" r="76%"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.03"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:.15"/></radialGradient></defs>`,stems='',links='';
+      let ground=`<defs><radialGradient id="three-outer-shade" cx="35%" cy="28%" r="78%"><stop offset="0" style="stop-color:var(--secondary);stop-opacity:.01"/><stop offset="1" style="stop-color:var(--secondary);stop-opacity:.08"/></radialGradient><radialGradient id="three-core-shade" cx="33%" cy="25%" r="76%"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.03"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:.15"/></radialGradient></defs>`,stems='';
       ground+=volume(outerBoundary,'outer',-110,510);
       if(allConnected)ground+=volume(coreBoundary,'core',-45,450);
        for(const n of points){if(!visible.has(n.id))continue;const a=pos[n.id],b=project(n.x,n.y);stems+=`<path class="three-stem${activeChapter!==null&&n.chapter!==activeChapter?' chapter-past':''}${focusedPerson!==null&&n.chapter!==personChapter?' person-other-chapter':''}" d="M${a.x},${a.y}L${b.x},${b.y}"/>`}
+      let pastLinks='',crossLinks='',currentLinks='';
       for(const [i,e] of edges.entries()){
         if(!visible.has(e.source)||!visible.has(e.target))continue;
         const path=paths[i],length=path.getTotalLength();if(!length)continue;
         const start=nodes[e.source],end=nodes[e.target],a=threeHeight(start),b=threeHeight(end);
         const samples=Array.from({length:13},(_,j)=>{const t=j/12,p=path.getPointAtLength(length*t);return project((p.x-ox)/k,(p.y-oy)/k,a+(b-a)*t)});
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
-        links+=`<path class="${path.getAttribute('class')} three-connection" d="${d}"/>`;
+        const markup=`<path class="${path.getAttribute('class')} three-connection" d="${d}"/>`;
+        if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-past'))pastLinks+=markup;
+        else if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-cross'))crossLinks+=markup;
+        else currentLinks+=markup;
       }
-      threeSvg.innerHTML=ground+stems+links;
+      threeSvg.innerHTML=ground+stems+`<g class="person-past-layer">${pastLinks}</g><g class="person-cross-layer">${crossLinks}</g><g class="person-current-layer">${currentLinks}</g>`;
       const lineage=selected===null?new Set():new Set(ancestors(selected)),selectedBranch=selected===null?new Set():descendants(selected);
       const connectedQuestions=new Set();for(const e of edges)if(e.kind!=='hierarchy'&&(e.source===selected||e.target===selected)){if(nodes[e.source].kind==='question')connectedQuestions.add(e.source);if(nodes[e.target].kind==='question')connectedQuestions.add(e.target)}
       const boxes=[],pointBoxes=points.filter(n=>visible.has(n.id)).map(n=>({id:n.id,x:pos[n.id].x-7,y:pos[n.id].y-7,w:14,h:14}));
@@ -531,6 +538,8 @@
         l.classList.toggle('person-cross',focusedPerson!==null&&((a.person===focusedPerson)!==(b.person===focusedPerson)));
         l.classList.toggle('person-past',focusedPerson!==null&&a.person!==focusedPerson&&b.person!==focusedPerson);
         l.classList.toggle('person-other-chapter',focusedPerson!==null&&(a.chapter!==personChapter||b.chapter!==personChapter));
+        const linkLayer=focusedPerson!==null&&branchKeep===null?(l.classList.contains('person-past')?personPastLayer:l.classList.contains('person-cross')?personCrossLayer:personCurrentLayer):personCurrentLayer;
+        if(l.parentNode!==linkLayer)linkLayer.append(l);
         l.classList.toggle('chapter-past',activeChapter!==null&&a.chapter!==activeChapter&&b.chapter!==activeChapter);
         l.classList.toggle('chapter-cross',activeChapter!==null&&(a.chapter===activeChapter)!==(b.chapter===activeChapter));
         l.classList.toggle('branch-past',branchKeep!==null&&((a.person===focusedPerson&&!branchKeep.has(a.id))||(b.person===focusedPerson&&!branchKeep.has(b.id))));
