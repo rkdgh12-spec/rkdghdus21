@@ -172,4 +172,6 @@
 #forum-source-network .stage.person-focus .three-stem.person-other-chapter{opacity:.12}
 #forum-source-network .stage.person-focus:not(.branch-focus) .links.person-past:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.8;opacity:.1}
 #forum-source-network .stage.person-focus:not(.branch-focus) .links.person-cross:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.8;opacity:.2}
+#forum-source-network .stage.branch-focus .links.branch-other-chapter:is(.active,:not(.active)){stroke:var(--secondary);stroke-width:.8;opacity:.2}
+#forum-source-network .stage.branch-focus .links.branch-other-chapter.person-past:is(.active,:not(.active)){opacity:.1}
 
