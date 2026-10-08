@@ -158,6 +158,7 @@
     function selectStep(id){
       const before=new Set(visible);selected=id;
       if(nodes[id].kind==='chapter')for(const n of points)if(n.chapter!==nodes[id].chapter)for(const animation of elems.get(n.id).b.getAnimations())animation.cancel();
+      if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.person===nodes[id].person&&!keep.has(n.id))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
       updateVisible();showDetail(nodes[id]);render();save();
       animateNodes(before);
@@ -436,6 +437,7 @@
       const focusedPerson=selected!==null&&!points.every(n=>visible.has(n.id))&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
+      const branchKeep=focusedPerson!==null&&['concept','subconcept','question'].includes(nodes[selected].kind)?new Set([...ancestors(selected),...descendants(selected)]):null;
       stage.classList.toggle('chapter-focus',activeChapter!==null);
       stage.classList.toggle('high-zoom-labels',threeZoom>=3);
       threeScene.style.setProperty('--three-label-zoom',labelZoom(threeZoom).toFixed(2));
@@ -489,7 +491,7 @@
       const labelPriority=n=>n.id===selected?0:n.kind==='person'?1:n.kind==='concept'?2:selectedBranch.has(n.id)?3:connectedQuestions.has(n.id)?4:n.kind==='subconcept'?5:6;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
-        b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(10000-p.d));b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
+        b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(10000-p.d));b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='block';label.style.width='max-content';const lw=label.offsetWidth,lh=label.offsetHeight,candidates=[];
         for(const gap of [10,18,26,36,50,66]){const diagonal=gap*.71;candidates.push([x+gap,y-lh/2],[x-lw-gap,y-lh/2],[x-lw/2,y+gap],[x-lw/2,y-lh-gap],[x+diagonal,y+diagonal],[x-lw-diagonal,y+diagonal],[x+diagonal,y-lh-diagonal],[x-lw-diagonal,y-lh-diagonal])}
         let choice=null;for(const [lx,ly] of candidates){const box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}}
@@ -505,7 +507,9 @@
       const focusedPerson=selected!==null&&!allConnected&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
+      const branchKeep=focusedPerson!==null&&['concept','subconcept','question'].includes(nodes[selected].kind)?new Set([...ancestors(selected),...descendants(selected)]):null;
       stage.classList.toggle('chapter-focus',activeChapter!==null);
+      stage.classList.toggle('branch-focus',branchKeep!==null);
       stage.classList.toggle('all-connected',allConnected);
       stage.classList.toggle('chapter-only',expanded.size===0);
       stage.classList.toggle('person-focus',focusedPerson!==null);
@@ -528,9 +532,10 @@
         l.classList.toggle('person-past',focusedPerson!==null&&a.person!==focusedPerson&&b.person!==focusedPerson);
         l.classList.toggle('chapter-past',activeChapter!==null&&a.chapter!==activeChapter&&b.chapter!==activeChapter);
         l.classList.toggle('chapter-cross',activeChapter!==null&&(a.chapter===activeChapter)!==(b.chapter===activeChapter));
+        l.classList.toggle('branch-past',branchKeep!==null&&((a.person===focusedPerson&&!branchKeep.has(a.id))||(b.person===focusedPerson&&!branchKeep.has(b.id))));
         l.classList.toggle('branch',e.kind==='hierarchy'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
         l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning||(hoverChapter!==null&&(selectedBranch.has(e.source)||selectedBranch.has(e.target))));
-        if(activeChapter!==null&&(l.classList.contains('chapter-past')||l.classList.contains('chapter-cross')))for(const animation of l.getAnimations())animation.cancel();
+        if((activeChapter!==null&&(l.classList.contains('chapter-past')||l.classList.contains('chapter-cross')))||l.classList.contains('branch-past'))for(const animation of l.getAnimations())animation.cancel();
         if(newlyShown&&!reducedMotion){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
       });
       if(allConnected&&!networkContours)networkContours=connectedContours();
@@ -576,7 +581,7 @@
       const ordered=[...points].sort((a,b)=>labelPriority(a)-labelPriority(b));
       for(const n of ordered){
         const {b,label}=elems.get(n.id),x=n.x*k+ox,y=n.y*k+oy;
-        b.style.left=x+'px';b.style.top=y+'px';b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.hidden=!visible.has(n.id)||x<0||x>width||y<0||y>height;
+        b.style.left=x+'px';b.style.top=y+'px';b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.hidden=!visible.has(n.id)||x<0||x>width||y<0||y>height;
         b.classList.toggle('connected',connectedQuestions.has(n.id));
         if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='none';
