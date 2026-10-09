@@ -2,7 +2,11 @@
   (()=>{
     const root=document.getElementById('forum-source-network');
     const data=window.FORUM_DATA;
-    const nodes=data.nodes,edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter');
+    const nodes=data.nodes;
+    const chapterOrigins=new Map(nodes.filter(n=>n.kind==='chapter').map(n=>[n.chapter,{x:n.x,y:n.y}]));
+    const layoutCenter=chapterOrigins.get(5),chapterOffsets={1:[-570,-780],2:[1080,-80],3:[380,710],4:[-1100,130],5:[0,0]};
+    for(const n of nodes){const anchor=chapterOrigins.get(n.chapter),offset=chapterOffsets[n.chapter],x=n.x,y=n.y;n.x=layoutCenter.x+offset[0]+(x-anchor.x)*.42;n.y=layoutCenter.y+offset[1]+(y-anchor.y)*.32}
+    const edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter');
     const coreConnections=[
       [134,147,'물질을 판단하고 사유하는 창작'],[134,150,'물질의 판단과 감각적 사고'],
       [134,148,'물질을 통해 세계를 읽는 태도'],[135,147,'물질의 성질에서 시작되는 사유'],
@@ -146,8 +150,7 @@
       layer.append(b);elems.set(n.id,{b,label});
     }
     function fit(ids=null){
-      const initialOverview=ids===null&&expanded.size===0&&selected===null;
-      const arr=ids?nodes.filter(n=>ids.has(n.id)):initialOverview?chapters:nodes;
+      const arr=ids?nodes.filter(n=>ids.has(n.id)):nodes;
       const minx=Math.min(...arr.map(n=>n.x))-150,maxx=Math.max(...arr.map(n=>n.x))+190,miny=Math.min(...arr.map(n=>n.y))-100,maxy=Math.max(...arr.map(n=>n.y))+110;
       const core=nodes.find(n=>n.kind==='chapter'&&n.label==='다시, 조각으로');
       const cx=ids?(minx+maxx)/2:core.x,cy=ids?(miny+maxy)/2:core.y;
@@ -168,7 +171,7 @@
       if(['chapter','person'].includes(nodes[id].kind))for(const n of points)if(n.chapter!==nodes[id].chapter)for(const animation of elems.get(n.id).b.getAnimations())animation.cancel();
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
-      updateVisible();if(before.size===chapters.length&&expanded.size>0)fit();showDetail(nodes[id]);render();save();
+      updateVisible();showDetail(nodes[id]);render();save();
       animateNodes(before);
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
     }
@@ -454,23 +457,17 @@
       const boundaryPoints=path=>{if(path.style.display==='none')return [];const length=path.getTotalLength();if(!length)return [];return Array.from({length:64},(_,i)=>{const p=path.getPointAtLength(length*i/64);return [(p.x-ox)/k,(p.y-oy)/k]})};
       const allConnected=points.every(n=>visible.has(n.id));
       const outerBoundary=boundaryPoints(outerOutline),coreBoundary=allConnected?boundaryPoints(areas.get(threeCenter.id).region):[];
-      const initialOverview=expanded.size===0&&selected===null;
-      const base=(initialOverview?chapters:nodes).map(n=>rawXYZ(n.x,n.y,threeHeight(n)));
-      for(const p of initialOverview?[]:outerBoundary)base.push(rawXYZ(p[0],p[1],190));
-      for(const p of initialOverview?[]:coreBoundary)base.push(rawXYZ(p[0],p[1],210));
-      if(!initialOverview&&outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
+      const base=nodes.map(n=>rawXYZ(n.x,n.y,threeHeight(n)));
+      for(const p of outerBoundary)base.push(rawXYZ(p[0],p[1],190));
+      for(const p of coreBoundary)base.push(rawXYZ(p[0],p[1],210));
+      if(outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
       const minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
       const centerPoint=rawXYZ(threeCenter.x,threeCenter.y,threeHeight(threeCenter));
-      const scale=(initialOverview?Math.min((width-180)/(2*Math.max(...base.map(p=>Math.abs(p.x-centerPoint.x)),1)),(height-180)/(2*Math.max(...base.map(p=>Math.abs(p.y-centerPoint.y)),1)),1.35):Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35))*threeZoom;
+      const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
-      if(autoCentered3D)threePanY=(midy-centerPoint.y)*scale;
+      if(autoCentered3D){threePanX=(midx-centerPoint.x)*scale;threePanY=(midy-centerPoint.y)*scale}
       const project=(x,y,z=0)=>{const p=rawXYZ(x,y,z);return {x:width/2+threePanX+(p.x-midx)*scale,y:height/2+threePanY+(p.y-midy)*scale,d:p.d}};
       const pos=nodes.map(n=>project(n.x,n.y,threeHeight(n)));
-      if(initialOverview){
-        const center=pos[threeCenter.id],spanX=Math.max(1,...chapters.map(n=>Math.abs(pos[n.id].x-center.x))),spanY=Math.max(1,...chapters.map(n=>Math.abs(pos[n.id].y-center.y)));
-        const reachX=width/2-Math.min(170,width*.14),reachY=height/2-Math.min(105,height*.17);
-        for(const n of chapters)pos[n.id]={...pos[n.id],x:width/2+(pos[n.id].x-center.x)/spanX*reachX,y:height/2+(pos[n.id].y-center.y)/spanY*reachY};
-      }
       const volume=(boundary,kind,bottom,top)=>{
         if(!boundary.length)return '';
         const cx=threeCenter.x,cy=threeCenter.y;
@@ -577,10 +574,7 @@
       q('.counts').textContent=expanded.size===0?'제목을 누르면 인물이 나타납니다.':'제목 → 인물 → 개념어 → 하위개념어 → 인터뷰 질문';
       q('.chapter-nav').querySelectorAll('[data-chapter]').forEach(b=>b.setAttribute('aria-current',String(selected!==null&&nodes[selected].chapter===nodes[Number(b.dataset.chapter)].chapter)));
       for(const c of chapters){
-        const opening=expanded.size===0&&selected===null,center=chapters.find(n=>n.chapter===5);
-        const spanX=Math.max(1,...chapters.map(n=>Math.abs(n.x-center.x))),spanY=Math.max(1,...chapters.map(n=>Math.abs(n.y-center.y)));
-        const reachX=width/2-Math.min(170,width*.14),reachY=height/2-Math.min(105,height*.17);
-        const {region,heading,members}=areas.get(c.id),x=opening?width/2+(c.x-center.x)/spanX*reachX:c.x*k+ox,y=opening?height/2+(c.y-center.y)/spanY*reachY:c.y*k+oy;
+        const {region,heading,members}=areas.get(c.id),x=c.x*k+ox,y=c.y*k+oy;
         heading.classList.toggle('selected',selected===c.id);heading.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);heading.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);region.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);region.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';
         const w=heading.offsetWidth,h=heading.offsetHeight;
         const box={x:x-w/2,y:y-h/2,w,h};heading.style.left=box.x+'px';heading.style.top=box.y+'px';
