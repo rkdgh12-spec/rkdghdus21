@@ -180,3 +180,20 @@
 #forum-source-network .stage.person-focus:not(.branch-focus) .person-cross-layer{opacity:.12}
 #forum-source-network .stage.person-focus:not(.branch-focus) .person-past-layer .links,#forum-source-network .stage.person-focus:not(.branch-focus) .person-cross-layer .links{opacity:1!important;stroke:var(--secondary);stroke-width:.8}
 
+
+/* Each node drifts on its own small cycle while the map geometry stays fixed. */
+@keyframes forum-cell-drift{
+  0%,100%{translate:0 0}
+  25%{translate:var(--cell-x) calc(var(--cell-y) * -.65)}
+  55%{translate:calc(var(--cell-x) * -.55) var(--cell-y)}
+  78%{translate:calc(var(--cell-x) * -.8) calc(var(--cell-y) * -.45)}
+}
+#forum-source-network :is(.node-layer,.three-nodes) :is(.dot,.area-heading):not([hidden]){
+  animation:forum-cell-drift var(--cell-duration,8s) ease-in-out var(--cell-delay,0s) infinite;
+}
+#forum-source-network :is(.node-layer,.three-nodes) :is(.dot,.area-heading):is(:hover,:focus-visible){
+  animation-play-state:paused;
+}
+@media (prefers-reduced-motion:reduce){
+  #forum-source-network :is(.node-layer,.three-nodes) :is(.dot,.area-heading){animation:none}
+}
