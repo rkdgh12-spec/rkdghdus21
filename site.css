@@ -43,7 +43,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 /* Keep the top bar focused on presentation navigation and viewing modes. */
 #forum-source-network .chapter-nav{display:none}
-#forum-source-network .tools>#forum-minus,#forum-source-network .tools>#forum-plus,#forum-source-network .tools>#forum-reset{display:none}
+#forum-source-network .tools>#forum-minus,#forum-source-network .tools>#forum-plus{display:none}
 #forum-source-network .tools>.epilogue-nav{color:var(--accent);font-weight:700;border-bottom:1px solid var(--accent);white-space:nowrap}
 #forum-source-network .header{padding-bottom:10px}
 @media(max-width:700px){#forum-source-network .tools>.epilogue-nav{font-size:12px}}
