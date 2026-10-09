@@ -2,11 +2,7 @@
   (()=>{
     const root=document.getElementById('forum-source-network');
     const data=window.FORUM_DATA;
-    const nodes=data.nodes;
-    const chapterOrigins=new Map(nodes.filter(n=>n.kind==='chapter').map(n=>[n.chapter,{x:n.x,y:n.y}]));
-    const layoutCenter=chapterOrigins.get(5),chapterOffsets={1:[-570,-780],2:[1080,-80],3:[380,710],4:[-1100,130],5:[0,0]};
-    for(const n of nodes){const anchor=chapterOrigins.get(n.chapter),offset=chapterOffsets[n.chapter],x=n.x,y=n.y;n.x=layoutCenter.x+offset[0]+(x-anchor.x)*.42;n.y=layoutCenter.y+offset[1]+(y-anchor.y)*.32}
-    const edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter');
+    const nodes=data.nodes,edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter');
     const coreConnections=[
       [134,147,'물질을 판단하고 사유하는 창작'],[134,150,'물질의 판단과 감각적 사고'],
       [134,148,'물질을 통해 세계를 읽는 태도'],[135,147,'물질의 성질에서 시작되는 사유'],
@@ -465,7 +461,7 @@
       const centerPoint=rawXYZ(threeCenter.x,threeCenter.y,threeHeight(threeCenter));
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
-      if(autoCentered3D){threePanX=(midx-centerPoint.x)*scale;threePanY=(midy-centerPoint.y)*scale}
+      if(autoCentered3D)threePanY=(midy-centerPoint.y)*scale;
       const project=(x,y,z=0)=>{const p=rawXYZ(x,y,z);return {x:width/2+threePanX+(p.x-midx)*scale,y:height/2+threePanY+(p.y-midy)*scale,d:p.d}};
       const pos=nodes.map(n=>project(n.x,n.y,threeHeight(n)));
       const volume=(boundary,kind,bottom,top)=>{
