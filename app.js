@@ -84,7 +84,7 @@
     const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false;
     function setDepthEnabled(enabled){
       depthEnabled=enabled;
-      if(enabled){autoCentered3D=true;threePanY=0}
+      if(enabled){autoCentered3D=true;threePanX=0;threePanY=0}
       stage.classList.toggle('three-view',enabled);
       flatPlane.hidden=enabled;threeScene.hidden=!enabled;
       depthButton.setAttribute('aria-pressed',String(enabled));
@@ -291,7 +291,7 @@
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
     function showAll(){return recordStep(()=>{const before=new Set(visible);selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fit();showDetail(null);animateNodes(before);updateCue();save()})}
     function reset(){return recordStep(()=>{selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);updateCue();save()})}
-    function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset();threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'.chapter-nav button').focus({preventScroll:true});save()})}
+    function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset();threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
     q('#enter-presentation').addEventListener('click',()=>enter('presentation'));q('#enter-explore').addEventListener('click',()=>enter('explore'));q('#enter-resume').addEventListener('click',()=>enter('resume'));
     q('#forum-home').addEventListener('click',()=>recordStep(()=>{q('.intro').hidden=false;q('.intro').inert=false;q('.map-shell').inert=true;q('#enter-resume').hidden=expanded.size===0;q('#enter-presentation').focus()}));
     q('#forum-fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await root.requestFullscreen()}catch{q('#map-status').textContent='이 브라우저에서는 전체 화면을 사용할 수 없습니다.'}});
@@ -466,7 +466,7 @@
       const centerPoint=rawXYZ(threeCenter.x,threeCenter.y,threeHeight(threeCenter));
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
-      if(autoCentered3D)threePanY=(midy-centerPoint.y)*scale;
+      if(autoCentered3D){threePanX=(midx-centerPoint.x)*scale;threePanY=(midy-centerPoint.y)*scale}
       const project=(x,y,z=0)=>{const p=rawXYZ(x,y,z);return {x:width/2+threePanX+(p.x-midx)*scale,y:height/2+threePanY+(p.y-midy)*scale,d:p.d}};
       const pos=nodes.map(n=>project(n.x,n.y,threeHeight(n)));
       const volume=(boundary,kind,bottom,top)=>{
@@ -660,7 +660,7 @@
     }
     function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,presentationMode,depthEnabled}))}catch{}}
     function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
-    new ResizeObserver(()=>{width=stage.clientWidth;height=stage.clientHeight;fit()}).observe(stage);
+    new ResizeObserver(()=>{width=stage.clientWidth;height=stage.clientHeight;if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
     fit();showDetail(null);restore();updateCue();q('#enter-resume').hidden=expanded.size===0;resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
 
