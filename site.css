@@ -47,3 +47,18 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .tools>.epilogue-nav{color:var(--accent);font-weight:700;border-bottom:1px solid var(--accent);white-space:nowrap}
 #forum-source-network .header{padding-bottom:10px}
 @media(max-width:700px){#forum-source-network .tools>.epilogue-nav{font-size:12px}}
+
+/* One compact header row, with a deliberate mobile wrap. */
+#forum-source-network .header{align-items:center;flex-wrap:nowrap;gap:14px;padding:4px 2px 8px}
+#forum-source-network .brand{display:flex;align-items:baseline;gap:12px;min-width:0;white-space:nowrap}
+#forum-source-network .brand button{flex:none}
+#forum-source-network .brand h2{margin:0;font-size:21px;line-height:1.2}
+#forum-source-network .brand .subtitle{margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:1.2}
+#forum-source-network .tools{gap:2px;flex-wrap:nowrap;flex:0 0 auto;padding:0;font-size:11px}
+#forum-source-network .tools .control{min-height:28px;padding:5px 7px;font-size:11px;line-height:1.15;white-space:nowrap}
+#forum-source-network .tools>.history-controls{gap:0;padding-right:6px;margin-right:4px}
+#forum-source-network .tools>.history-controls button{padding:5px 7px;font-size:11px;line-height:1.15}
+#forum-source-network .tools>.history-controls .history-count{display:none}
+#forum-source-network .tools>.epilogue-nav{margin-right:6px}
+@media(max-width:1050px){#forum-source-network .header{flex-wrap:wrap;gap:5px}#forum-source-network .brand{width:100%}#forum-source-network .tools{width:100%;overflow-x:auto;scrollbar-width:none}#forum-source-network .tools::-webkit-scrollbar{display:none}}
+@media(max-width:700px){#forum-source-network .header{padding:2px 0 6px}#forum-source-network .brand{gap:8px}#forum-source-network .brand h2{font-size:18px}#forum-source-network .brand .subtitle{font-size:10px}}
