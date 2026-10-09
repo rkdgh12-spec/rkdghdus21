@@ -146,7 +146,8 @@
       layer.append(b);elems.set(n.id,{b,label});
     }
     function fit(ids=null){
-      const arr=ids?nodes.filter(n=>ids.has(n.id)):nodes;
+      const initialOverview=ids===null&&expanded.size===0&&selected===null;
+      const arr=ids?nodes.filter(n=>ids.has(n.id)):initialOverview?chapters:nodes;
       const minx=Math.min(...arr.map(n=>n.x))-150,maxx=Math.max(...arr.map(n=>n.x))+190,miny=Math.min(...arr.map(n=>n.y))-100,maxy=Math.max(...arr.map(n=>n.y))+110;
       const core=nodes.find(n=>n.kind==='chapter'&&n.label==='다시, 조각으로');
       const cx=ids?(minx+maxx)/2:core.x,cy=ids?(miny+maxy)/2:core.y;
@@ -167,7 +168,7 @@
       if(['chapter','person'].includes(nodes[id].kind))for(const n of points)if(n.chapter!==nodes[id].chapter)for(const animation of elems.get(n.id).b.getAnimations())animation.cancel();
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
-      updateVisible();showDetail(nodes[id]);render();save();
+      updateVisible();if(before.size===chapters.length&&expanded.size>0)fit();showDetail(nodes[id]);render();save();
       animateNodes(before);
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
     }
@@ -453,10 +454,11 @@
       const boundaryPoints=path=>{if(path.style.display==='none')return [];const length=path.getTotalLength();if(!length)return [];return Array.from({length:64},(_,i)=>{const p=path.getPointAtLength(length*i/64);return [(p.x-ox)/k,(p.y-oy)/k]})};
       const allConnected=points.every(n=>visible.has(n.id));
       const outerBoundary=boundaryPoints(outerOutline),coreBoundary=allConnected?boundaryPoints(areas.get(threeCenter.id).region):[];
-      const base=nodes.map(n=>rawXYZ(n.x,n.y,threeHeight(n)));
-      for(const p of outerBoundary)base.push(rawXYZ(p[0],p[1],190));
-      for(const p of coreBoundary)base.push(rawXYZ(p[0],p[1],210));
-      if(outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
+      const initialOverview=expanded.size===0&&selected===null;
+      const base=(initialOverview?chapters:nodes).map(n=>rawXYZ(n.x,n.y,threeHeight(n)));
+      for(const p of initialOverview?[]:outerBoundary)base.push(rawXYZ(p[0],p[1],190));
+      for(const p of initialOverview?[]:coreBoundary)base.push(rawXYZ(p[0],p[1],210));
+      if(!initialOverview&&outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
       const minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
