@@ -26,3 +26,14 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .legend{padding:5px 0 4px;flex:0 0 auto}
 #forum-source-network .meta{padding:0 0 3px;flex:0 0 auto}
 @media(max-width:700px){#forum-source-network .map-shell{height:calc(100dvh - 16px);min-height:540px}#forum-source-network .stage,#forum-source-network .explore .stage{height:auto;min-height:300px}#forum-source-network .presentation-bar{min-height:38px}#forum-source-network .sequence-controls{min-height:28px}}
+
+/* Compact presentation footer: the stage controls remain, supporting keys and duplicate navigation stay out of the map. */
+#forum-source-network .map-shell>.presentation-bar,#forum-source-network .map-shell>.legend,#forum-source-network .map-shell>.meta{display:none}
+#forum-source-network .sequence-controls{justify-content:flex-end;min-height:38px;padding:2px 0;border-top:1px solid var(--faint)}
+#forum-source-network .sequence-controls[hidden]{display:none}
+#forum-source-network .sequence-controls>span{display:none}
+#forum-source-network .sequence-controls>div{margin-left:0;gap:16px}
+#forum-source-network .sequence-controls button{padding:7px 10px;font-size:12px;color:var(--ink)}
+#forum-source-network #sequence-count{font-variant-numeric:tabular-nums;font-size:11px;color:var(--secondary)}
+#forum-source-network .detail-panel{bottom:50px;max-height:min(60dvh,calc(100dvh - 130px))}
+@media(max-width:700px){#forum-source-network .sequence-controls{min-height:42px}#forum-source-network .detail-panel{bottom:54px;max-height:52dvh}}
