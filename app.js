@@ -460,9 +460,10 @@
       for(const p of initialOverview?[]:coreBoundary)base.push(rawXYZ(p[0],p[1],210));
       if(!initialOverview&&outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
       const minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
-      const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
+      const centerPoint=rawXYZ(threeCenter.x,threeCenter.y,threeHeight(threeCenter));
+      const scale=(initialOverview?Math.min((width-180)/(2*Math.max(...base.map(p=>Math.abs(p.x-centerPoint.x)),1)),(height-180)/(2*Math.max(...base.map(p=>Math.abs(p.y-centerPoint.y)),1)),1.35):Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35))*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
-      if(autoCentered3D)threePanY=(midy-rawXYZ(threeCenter.x,threeCenter.y,threeHeight(threeCenter)).y)*scale;
+      if(autoCentered3D)threePanY=(midy-centerPoint.y)*scale;
       const project=(x,y,z=0)=>{const p=rawXYZ(x,y,z);return {x:width/2+threePanX+(p.x-midx)*scale,y:height/2+threePanY+(p.y-midy)*scale,d:p.d}};
       const pos=nodes.map(n=>project(n.x,n.y,threeHeight(n)));
       const volume=(boundary,kind,bottom,top)=>{
