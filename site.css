@@ -62,3 +62,18 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .tools>.epilogue-nav{margin-right:6px}
 @media(max-width:1050px){#forum-source-network .header{flex-wrap:wrap;gap:5px}#forum-source-network .brand{width:100%}#forum-source-network .tools{width:100%;overflow-x:auto;scrollbar-width:none}#forum-source-network .tools::-webkit-scrollbar{display:none}}
 @media(max-width:700px){#forum-source-network .header{padding:2px 0 6px}#forum-source-network .brand{gap:8px}#forum-source-network .brand h2{font-size:18px}#forum-source-network .brand .subtitle{font-size:10px}}
+
+/* Smaller node detail card, with its contents scrollable when needed. */
+#forum-source-network .detail-panel{right:18px;bottom:48px;width:min(286px,calc(100vw - 28px));max-height:min(40dvh,360px)}
+#forum-source-network .detail-toolbar{justify-content:flex-end;padding:4px 6px 0}
+#forum-source-network .detail-toolbar .history-controls{display:none}
+#forum-source-network .detail-close{padding:5px 7px}
+#forum-source-network .detail{padding:6px 14px 14px}
+#forum-source-network .detail-title{font-size:16px;margin-bottom:7px}
+#forum-source-network .question-text{font-size:13px;line-height:1.55;margin:6px 0 10px}
+#forum-source-network .person-profile{margin:6px 0 10px}
+#forum-source-network .person-tabs{gap:12px;margin:12px 0 10px}
+#forum-source-network .person-tabs button{font-size:12px;padding-bottom:6px}
+#forum-source-network .intro-question{font-size:12px;line-height:1.55;margin-bottom:10px}
+#forum-source-network .person-video-button{padding:9px;font-size:12px}
+@media(max-width:700px){#forum-source-network .detail-panel{right:10px;left:auto;bottom:50px;width:min(280px,calc(100vw - 20px));max-height:38dvh}}
