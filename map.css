@@ -184,9 +184,9 @@
 /* Each node drifts on its own small cycle while the map geometry stays fixed. */
 @keyframes forum-cell-drift{
   0%,100%{translate:0 0}
-  25%{translate:var(--cell-x) calc(var(--cell-y) * -.65)}
-  55%{translate:calc(var(--cell-x) * -.55) var(--cell-y)}
-  78%{translate:calc(var(--cell-x) * -.8) calc(var(--cell-y) * -.45)}
+  25%{translate:var(--cell-x) var(--cell-y)}
+  55%{translate:0 var(--cell-x)}
+  78%{translate:var(--cell-y) 0}
 }
 #forum-source-network :is(.node-layer,.three-nodes) :is(.dot,.area-heading):not([hidden]){
   animation:forum-cell-drift var(--cell-duration,8s) ease-in-out var(--cell-delay,0s) infinite;
