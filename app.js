@@ -190,7 +190,7 @@
       if(direct>=0&&paths[direct].style.display!=='none')return [from,to];
       const a=ancestors(from),b=ancestors(to);let shared=0;
       while(shared<a.length&&shared<b.length&&a[shared]===b[shared])shared++;
-      return [...a.slice(shared-1).reverse(),...b.slice(shared)];
+      return [...a.slice(Math.max(0,shared-1)).reverse(),...b.slice(shared)];
     }
     function travel(points,duration,frame,done){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
