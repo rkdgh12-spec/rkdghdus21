@@ -17,3 +17,12 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #interview-play:hover{background:#000}
 #interview-video:fullscreen{width:100vw;height:100vh;object-fit:contain;background:#000}
 
+
+/* Give the network the remaining viewport height; keep the lower controls compact. */
+#forum-source-network .map-shell{display:flex;flex-direction:column;height:calc(100dvh - 22px);min-height:580px}
+#forum-source-network .stage,#forum-source-network .explore .stage{height:auto;min-height:360px;flex:1 1 auto}
+#forum-source-network .presentation-bar{min-height:40px;flex:0 0 auto}
+#forum-source-network .sequence-controls{min-height:30px;padding:0;flex:0 0 auto}
+#forum-source-network .legend{padding:5px 0 4px;flex:0 0 auto}
+#forum-source-network .meta{padding:0 0 3px;flex:0 0 auto}
+@media(max-width:700px){#forum-source-network .map-shell{height:calc(100dvh - 16px);min-height:540px}#forum-source-network .stage,#forum-source-network .explore .stage{height:auto;min-height:300px}#forum-source-network .presentation-bar{min-height:38px}#forum-source-network .sequence-controls{min-height:28px}}
