@@ -184,14 +184,6 @@
       const box=element.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
-    function connectionRoute(from,to){
-      if(from===null||from===to)return [to];
-      const direct=edges.findIndex(e=>(e.source===from&&e.target===to)||(e.source===to&&e.target===from));
-      if(direct>=0&&paths[direct].style.display!=='none')return [from,to];
-      const a=ancestors(from),b=ancestors(to);let shared=0;
-      while(shared<a.length&&shared<b.length&&a[shared]===b[shared])shared++;
-      return [...a.slice(Math.max(0,shared-1)).reverse(),...b.slice(shared)];
-    }
     function travel(points,duration,frame,done){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
@@ -219,36 +211,20 @@
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
         for(let i=0;i<2;i++){const label=selectedTextPoint(id);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
         const goal={x:threePanX,y:threePanY};threePanX=start.x;threePanY=start.y;render3D();
-        const route=connectionRoute(previous,id),points=[start];
-        const prior=previous!==null?threeProjected[previous]:null;
-        if(prior&&Math.hypot(prior.x-width/2,prior.y-height/2)<Math.min(width,height)*.7)
-          for(const rid of route){const q=threeProjected[rid];points.push({x:start.x+width/2-q.x,y:start.y+height/2-q.y})}
-        points.push(goal);
         const finish=()=>{threePanX=goal.x;threePanY=goal.y;render3D();after()};
         if(reducedMotion){finish();return}
-        travel(points,Math.min(900,450+route.length*95),p=>{threePanX=p.x;threePanY=p.y;render3D()},finish);
+        const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
+        travel([start,goal],Math.min(780,Math.max(400,400+distance*.28)),p=>{threePanX=p.x;threePanY=p.y;render3D()},finish);
         return;
       }
       const start={x:ox,y:oy},node=nodes[id];
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
       for(let i=0;i<2;i++){const label=selectedTextPoint(id);ox+=width/2-label.x;oy+=height/2-label.y;render()}
       const goal={x:ox,y:oy};ox=start.x;oy=start.y;render();
-      const route=connectionRoute(previous,id),points=[{x:(width/2-ox)/k,y:(height/2-oy)/k}];
-      const prior=previous!==null?nodes[previous]:null;
-      if(prior&&Math.hypot(prior.x*k+ox-width/2,prior.y*k+oy-height/2)<Math.min(width,height)*.7){
-        for(let i=0;i<route.length;i++){
-          const from=route[i-1],to=route[i];if(from===undefined){points.push({x:nodes[to].x,y:nodes[to].y});continue}
-          const edgeIndex=edges.findIndex(e=>(e.source===from&&e.target===to)||(e.source===to&&e.target===from)),path=paths[edgeIndex];
-          if(edgeIndex>=0&&path.style.display!=='none'){
-            const length=path.getTotalLength(),forward=edges[edgeIndex].source===from;
-            for(let j=1;j<=5;j++){const q=path.getPointAtLength(length*(forward?j/5:1-j/5));points.push({x:(q.x-ox)/k,y:(q.y-oy)/k})}
-          }else points.push({x:nodes[to].x,y:nodes[to].y});
-        }
-      }
-      points.push({x:(width/2-goal.x)/k,y:(height/2-goal.y)/k});
       const finish=()=>{ox=goal.x;oy=goal.y;render();after()};
       if(reducedMotion){finish();return}
-      travel(points,Math.min(900,450+route.length*95),p=>{ox=width/2-p.x*k;oy=height/2-p.y*k;render()},finish);
+      const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
+      travel([start,goal],Math.min(780,Math.max(400,400+distance*.28)),p=>{ox=p.x;oy=p.y;render()},finish);
     }
     function showDetail(n,openQuestion=true){
       if(!n){panel.hidden=true;detail.hidden=true;detail.innerHTML='';return}
