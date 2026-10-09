@@ -64,16 +64,16 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 @media(max-width:700px){#forum-source-network .header{padding:2px 0 6px}#forum-source-network .brand{gap:8px}#forum-source-network .brand h2{font-size:18px}#forum-source-network .brand .subtitle{font-size:10px}}
 
 /* Smaller node detail card, with its contents scrollable when needed. */
-#forum-source-network .detail-panel{right:18px;bottom:48px;width:min(286px,calc(100vw - 28px));max-height:min(40dvh,360px)}
+#forum-source-network .detail-panel{right:14px;bottom:44px;width:min(232px,calc(100vw - 24px));max-height:min(30dvh,250px)}
 #forum-source-network .detail-toolbar{justify-content:flex-end;padding:4px 6px 0}
 #forum-source-network .detail-toolbar .history-controls{display:none}
 #forum-source-network .detail-close{padding:5px 7px}
-#forum-source-network .detail{padding:6px 14px 14px}
-#forum-source-network .detail-title{font-size:16px;margin-bottom:7px}
+#forum-source-network .detail{padding:5px 11px 11px}
+#forum-source-network .detail-title{font-size:15px;margin-bottom:5px}
 #forum-source-network .question-text{font-size:13px;line-height:1.55;margin:6px 0 10px}
 #forum-source-network .person-profile{margin:6px 0 10px}
 #forum-source-network .person-tabs{gap:12px;margin:12px 0 10px}
 #forum-source-network .person-tabs button{font-size:12px;padding-bottom:6px}
 #forum-source-network .intro-question{font-size:12px;line-height:1.55;margin-bottom:10px}
 #forum-source-network .person-video-button{padding:9px;font-size:12px}
-@media(max-width:700px){#forum-source-network .detail-panel{right:10px;left:auto;bottom:50px;width:min(280px,calc(100vw - 20px));max-height:38dvh}}
+@media(max-width:700px){#forum-source-network .detail-panel{right:8px;left:auto;bottom:46px;width:min(220px,calc(100vw - 16px));max-height:30dvh}}
