@@ -113,7 +113,7 @@
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
-    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>recordStep(()=>{showAll();openEpilogue(0)}));q('.tools').append(epilogueNav);
+    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>recordStep(()=>{showAll();openEpilogue(0)}));q('.tools').insertBefore(epilogueNav,depthButton);
     epilogueQuestions.forEach((n,index)=>{const tab=document.createElement('button');tab.type='button';tab.id='epilogue-person-'+index;tab.textContent=n.person;tab.setAttribute('role','tab');tab.setAttribute('aria-controls','interview-content');tab.addEventListener('click',()=>openEpilogue(index));tab.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?epilogueQuestions.length-1:(index+(e.key==='ArrowRight'?1:epilogueQuestions.length-1))%epilogueQuestions.length;openEpilogue(next);q('#epilogue-person-'+next).focus()});q('#epilogue-people').append(tab)});
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
