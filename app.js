@@ -66,6 +66,9 @@
       const kind=nodes[source].kind==='question'?'question-related':'semantic';
       edges.push({source,target,kind,core:true,reason});edgeKeys.add(key);
     }
+    const crossChapterPairs=new Map(),thinnedCrossEdges=new Set();
+    edges.forEach((e,i)=>{const a=nodes[e.source],b=nodes[e.target];if(e.kind==='hierarchy'||a.chapter===b.chapter||a.chapter===5||b.chapter===5)return;const pair=[a.chapter,b.chapter].sort((x,y)=>x-y).join('-');if(!crossChapterPairs.has(pair))crossChapterPairs.set(pair,[]);crossChapterPairs.get(pair).push(i)});
+    for(const pairEdges of crossChapterPairs.values())pairEdges.forEach((i,j)=>{if(j%2===1)thinnedCrossEdges.add(i)});
     const chapters=nodes.filter(n=>n.kind==='chapter'),points=nodes.filter(n=>n.kind!=='chapter');
     const stage=root.querySelector('.stage'),svg=root.querySelector('.wires'),layer=root.querySelector('.node-layer'),detail=root.querySelector('.detail');
     const kindNames={chapter:'주제 영역',person:'인물',concept:'개념어',subconcept:'하위개념어',question:'인터뷰 질문'};
@@ -472,7 +475,8 @@
       let pastLinks='',crossLinks='',currentLinks='';
       for(const [i,e] of edges.entries()){
         if(!visible.has(e.source)||!visible.has(e.target))continue;
-        const path=paths[i],length=path.getTotalLength();if(!length)continue;
+        const path=paths[i];if(path.style.display==='none')continue;
+        const length=path.getTotalLength();if(!length)continue;
         const start=nodes[e.source],end=nodes[e.target],a=threeHeight(start),b=threeHeight(end);
         const samples=Array.from({length:13},(_,j)=>{const t=j/12,p=path.getPointAtLength(length*t);return project((p.x-ox)/k,(p.y-oy)/k,a+(b-a)*t)});
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
@@ -529,7 +533,7 @@
       stage.classList.toggle('core-chapter-hover',hoverChapter!==null&&nodes[hoverChapter].chapter===5);
       const connectedQuestions=new Set();
       edges.forEach((e,i)=>{
-        const l=paths[i],a=nodes[e.source],b=nodes[e.target],shown=visible.has(e.source)&&visible.has(e.target);
+        const l=paths[i],a=nodes[e.source],b=nodes[e.target],shown=visible.has(e.source)&&visible.has(e.target)&&!(allConnected&&thinnedCrossEdges.has(i));
         const linkedMeaning=e.kind!=='hierarchy'&&(e.source===emphasis||e.target===emphasis);
         if(shown&&linkedMeaning){if(a.kind==='question')connectedQuestions.add(e.source);if(b.kind==='question')connectedQuestions.add(e.target)}
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
