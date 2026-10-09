@@ -439,6 +439,11 @@
       if(n.kind!=='question')b.setAttribute('aria-expanded','false');
       b.addEventListener('pointerdown',e=>{if(e.button!==1)e.stopPropagation()});b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',()=>select(n.id));threeLayer.append(b);threeNodes.set(n.id,b);
     }
+    for(const n of nodes){
+      const phase=n.id*2.39996,amplitude=n.kind==='chapter'?1.5:n.kind==='person'?1.3:1.05;
+      const targets=n.kind==='chapter'?[areas.get(n.id).heading,threeNodes.get(n.id)]:[elems.get(n.id).b,threeNodes.get(n.id)];
+      for(const element of targets){element.style.setProperty('--cell-x',(Math.cos(phase)*amplitude).toFixed(2)+'px');element.style.setProperty('--cell-y',(Math.sin(phase)*amplitude).toFixed(2)+'px');element.style.setProperty('--cell-duration',(6.4+(n.id*37%39)/10).toFixed(1)+'s');element.style.setProperty('--cell-delay',(-((n.id*73)%760)/100).toFixed(2)+'s')}
+    }
     function render3D(){
       if(!depthEnabled)return;
       const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
