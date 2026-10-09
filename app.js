@@ -81,9 +81,10 @@
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
-    const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0;
+    const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false;
     function setDepthEnabled(enabled){
       depthEnabled=enabled;
+      if(enabled){autoCentered3D=true;threePanY=0}
       stage.classList.toggle('three-view',enabled);
       flatPlane.hidden=enabled;threeScene.hidden=!enabled;
       depthButton.setAttribute('aria-pressed',String(enabled));
@@ -150,7 +151,7 @@
       const core=nodes.find(n=>n.kind==='chapter'&&n.label==='다시, 조각으로');
       const cx=ids?(minx+maxx)/2:core.x,cy=ids?(miny+maxy)/2:core.y;
       const rx=Math.max(cx-minx,maxx-cx),ry=Math.max(cy-miny,maxy-cy);
-      k=Math.min((width-36)/(2*rx),(height-48)/(2*ry),1.9);fitK=k;ox=width/2-cx*k;oy=height*(ids===null&&expanded.size===0 ? 0.4 : 0.5)-cy*k;render();
+      k=Math.min((width-36)/(2*rx),(height-48)/(2*ry),1.9);fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
     }
     function updateVisible(){
       visible=new Set(chapters.map(n=>n.id));
@@ -290,7 +291,7 @@
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
     function showAll(){return recordStep(()=>{const before=new Set(visible);selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fit();showDetail(null);animateNodes(before);updateCue();save()})}
     function reset(){return recordStep(()=>{selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);updateCue();save()})}
-    function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset();threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;threePanY=-height*.1;fit()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'.chapter-nav button').focus({preventScroll:true});save()})}
+    function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset();threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'.chapter-nav button').focus({preventScroll:true});save()})}
     q('#enter-presentation').addEventListener('click',()=>enter('presentation'));q('#enter-explore').addEventListener('click',()=>enter('explore'));q('#enter-resume').addEventListener('click',()=>enter('resume'));
     q('#forum-home').addEventListener('click',()=>recordStep(()=>{q('.intro').hidden=false;q('.intro').inert=false;q('.map-shell').inert=true;q('#enter-resume').hidden=expanded.size===0;q('#enter-presentation').focus()}));
     q('#forum-fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await root.requestFullscreen()}catch{q('#map-status').textContent='이 브라우저에서는 전체 화면을 사용할 수 없습니다.'}});
@@ -459,6 +460,7 @@
       const minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
+      if(autoCentered3D)threePanY=(midy-rawXYZ(threeCenter.x,threeCenter.y,threeHeight(threeCenter)).y)*scale;
       const project=(x,y,z=0)=>{const p=rawXYZ(x,y,z);return {x:width/2+threePanX+(p.x-midx)*scale,y:height/2+threePanY+(p.y-midy)*scale,d:p.d}};
       const pos=nodes.map(n=>project(n.x,n.y,threeHeight(n)));
       const volume=(boundary,kind,bottom,top)=>{
@@ -632,8 +634,8 @@
     stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0014),e.clientX-r.left,e.clientY-r.top)},{passive:false});
     const pointers=new Map();let pinch=null,framePending=false;
     function scheduleRender(){if(framePending)return;framePending=true;requestAnimationFrame(()=>{framePending=false;render()})}
-    stage.addEventListener('wheel',()=>{if(depthEnabled)lastManual3D=performance.now()},{capture:true,passive:true});
-    stage.addEventListener('pointerdown',()=>{if(depthEnabled)lastManual3D=performance.now()},true);
+    stage.addEventListener('wheel',()=>{if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
+    stage.addEventListener('pointerdown',()=>{if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},true);
     stage.addEventListener('pointermove',()=>{if(depthEnabled&&pointers.size)lastManual3D=performance.now()},true);
     stage.addEventListener('pointerdown',e=>{if(e.button!==0&&!(depthEnabled&&e.button===1))return;if(depthEnabled)e.preventDefault();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});stage.setPointerCapture(e.pointerId);if(pointers.size===1)drag={x:e.clientX,y:e.clientY,ox,oy,panX:threePanX,panY:threePanY,rotate:depthEnabled&&e.button===1};else if(pointers.size===2){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;pinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),k:depthEnabled?threeZoom:k,wx:(cx-ox)/k,wy:(cy-oy)/k,cx,cy,panX:threePanX,panY:threePanY};drag=null}});
     stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const previous=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(depthEnabled){if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;threeZoom=Math.max(.45,Math.min(maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));const ratio=threeZoom/pinch.k;threePanX=pinch.panX+cx-pinch.cx-(pinch.cx-width/2)* (ratio-1)+pinch.panX*(ratio-1);threePanY=pinch.panY+cy-pinch.cy-(pinch.cy-height/2)*(ratio-1)+pinch.panY*(ratio-1);scheduleRender()}else if(drag?.rotate){threeYaw+=(e.clientX-previous.x)*.006;threeElevation=Math.max(.28,Math.min(1.45,threeElevation-(e.clientY-previous.y)*.005));scheduleRender()}else if(drag){threePanX=drag.panX+e.clientX-drag.x;threePanY=drag.panY+e.clientY-drag.y;scheduleRender()}return}if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect();k=Math.max(fitK*.45,Math.min(fitK*maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));ox=(a.x+b.x)/2-r.left-pinch.wx*k;oy=(a.y+b.y)/2-r.top-pinch.wy*k;scheduleRender()}else if(drag){ox=drag.ox+e.clientX-drag.x;oy=drag.oy+e.clientY-drag.y;scheduleRender()}});
@@ -651,7 +653,7 @@
       idleYaw=yaw;idleElevation=elevation;render3D();
     }
     function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,presentationMode,depthEnabled}))}catch{}}
-    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
+    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
     new ResizeObserver(()=>{width=stage.clientWidth;height=stage.clientHeight;fit()}).observe(stage);
     fit();showDetail(null);restore();updateCue();q('#enter-resume').hidden=expanded.size===0;resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
