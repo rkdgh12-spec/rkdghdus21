@@ -466,6 +466,11 @@
       if(autoCentered3D)threePanY=(midy-centerPoint.y)*scale;
       const project=(x,y,z=0)=>{const p=rawXYZ(x,y,z);return {x:width/2+threePanX+(p.x-midx)*scale,y:height/2+threePanY+(p.y-midy)*scale,d:p.d}};
       const pos=nodes.map(n=>project(n.x,n.y,threeHeight(n)));
+      if(initialOverview){
+        const center=pos[threeCenter.id],spanX=Math.max(1,...chapters.map(n=>Math.abs(pos[n.id].x-center.x))),spanY=Math.max(1,...chapters.map(n=>Math.abs(pos[n.id].y-center.y)));
+        const reachX=width/2-Math.min(170,width*.14),reachY=height/2-Math.min(105,height*.17);
+        for(const n of chapters)pos[n.id]={...pos[n.id],x:width/2+(pos[n.id].x-center.x)/spanX*reachX,y:height/2+(pos[n.id].y-center.y)/spanY*reachY};
+      }
       const volume=(boundary,kind,bottom,top)=>{
         if(!boundary.length)return '';
         const cx=threeCenter.x,cy=threeCenter.y;
@@ -572,7 +577,10 @@
       q('.counts').textContent=expanded.size===0?'제목을 누르면 인물이 나타납니다.':'제목 → 인물 → 개념어 → 하위개념어 → 인터뷰 질문';
       q('.chapter-nav').querySelectorAll('[data-chapter]').forEach(b=>b.setAttribute('aria-current',String(selected!==null&&nodes[selected].chapter===nodes[Number(b.dataset.chapter)].chapter)));
       for(const c of chapters){
-        const {region,heading,members}=areas.get(c.id),x=c.x*k+ox,y=c.y*k+oy;
+        const opening=expanded.size===0&&selected===null,center=chapters.find(n=>n.chapter===5);
+        const spanX=Math.max(1,...chapters.map(n=>Math.abs(n.x-center.x))),spanY=Math.max(1,...chapters.map(n=>Math.abs(n.y-center.y)));
+        const reachX=width/2-Math.min(170,width*.14),reachY=height/2-Math.min(105,height*.17);
+        const {region,heading,members}=areas.get(c.id),x=opening?width/2+(c.x-center.x)/spanX*reachX:c.x*k+ox,y=opening?height/2+(c.y-center.y)/spanY*reachY:c.y*k+oy;
         heading.classList.toggle('selected',selected===c.id);heading.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);heading.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);region.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);region.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';
         const w=heading.offsetWidth,h=heading.offsetHeight;
         const box={x:x-w/2,y:y-h/2,w,h};heading.style.left=box.x+'px';heading.style.top=box.y+'px';
