@@ -37,3 +37,6 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network #sequence-count{font-variant-numeric:tabular-nums;font-size:11px;color:var(--secondary)}
 #forum-source-network .detail-panel{bottom:50px;max-height:min(60dvh,calc(100dvh - 130px))}
 @media(max-width:700px){#forum-source-network .sequence-controls{min-height:42px}#forum-source-network .detail-panel{bottom:54px;max-height:52dvh}}
+
+/* Hide the drag instruction along the map's lower edge. */
+#forum-source-network .depth-hint{display:none!important}
