@@ -167,7 +167,9 @@
       if(['chapter','person'].includes(nodes[id].kind))for(const n of points)if(n.chapter!==nodes[id].chapter)for(const animation of elems.get(n.id).b.getAnimations())animation.cancel();
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
-      updateVisible();showDetail(nodes[id]);render();save();
+      updateVisible();showDetail(nodes[id]);
+      if(depthEnabled){autoCentered3D=true;lastManual3D=performance.now()}else{ox=width/2-nodes[id].x*k;oy=height/2-nodes[id].y*k}
+      render();save();
       animateNodes(before);
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
     }
@@ -322,7 +324,7 @@
         k=s.camera.k;ox=width/2-s.camera.x*k;oy=height/2-s.camera.y*k;
         showDetail(s.panelOpen&&selected!==null?nodes[selected]:null,false);
         if(s.panelOpen&&nodes[selected]?.kind==='person')detail.querySelector('[data-person-tab="'+s.personTab+'"]')?.click();
-        q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);render();updateCue();animateNodes(before);panel.scrollTop=s.panelScroll;
+        q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);if(depthEnabled)autoCentered3D=true;render();updateCue();animateNodes(before);panel.scrollTop=s.panelScroll;
         if(s.interview){const item=s.interview.kind==='epilogue'?epilogueQuestions.find(n=>n.id===s.interview.id):s.interview.kind==='introduction'?introduction(points.find(n=>n.kind==='person'&&n.label===s.interview.person)):nodes[s.interview.id];if(item){openInterview(item,s.interview.mode);dialog.scrollTop=s.dialogScroll}}
         save();
       }finally{restoringStep=false;updateStepControls()}
@@ -463,7 +465,8 @@
       for(const p of coreBoundary)base.push(rawXYZ(p[0],p[1],210));
       if(outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
       const minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
-      const centerPoint=rawXYZ(threeCenter.x,threeCenter.y,threeHeight(threeCenter));
+      const cameraNode=selected!==null?nodes[selected]:threeCenter;
+      const centerPoint=rawXYZ(cameraNode.x,cameraNode.y,threeHeight(cameraNode));
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
       if(autoCentered3D){threePanX=(midx-centerPoint.x)*scale;threePanY=(midy-centerPoint.y)*scale}
