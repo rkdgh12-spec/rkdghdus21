@@ -413,13 +413,13 @@
           const d=path.getAttribute('d');if(!d)continue;
           const index=Number(path.dataset.edgeIndex),edge=edges[index],length=path.getTotalLength();if(!edge||!length)continue;
           const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
-          echo.style.setProperty('animation','none','important');echo.style.setProperty('stroke','#078694','important');echo.style.setProperty('opacity','0','important');
+          echo.style.setProperty('animation','none','important');echo.style.setProperty('stroke','#006b78','important');echo.style.setProperty('opacity','0','important');
           epilogueEchoes.set(index,echo);
           const child=route.parentEdge[edge.source]===index?edge.source:route.parentEdge[edge.target]===index?edge.target:-1;
           if(child<0){epilogueEchoes.delete(index);continue}
           if(child>=0){
             const parent=route.parentNode[child],start=route.arrival[parent]+(parent===threeCenter.id?route.branchDelay[child]:0);
-            echo.classList.add('trace');echo.style.setProperty('stroke-width','2.7','important');echo.style.strokeDasharray=`${length} ${length}`;
+            echo.classList.add('trace');echo.style.setProperty('stroke-width','1.8','important');echo.style.strokeDasharray=`${length} ${length}`;
             routeViews.push({echo,trace:true,length,reverse:edge.target===parent,start,duration:Math.max(440,route.arrival[child]-start)});
           }else{echo.style.setProperty('stroke-width','1.6','important');routeViews.push({echo,trace:false,start:Math.max(route.arrival[edge.source],route.arrival[edge.target])+(index*71%420)})}
           overlay.append(echo);
