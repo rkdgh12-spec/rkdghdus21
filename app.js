@@ -316,11 +316,12 @@
           echo.style.setProperty('--epi-delay',((index*47)%390)+'ms');overlay.append(echo);index++;
         }
         stage.append(overlay);
-        await new Promise(resolve=>setTimeout(resolve,3650));
+        await new Promise(resolve=>setTimeout(resolve,3700));
+        if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
         overlay.remove();
       }
       epilogueTransitioning=false;
-      if(motion===cameraMotion)openEpilogue();
+      if(reducedMotion&&motion===cameraMotion)openEpilogue();
     }
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
     function openInterviewStep(n,mode='person'){
