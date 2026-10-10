@@ -1,5 +1,12 @@
 // Add published video URLs by person/question key. Q1 is the self-introduction.
 window.FORUM_MEDIA = {
+  "epilogue/film": {
+    "title": "조소과 교육의 앞으로",
+    "src": "",
+    "poster": "",
+    "captions": [],
+    "transcript": ""
+  },
   "최고은/Q4": {
     "title": "",
     "src": "",
@@ -498,4 +505,5 @@ window.FORUM_MEDIA = {
     "transcript": ""
   }
 };
+
 
