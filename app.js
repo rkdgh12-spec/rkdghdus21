@@ -500,12 +500,14 @@
           echo.style.setProperty('animation','none','important');echo.style.setProperty('stroke','#006b78','important');echo.style.setProperty('opacity','0','important');
           epilogueEchoes.set(index,echo);
           const child=route.parentEdge[edge.source]===index?edge.source:route.parentEdge[edge.target]===index?edge.target:-1;
-          if(child<0){epilogueEchoes.delete(index);continue}
-          if(child>=0){
-            const parent=route.parentNode[child],start=route.arrival[parent]+(parent===threeCenter.id?route.branchDelay[child]:0);
-            echo.classList.add('trace');echo.style.setProperty('stroke-width','1.8','important');echo.style.strokeDasharray=`${length} ${length}`;
-            routeViews.push({echo,trace:true,length,reverse:edge.target===parent,start,duration:Math.max(440,route.arrival[child]-start)});
-          }else{echo.style.setProperty('stroke-width','1.6','important');routeViews.push({echo,trace:false,start:Math.max(route.arrival[edge.source],route.arrival[edge.target])+(index*71%420)})}
+          const parent=child>=0?route.parentNode[child]:route.arrival[edge.source]<=route.arrival[edge.target]?edge.source:edge.target;
+          const start=child>=0
+            ?route.arrival[parent]+(parent===threeCenter.id?route.branchDelay[child]:0)
+            :Math.max(route.arrival[edge.source],route.arrival[edge.target])+120+(index*71%420);
+          echo.classList.add('trace');
+          echo.style.setProperty('stroke-width',child>=0?'1.8':'1.35','important');
+          echo.style.strokeDasharray=`${length} ${length}`;
+          routeViews.push({echo,trace:true,length,reverse:edge.target===parent,start,duration:child>=0?Math.max(440,route.arrival[child]-start):620});
           overlay.append(echo);
         }
         epilogueOrigin=document.createElementNS(NS,'circle');epilogueOrigin.setAttribute('class','epilogue-origin');const center=depthEnabled?threeProjected[threeCenter.id]:{x:threeCenter.x*k+ox,y:threeCenter.y*k+oy};epilogueOrigin.setAttribute('cx',center.x);epilogueOrigin.setAttribute('cy',center.y);epilogueOrigin.setAttribute('r','6');overlay.append(epilogueOrigin);
