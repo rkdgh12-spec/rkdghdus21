@@ -360,7 +360,7 @@
         const zoomSteps=Math.abs(Math.log2(goal.zoom/start.zoom));
         const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
         if(wideTransit){
-          const overviewZoom=chapterTransit ? .62 : .72;
+          const overviewZoom=chapterTransit ? 1 : .72;
           const anchorAt=zoom=>{
             const ratio=zoom/start.zoom;
             return {x:startFocus.x-width/2-(startFocus.x-width/2-start.x)*ratio,y:startFocus.y-height/2-(startFocus.y-height/2-start.y)*ratio};
