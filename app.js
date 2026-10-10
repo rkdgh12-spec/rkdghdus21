@@ -483,7 +483,7 @@
       if(!dialog.open){
         const reference=q('#sequence-next').getBoundingClientRect(),nextButton=q('#interview-stage-next');
         nextButton.style.right=Math.max(0,document.documentElement.clientWidth-reference.right)+'px';
-        nextButton.style.bottom=Math.max(0,window.innerHeight-reference.bottom)+'px';
+        nextButton.style.bottom=Math.max(0,window.innerHeight-reference.bottom-window.scrollY)+'px';
         dialog.showModal();
         if(!reducedMotion)dialog.animate([{opacity:0},{opacity:1}],{duration:240,easing:'ease-out'});
       }
