@@ -126,7 +126,8 @@
           if(!question)throw new Error('강연 순서에 없는 질문: '+name+' '+questionLabel);
           for(const id of ancestors(question.id).slice(2)){
             const n=nodes[id];
-            cues.push({id,label:name+' · '+(n.kind==='question'?n.label+' '+n.topic:n.label)});
+            if(n.kind==='subconcept')continue;
+            cues.push({id,label:name+' · '+(n.kind==='question'?nodes[n.parent].label+' · '+n.label+' '+n.topic:n.label)});
           }
         }
       }
@@ -134,7 +135,7 @@
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
     const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:6800)});q('.tools').insertBefore(epilogueNav,depthButton);
-    const quickStep=document.createElement('button');quickStep.type='button';quickStep.className='control quick-step';quickStep.textContent='87단계로 이동 · 임시';quickStep.title='87단계로 바로 이동';quickStep.addEventListener('click',()=>runCue(86));q('.tools').insertBefore(quickStep,epilogueNav);
+    const quickStep=document.createElement('button');quickStep.type='button';quickStep.className='control quick-step';quickStep.textContent='전체 연결 직전 · 임시';quickStep.title='마지막 인터뷰 단계로 바로 이동';quickStep.addEventListener('click',()=>runCue(cues.findIndex(c=>c.all)-1));q('.tools').insertBefore(quickStep,epilogueNav);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
     for(const c of [...chapters].sort((a,b)=>(a.chapter===5)-(b.chapter===5))){
