@@ -78,7 +78,7 @@
     const children=id=>nodes.filter(n=>n.parent===id);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elems=new Map(),paths=[],areas=new Map();
-    let guidedStep=false,activeRoute=null;
+    let guidedStep=false,activeRoute=null,fullReveal=null;
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
@@ -201,7 +201,7 @@
           const orbit=Math.sin(Math.PI*t);
           threeYaw=start3D.yaw+(goal.yaw-start3D.yaw)*ease+orbit*.55;threeElevation=start3D.elevation+(goal.elevation-start3D.elevation)*ease-orbit*.32;threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*ease;
           threePanX=start3D.x+(goal.x-start3D.x)*ease;threePanY=start3D.y+(goal.y-start3D.y)*ease;lastManual3D=now;render3D();
-          if(t<1)requestAnimationFrame(tick);else{stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
+          if(t<1)requestAnimationFrame(tick);else{fullReveal=null;render3D();stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
         requestAnimationFrame(tick);return;
       }
       const goal={k,ox,oy};k=start2D.k;ox=start2D.ox;oy=start2D.oy;render();
@@ -220,6 +220,7 @@
     }
     function select(id){return recordStep(()=>selectStep(id))}
     function selectStep(id){
+      fullReveal=null;
       const previous=selected,before=new Set(visible);selected=id;
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
       if(guided)for(const line of paths)for(const animation of line.getAnimations())animation.cancel();
@@ -373,12 +374,14 @@
     }
     function stopVideo(){exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
     function openEpilogue(){openInterview(epilogueFilm,'epilogue')}
-    let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null;
+    let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null,epilogueContours=null;
     function syncEpilogueOverlay(){
       if(!epilogueOverlay||!epilogueEchoes)return;
       epilogueOverlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
       const projected=depthEnabled?new Map([...threeSvg.querySelectorAll('.links[data-edge-index]')].map(path=>[Number(path.dataset.edgeIndex),path])):null;
       for(const [index,echo] of epilogueEchoes){const path=projected?projected.get(index):paths[index];if(path)echo.setAttribute('d',path.getAttribute('d'))}
+      const contour=depthEnabled?threeSvg.querySelector('.three-volume.outer'):outerOutline;
+      if(contour&&epilogueContours)for(const echo of epilogueContours)echo.setAttribute('d',contour.getAttribute('d'));
     }
     async function transitionToEpilogue(){
       if(epilogueTransitioning)return;
@@ -389,6 +392,9 @@
         const wash=document.createElement('div');wash.className='epilogue-wash';wash.setAttribute('aria-hidden','true');
         const source=depthEnabled?threeSvg:svg;
         epilogueOverlay=overlay;epilogueEchoes=new Map();
+        const contour=depthEnabled?threeSvg.querySelector('.three-volume.outer'):outerOutline;
+        epilogueContours=[];
+        if(contour?.getAttribute('d'))for(let i=0;i<2;i++){const echo=document.createElementNS(NS,'path');echo.setAttribute('d',contour.getAttribute('d'));echo.setAttribute('class','epilogue-contour'+(i?' second':''));overlay.append(echo);epilogueContours.push(echo)}
         const reach=Math.hypot(width/2,height/2);
         for(const path of source.querySelectorAll('.links')){
           if(getComputedStyle(path).display==='none')continue;
@@ -402,7 +408,7 @@
         stage.append(wash,overlay);
         await new Promise(resolve=>setTimeout(resolve,6300));
         if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
-        overlay.remove();wash.remove();if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null}
+        overlay.remove();wash.remove();if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null;epilogueContours=null}
       }
       epilogueTransitioning=false;
       if(reducedMotion&&motion===cameraMotion)openEpilogue();
@@ -478,7 +484,7 @@
         updateCue();save();transitionToEpilogue();return;
       }
       if(cue.all||cue.epilogue){
-        cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible);selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save();
+        cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible);selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=depthEnabled&&!reducedMotion?{before,start:performance.now(),radius:Math.max(...points.map(n=>Math.hypot(n.x-threeCenter.x,n.y-threeCenter.y)))}:null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save();
         if(cue.epilogue)transitionToEpilogue();
         return;
       }
@@ -493,7 +499,7 @@
       updateCue();
     }
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
-    function showAll(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible);selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
+    function showAll(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible);selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=depthEnabled&&!reducedMotion?{before,start:performance.now(),radius:Math.max(...points.map(n=>Math.hypot(n.x-threeCenter.x,n.y-threeCenter.y)))}:null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
     function reset(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);updateCue();save()})}
     function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset();threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
     q('#enter-presentation').addEventListener('click',()=>enter('presentation'));q('#enter-explore').addEventListener('click',()=>enter('explore'));q('#enter-resume').addEventListener('click',()=>enter('resume'));
@@ -650,6 +656,10 @@
     }
     function render3D(){
       if(!depthEnabled)return;
+      const reveal=fullReveal&&performance.now()-fullReveal.start<3100?fullReveal:null;
+      const revealAmount=(x,y)=>{if(!reveal)return 1;const distance=Math.hypot(x-threeCenter.x,y-threeCenter.y)/reveal.radius;const delay=Math.min(1850,distance*1850);const t=Math.max(0,Math.min(1,(performance.now()-reveal.start-delay)/700));return t*t*(3-2*t)};
+      const nodeReveal=n=>!reveal||reveal.before.has(n.id)?1:revealAmount(n.x,n.y);
+      const setRevealOpacity=(element,n)=>{if(reveal&&!reveal.before.has(n.id))element.style.setProperty('opacity',String(nodeReveal(n)),'important');else element.style.removeProperty('opacity')};
       const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
@@ -685,7 +695,7 @@
       let ground=`<defs><radialGradient id="three-outer-shade" cx="35%" cy="28%" r="78%"><stop offset="0" style="stop-color:var(--secondary);stop-opacity:.01"/><stop offset="1" style="stop-color:var(--secondary);stop-opacity:.08"/></radialGradient><radialGradient id="three-core-shade" cx="33%" cy="25%" r="76%"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.03"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:.15"/></radialGradient></defs>`,stems='';
       ground+=volume(outerBoundary,'outer',-110,510);
       if(allConnected)ground+=volume(coreBoundary,'core',-45,450);
-       for(const n of points){if(!visible.has(n.id))continue;const a=pos[n.id],b=project(n.x,n.y);stems+=`<path class="three-stem${activeChapter!==null&&n.chapter!==activeChapter?' chapter-past':''}${focusedPerson!==null&&n.chapter!==personChapter?' person-other-chapter':''}" d="M${a.x},${a.y}L${b.x},${b.y}"/>`}
+       for(const n of points){if(!visible.has(n.id))continue;const a=pos[n.id],b=project(n.x,n.y),opacity=nodeReveal(n);stems+=`<g opacity="${opacity}"><path class="three-stem${activeChapter!==null&&n.chapter!==activeChapter?' chapter-past':''}${focusedPerson!==null&&n.chapter!==personChapter?' person-other-chapter':''}" d="M${a.x},${a.y}L${b.x},${b.y}"/></g>`}
       let pastLinks='',crossLinks='',currentLinks='';
       for(const [i,e] of edges.entries()){
         if(!visible.has(e.source)||!visible.has(e.target))continue;
@@ -694,7 +704,8 @@
         const start=nodes[e.source],end=nodes[e.target],a=threeHeight(start),b=threeHeight(end);
         const samples=Array.from({length:13},(_,j)=>{const t=j/12,p=path.getPointAtLength(length*t);return project((p.x-ox)/k,(p.y-oy)/k,a+(b-a)*t)});
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
-        const markup=`<path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"/>`;
+        const opacity=reveal&&(!reveal.before.has(e.source)||!reveal.before.has(e.target))?revealAmount((start.x+end.x)/2,(start.y+end.y)/2):1;
+        const markup=`<g opacity="${opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"/></g>`;
         if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-past'))pastLinks+=markup;
         else if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-cross'))crossLinks+=markup;
         else currentLinks+=markup;
@@ -712,12 +723,12 @@
         const positions=[[p.x,p.y]];for(const distance of [24,48,72,96])positions.push([p.x+ux*distance,p.y+uy*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+uy*distance,p.y-ux*distance]);
         let chosen=null;for(const [x,y] of positions){const box={x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16};if(box.x<8||box.y<8||box.x+box.w>width-8||box.y+box.h>height-8)continue;if(boxes.every(other=>separated(box,other,8))){chosen={x,y,box};break}}
         if(!chosen){const x=Math.max(w/2+8,Math.min(width-w/2-8,p.x)),y=Math.max(h/2+8,Math.min(height-h/2-8,p.y));chosen={x,y,box:{x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16}}}
-        b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';b.style.zIndex=String(Math.round(10000-p.d));boxes.push(chosen.box);
+        b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
       }
       const labelPriority=n=>n.id===selected?0:n.kind==='person'?1:n.kind==='concept'?2:selectedBranch.has(n.id)?3:connectedQuestions.has(n.id)?4:n.kind==='subconcept'?5:6;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
-        b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
+        b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));setRevealOpacity(b,n);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='block';label.style.width='max-content';const lw=label.offsetWidth,lh=label.offsetHeight,candidates=[];
         for(const gap of [10,18,26,36,50,66]){const diagonal=gap*.71;candidates.push([x+gap,y-lh/2],[x-lw-gap,y-lh/2],[x-lw/2,y+gap],[x-lw/2,y-lh-gap],[x+diagonal,y+diagonal],[x-lw-diagonal,y+diagonal],[x+diagonal,y-lh-diagonal],[x-lw-diagonal,y-lh-diagonal])}
         let choice=null;for(const [lx,ly] of candidates){const box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}}
