@@ -133,7 +133,8 @@
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
-    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:1450)});q('.tools').insertBefore(epilogueNav,depthButton);
+    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:5300)});q('.tools').insertBefore(epilogueNav,depthButton);
+    const quickStep=document.createElement('button');quickStep.type='button';quickStep.className='control quick-step';quickStep.textContent='87단계로 이동 · 임시';quickStep.title='87단계로 바로 이동';quickStep.addEventListener('click',()=>runCue(86));q('.tools').insertBefore(quickStep,epilogueNav);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
     for(const c of [...chapters].sort((a,b)=>(a.chapter===5)-(b.chapter===5))){
@@ -187,7 +188,7 @@
         fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
       }
       if(reducedMotion&&!depthEnabled)return;
-      const token=++cameraMotion,duration=depthEnabled?3300:3000,start=performance.now();
+      const token=++cameraMotion,duration=depthEnabled?5200:5000,start=performance.now();
       if(depthEnabled){
         const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
@@ -396,15 +397,21 @@
         const contour=depthEnabled?threeSvg.querySelector('.three-volume.outer'):outerOutline;
         epilogueContours=[];
         if(contour?.getAttribute('d'))for(let i=0;i<2;i++){const echo=document.createElementNS(NS,'path');echo.setAttribute('d',contour.getAttribute('d'));echo.setAttribute('class','epilogue-contour'+(i?' second':''));overlay.append(echo);epilogueContours.push(echo)}
-        const reach=Math.hypot(width/2,height/2);
+        const route=createFullReveal(new Set(),null);
         for(const path of source.querySelectorAll('.links')){
           if(getComputedStyle(path).display==='none')continue;
           const d=path.getAttribute('d');if(!d)continue;
+          const index=Number(path.dataset.edgeIndex),edge=edges[index],length=path.getTotalLength();if(!edge||!length)continue;
           const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
-          epilogueEchoes.set(Number(path.dataset.edgeIndex),echo);
-          const midpoint=path.getPointAtLength(path.getTotalLength()/2);
-          const distance=Math.hypot(midpoint.x-width/2,midpoint.y-height/2);
-          echo.style.setProperty('--epi-delay',Math.round(Math.min(850,distance/reach*1150))+'ms');overlay.append(echo);
+          epilogueEchoes.set(index,echo);
+          const child=route.parentEdge[edge.source]===index?edge.source:route.parentEdge[edge.target]===index?edge.target:-1;
+          if(child>=0){
+            const parent=route.parentNode[child],start=route.arrival[parent]+(parent===threeCenter.id?route.branchDelay[child]:0);
+            echo.classList.add('trace');echo.style.strokeDasharray=`${length} ${length}`;
+            echo.style.setProperty('--epi-start-offset',`${(edge.target===parent?-1:1)*length}px`);
+            echo.style.setProperty('--epi-delay',Math.round(start)+'ms');echo.style.setProperty('--epi-duration',Math.round(Math.max(360,route.arrival[child]-start))+'ms');
+          }else echo.style.setProperty('--epi-delay',Math.round(Math.max(route.arrival[edge.source],route.arrival[edge.target])+(index*71%420))+'ms');
+          overlay.append(echo);
         }
         stage.append(wash,overlay);
         await new Promise(resolve=>setTimeout(resolve,6300));
@@ -655,14 +662,17 @@
         }
       }
       const finite=distance.filter(Number.isFinite),maximum=Math.max(...finite,1);
-      const arrival=distance.map((value,id)=>id===threeCenter.id?0:Number.isFinite(value)?280+value/maximum*2150:280+Math.hypot(nodes[id].x-threeCenter.x,nodes[id].y-threeCenter.y)/1200*2150);
-      return {before,anchorPerson,start:performance.now(),arrival,parentEdge,parentNode};
+      const branches=nodes.filter(n=>parentNode[n.id]===threeCenter.id).sort((a,b)=>Math.atan2(a.y-threeCenter.y,a.x-threeCenter.x)-Math.atan2(b.y-threeCenter.y,b.x-threeCenter.x));
+      const branchDelay=nodes.map(n=>{let id=n.id;while(parentNode[id]>=0&&parentNode[id]!==threeCenter.id)id=parentNode[id];const rank=branches.findIndex(branch=>branch.id===id);return rank<0?0:rank/Math.max(1,branches.length-1)*650});
+      const arrival=distance.map((value,id)=>id===threeCenter.id?0:Number.isFinite(value)?300+value/maximum*2700+branchDelay[id]:300+Math.hypot(nodes[id].x-threeCenter.x,nodes[id].y-threeCenter.y)/1200*2700);
+      return {before,anchorPerson,start:performance.now(),arrival,parentEdge,parentNode,branchDelay};
     }
     function fullRevealAmount(x,y){
       if(!fullReveal)return 1;
       const distance=Math.hypot(x-threeCenter.x,y-threeCenter.y);
-      return smooth((performance.now()-fullReveal.start-280-distance/1200*1850)/500);
+      return smooth((performance.now()-fullReveal.start-850-distance/1200*1300)/2300);
     }
+    function fullRevealCore(){return fullReveal?smooth((performance.now()-fullReveal.start-900)/2600):1}
     function fullRevealNode(n){
       if(!fullReveal||n.person===fullReveal.anchorPerson||n.kind==='chapter'&&n.chapter===5)return 1;
       const amount=smooth((performance.now()-fullReveal.start-fullReveal.arrival[n.id])/300);
@@ -674,8 +684,8 @@
       if(a.person===fullReveal.anchorPerson&&b.person===fullReveal.anchorPerson)return {opacity:1,progress:1,reverse:false,trace:false};
       const elapsed=performance.now()-fullReveal.start;
       const child=fullReveal.parentEdge[e.source]===index?e.source:fullReveal.parentEdge[e.target]===index?e.target:-1;
-      if(child>=0){const parent=fullReveal.parentNode[child],start=fullReveal.arrival[parent],end=fullReveal.arrival[child];return {opacity:1,progress:smooth((elapsed-start)/Math.max(220,end-start)),reverse:e.target===parent,trace:true}}
-      const amount=smooth((elapsed-Math.max(fullReveal.arrival[e.source],fullReveal.arrival[e.target]))/520);
+      if(child>=0){const parent=fullReveal.parentNode[child],start=fullReveal.arrival[parent]+(parent===threeCenter.id?fullReveal.branchDelay[child]:0),end=fullReveal.arrival[child];return {opacity:1,progress:smooth((elapsed-start)/Math.max(360,end-start)),reverse:e.target===parent,trace:true}}
+      const amount=smooth((elapsed-Math.max(fullReveal.arrival[e.source],fullReveal.arrival[e.target])-(index*71%420))/700);
       return {opacity:amount,progress:1,reverse:false,trace:false};
     }
     const threeHeight=n=>({chapter:0,person:120,concept:210,subconcept:300,question:355})[n.kind]+(n.coreLayout?40:0);
@@ -733,7 +743,7 @@
       };
       let ground=`<defs><radialGradient id="three-outer-shade" cx="35%" cy="28%" r="78%"><stop offset="0" style="stop-color:var(--secondary);stop-opacity:.01"/><stop offset="1" style="stop-color:var(--secondary);stop-opacity:.08"/></radialGradient><radialGradient id="three-core-shade" cx="33%" cy="25%" r="76%"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.03"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:.15"/></radialGradient></defs>`,stems='';
       ground+=volume(outerBoundary,'outer',-110,510);
-      if(allConnected)ground+=`<g opacity="${fullRevealAmount(threeCenter.x,threeCenter.y)}">${volume(coreBoundary,'core',-45,450)}</g>`;
+      if(allConnected)ground+=`<g opacity="${fullRevealCore()}">${volume(coreBoundary,'core',-45,450)}</g>`;
        for(const n of points){if(!visible.has(n.id))continue;const a=pos[n.id],b=project(n.x,n.y),opacity=nodeReveal(n);stems+=`<g opacity="${opacity}"><path class="three-stem${activeChapter!==null&&n.chapter!==activeChapter?' chapter-past':''}${focusedPerson!==null&&n.chapter!==personChapter?' person-other-chapter':''}" d="M${a.x},${a.y}L${b.x},${b.y}"/></g>`}
       let pastLinks='',crossLinks='',currentLinks='';
       for(const [i,e] of edges.entries()){
@@ -839,7 +849,7 @@
       q('.chapter-nav').querySelectorAll('[data-chapter]').forEach(b=>b.setAttribute('aria-current',String(selected!==null&&nodes[selected].chapter===nodes[Number(b.dataset.chapter)].chapter)));
       for(const c of chapters){
         const {region,heading,members}=areas.get(c.id),x=c.x*k+ox,y=c.y*k+oy;
-        heading.classList.toggle('selected',selected===c.id);heading.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);heading.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);region.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);region.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';heading.style.filter=fullReveal?`opacity(${fullRevealNode(c)})`:'';region.style.filter=fullReveal?`opacity(${fullRevealNode(c)})`:'';
+        heading.classList.toggle('selected',selected===c.id);heading.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);heading.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);region.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);region.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';heading.style.filter=fullReveal?`opacity(${fullRevealNode(c)})`:'';region.style.filter=fullReveal?`opacity(${c.chapter===5?fullRevealCore():fullRevealNode(c)})`:'';
         const w=heading.offsetWidth,h=heading.offsetHeight;
         const box={x:x-w/2,y:y-h/2,w,h};heading.style.left=box.x+'px';heading.style.top=box.y+'px';
         boxes.push({x:box.x-9,y:box.y-10,w:w+18,h:h+20});
@@ -854,7 +864,7 @@
           region.setAttribute('d',`M${x-radius},${y}a${radius},${radius} 0 1 0 ${radius*2},0a${radius},${radius} 0 1 0 ${-radius*2},0`);
           ps.length=0;for(let i=0;i<24;i++){const angle=i*Math.PI/12;ps.push([x+Math.cos(angle)*radius,y+Math.sin(angle)*radius])}
         }else region.setAttribute('d',softPath(ps));
-        if(c.chapter===5){coreHalo.setAttribute('d',region.getAttribute('d'));coreHalo.style.display=region.style.display}
+        if(c.chapter===5){coreHalo.setAttribute('d',region.getAttribute('d'));coreHalo.style.display=region.style.display;coreHalo.style.filter=fullReveal?`opacity(${fullRevealCore()})`:''}
         if(expanded.has(c.id))for(const p of ps)for(let i=0;i<8;i++){const a=i*Math.PI/4;envelopePoints.push([p[0]+Math.cos(a)*8,p[1]+Math.sin(a)*8])}
       }
       outerOutline.style.display=envelopePoints.length?'':'none';outerOutline.style.filter=fullReveal?`opacity(${fullRevealAmount(threeCenter.x,threeCenter.y)*.85})`:'';
