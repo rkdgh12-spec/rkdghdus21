@@ -519,7 +519,7 @@
     });
     video.addEventListener('ended',()=>{exitVideoFullscreen();q('#interview-play').hidden=false});
     q('.detail-close').addEventListener('click',()=>recordStep(()=>{panel.hidden=true}));
-    function updateCue(){stage.classList.toggle('chapter-one-detail',presentationMode&&depthEnabled&&cueIndex>=2&&selected!==null&&nodes[selected].chapter===1);q('#sequence-count').textContent=(cueIndex+1)+' / '+cues.length;q('#sequence-label').textContent=cueIndex<0?'제1장부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0;q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!presentationMode||cueIndex>=cues.length-1;q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
+    function updateCue(){q('#sequence-count').textContent=(cueIndex+1)+' / '+cues.length;q('#sequence-label').textContent=cueIndex<0?'제1장부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0;q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!presentationMode||cueIndex>=cues.length-1;q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
       const nextIndex=Math.max(-1,Math.min(cues.length-1,index));
@@ -823,13 +823,20 @@
       const lineage=selected===null?new Set():new Set(ancestors(selected)),selectedBranch=selected===null?new Set():descendants(selected);
       const connectedQuestions=new Set();for(const e of edges)if(e.kind!=='hierarchy'&&(e.source===selected||e.target===selected)){if(nodes[e.source].kind==='question')connectedQuestions.add(e.source);if(nodes[e.target].kind==='question')connectedQuestions.add(e.target)}
       const boxes=[],pointBoxes=points.filter(n=>visible.has(n.id)).map(n=>({id:n.id,x:pos[n.id].x-7,y:pos[n.id].y-7,w:14,h:14}));
+      const activePath=selected!==null?ancestors(selected).filter(id=>visible.has(id)&&nodes[id].kind!=='chapter'):[];
+      const activeNodeBoxes=activePath.map(id=>{const p=pos[id],label=threeNodes.get(id)?.querySelector('.node-label'),lw=label?.offsetWidth||0,lh=label?.offsetHeight||0;return {x:p.x-Math.max(42,lw/2+20),y:p.y-Math.max(26,lh/2+17),w:Math.max(84,lw+40),h:Math.max(52,lh+34)}});
+      const activeLineBoxes=[];
+      for(let i=1;i<activePath.length;i++){const from=pos[activePath[i-1]],to=pos[activePath[i]];for(let t=1;t<10;t++){const f=t/10,x=from.x+(to.x-from.x)*f,y=from.y+(to.y-from.y)*f;activeLineBoxes.push({x:x-13,y:y-13,w:26,h:26})}}
+      const activeObstacles=[...activeNodeBoxes,...activeLineBoxes];
       const separated=(a,b,gap=0)=>a.x+a.w+gap<=b.x||b.x+b.w+gap<=a.x||a.y+a.h+gap<=b.y||b.y+b.h+gap<=a.y;
       for(const n of [threeCenter,...chapters.filter(c=>c!==threeCenter)]){
         const b=threeNodes.get(n.id),p=pos[n.id],show=visible.has(n.id)&&p.x>-150&&p.x<width+150&&p.y>-60&&p.y<height+60;b.hidden=!show;if(!show)continue;
         b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-chapter-past',personChapter!==null&&n.chapter!==personChapter);b.classList.toggle('chapter-other',activeChapter!==null&&n.chapter!==activeChapter);b.setAttribute('aria-expanded',String(expanded.has(n.id)));b.querySelector('small').hidden=!expanded.has(n.id);
         const w=b.offsetWidth,h=b.offsetHeight,c=pos[threeCenter.id],dx=p.x-c.x,dy=p.y-c.y,m=Math.max(1,Math.hypot(dx,dy)),ux=dx/m,uy=dy/m;
-        const positions=[[p.x,p.y]];for(const distance of [24,48,72,96])positions.push([p.x+ux*distance,p.y+uy*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+uy*distance,p.y-ux*distance]);
-        let chosen=null;for(const [x,y] of positions){const box={x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16};if(box.x<8||box.y<8||box.x+box.w>width-8||box.y+box.h>height-8)continue;if(boxes.every(other=>separated(box,other,8))){chosen={x,y,box};break}}
+        const positions=[[p.x,p.y]];
+        for(const distance of [24,48,72,96,128,160,192,224,256])positions.push([p.x+ux*distance,p.y+uy*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+uy*distance,p.y-ux*distance],[p.x-ux*distance,p.y-uy*distance],[p.x+uy*distance,p.y-ux*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+distance,p.y],[p.x-distance,p.y],[p.x,p.y+distance],[p.x,p.y-distance]);
+        const protectRoute=!allConnected&&selected!==null&&nodes[selected].chapter===n.chapter&&nodes[selected].kind!=='chapter';
+        let chosen=null;for(const [x,y] of positions){const box={x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16};if(box.x<8||box.y<8||box.x+box.w>width-8||box.y+box.h>height-8)continue;if(boxes.every(other=>separated(box,other,8))&&(!protectRoute||activeObstacles.every(other=>separated(box,other,8)))){chosen={x,y,box};break}}
         if(!chosen){const x=Math.max(w/2+8,Math.min(width-w/2-8,p.x)),y=Math.max(h/2+8,Math.min(height-h/2-8,p.y));chosen={x,y,box:{x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16}}}
         b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
       }
