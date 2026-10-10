@@ -376,7 +376,7 @@
     }
     function stopVideo(){exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
     function openEpilogue(){openInterview(epilogueFilm,'epilogue')}
-    let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null,epilogueContours=null;
+    let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null,epilogueContours=null,epilogueOrigin=null;
     function syncEpilogueOverlay(){
       if(!epilogueOverlay||!epilogueEchoes)return;
       epilogueOverlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
@@ -384,6 +384,7 @@
       for(const [index,echo] of epilogueEchoes){const path=projected?projected.get(index):paths[index];if(path)echo.setAttribute('d',path.getAttribute('d'))}
       const contour=depthEnabled?threeSvg.querySelector('.three-volume.outer'):outerOutline;
       if(contour&&epilogueContours)for(const echo of epilogueContours)echo.setAttribute('d',contour.getAttribute('d'));
+      if(epilogueOrigin){const center=depthEnabled?threeProjected[threeCenter.id]:{x:threeCenter.x*k+ox,y:threeCenter.y*k+oy};if(center){epilogueOrigin.setAttribute('cx',center.x);epilogueOrigin.setAttribute('cy',center.y)}}
     }
     async function transitionToEpilogue(){
       if(epilogueTransitioning)return;
@@ -413,10 +414,12 @@
           }else echo.style.setProperty('--epi-delay',Math.round(Math.max(route.arrival[edge.source],route.arrival[edge.target])+(index*71%420))+'ms');
           overlay.append(echo);
         }
+        epilogueOrigin=document.createElementNS(NS,'circle');epilogueOrigin.setAttribute('class','epilogue-origin');const center=depthEnabled?threeProjected[threeCenter.id]:{x:threeCenter.x*k+ox,y:threeCenter.y*k+oy};epilogueOrigin.setAttribute('cx',center.x);epilogueOrigin.setAttribute('cy',center.y);epilogueOrigin.setAttribute('r','6');overlay.append(epilogueOrigin);
+        stage.classList.add('epilogue-tracing');
         stage.append(wash,overlay);
         await new Promise(resolve=>setTimeout(resolve,6300));
         if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
-        overlay.remove();wash.remove();if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null;epilogueContours=null}
+        overlay.remove();wash.remove();stage.classList.remove('epilogue-tracing');if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null;epilogueContours=null;epilogueOrigin=null}
       }
       epilogueTransitioning=false;
       if(reducedMotion&&motion===cameraMotion)openEpilogue();
@@ -655,6 +658,7 @@
         let u=-1;for(const n of nodes)if(!used.has(n.id)&&(u<0||distance[n.id]<distance[u]))u=n.id;
         if(u<0||!Number.isFinite(distance[u]))break;used.add(u);
         for(const [index,e] of edges.entries()){
+          if(thinnedCrossEdges.has(index))continue;
           const v=e.source===u?e.target:e.target===u?e.source:-1;if(v<0||used.has(v))continue;
           const length=Math.hypot(nodes[u].x-nodes[v].x,nodes[u].y-nodes[v].y);
           const next=distance[u]+120+Math.pow(length,.7);
