@@ -187,12 +187,14 @@
         k=Math.min((width-36)/(2*Math.max(cx-minx,maxx-cx)),(height-48)/(2*Math.max(cy-miny,maxy-cy)),1.9);
         fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
       }
-      if(reducedMotion&&!depthEnabled)return;
+      const centeredX=(width/2-ox)/k,centeredY=(height/2-oy)/k;
+      k*=1.09;ox=width/2-centeredX*k;oy=height/2-centeredY*k;
+      if(reducedMotion&&!depthEnabled){render();return}
       const token=++cameraMotion,duration=depthEnabled?5200:5000,start=performance.now();
       if(depthEnabled){
         const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
-        threeYaw=goalYaw;threeElevation=1.38;threeZoom=1;render3D();
+        threeYaw=goalYaw;threeElevation=1.38;threeZoom=1.09;render3D();
         const region=threeSvg.querySelector('.three-volume.core');
         if(region){const box=region.getBBox();threePanX+=width/2-box.x-box.width/2;threePanY+=height/2-box.y-box.height/2;render3D()}
         const goal={yaw:threeYaw,elevation:threeElevation,zoom:threeZoom,x:threePanX,y:threePanY};
