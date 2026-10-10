@@ -8,8 +8,8 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "최고은/Q4": {
-    "title": "",
-    "src": "",
+    "title": "최고은 인터뷰 Q4 · 자기소개 포함",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-q4-q5-20261010/choe-goeun-q4-intro.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -22,8 +22,8 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "최고은/Q5": {
-    "title": "",
-    "src": "",
+    "title": "최고은 인터뷰 Q5",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-q4-q5-20261010/choe-goeun-q5.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
