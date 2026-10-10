@@ -105,11 +105,30 @@
     let interviewMode='person';
     let stepHistory=[],stepIndex=-1,stepDepth=0,restoringStep=false;
     const epilogueQuestions=(window.FORUM_EPILOGUE||[]).map(row=>{const person=points.find(n=>n.kind==='person'&&n.label===row.person);return {...row,id:'epilogue-'+person.id,kind:'epilogue',parent:person.id,chapter:person.chapter}});
-    const cues=[];
+    const lectureOrder=[
+      {chapter:1,people:[['최고은',['Q4','Q5']]]},
+      {chapter:2,people:[['류성실',['Q5','Q6']],['강인애',['Q3','Q5']]]},
+      {chapter:3,people:[['박재영',['Q4','Q5']],['민지희',['Q4','Q3']],['안정환',['Q5','Q6']]]},
+      {chapter:4,people:[['최지혜',['Q3','Q4']],['서해영',['Q5','Q6']]]},
+      {chapter:5,people:[['권현빈',['Q4','Q5']],['채길원',['Q5','Q7']]]}
+    ];
+    const cues=[];let applyingCue=false;
     for(const c of [...chapters].sort((a,b)=>a.chapter-b.chapter)){
       const nav=document.createElement('button');nav.type='button';nav.dataset.chapter=c.id;nav.innerHTML='<span class="nav-number">0'+c.chapter+'</span>'+esc(c.label);nav.addEventListener('click',()=>select(c.id));q('.chapter-nav').append(nav);
-      cues.push({id:c.id,deep:false,label:displayLabel(c)});
-      for(const p of children(c.id)){cues.push({id:p.id,deep:false,label:p.label+' · 주요 개념'});cues.push({id:p.id,deep:true,label:p.label+' · 인터뷰와 연결'})}
+      cues.push({id:c.id,label:displayLabel(c)});
+      for(const [name,questionLabels] of lectureOrder.find(group=>group.chapter===c.chapter).people){
+        const person=children(c.id).find(n=>n.label===name);
+        if(!person)throw new Error('강연 순서에 없는 인물: '+name);
+        cues.push({id:person.id,label:name});
+        for(const questionLabel of questionLabels){
+          const question=points.find(n=>n.kind==='question'&&n.person===name&&n.label===questionLabel);
+          if(!question)throw new Error('강연 순서에 없는 질문: '+name+' '+questionLabel);
+          for(const id of ancestors(question.id).slice(2)){
+            const n=nodes[id];
+            cues.push({id,label:name+' · '+(n.kind==='question'?n.label+' '+n.topic:n.label)});
+          }
+        }
+      }
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
@@ -164,6 +183,11 @@
     function select(id){return recordStep(()=>selectStep(id))}
     function selectStep(id){
       const previous=selected,before=new Set(visible);selected=id;
+      if(presentationMode&&!applyingCue){
+        const upcoming=cues.findIndex((cue,index)=>index>=cueIndex&&cue.id===id);
+        const planned=upcoming>=0?upcoming:cues.findIndex(cue=>cue.id===id);
+        if(planned>=0){cueIndex=planned;updateCue()}
+      }
       if(['chapter','person'].includes(nodes[id].kind))for(const n of points)if(n.chapter!==nodes[id].chapter)for(const animation of elems.get(n.id).b.getAnimations())animation.cancel();
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
@@ -265,6 +289,7 @@
       const tabs=[...detail.querySelectorAll('[data-person-tab]')];
       function activateTab(tab){recordStep(()=>{for(const t of tabs){const active=t===tab;t.setAttribute('aria-selected',String(active));t.tabIndex=active?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!active}})}
       tabs.forEach((tab,index)=>{tab.addEventListener('click',()=>activateTab(tab));tab.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();e.stopPropagation();const target=tabs[e.key==='Home'?0:e.key==='End'?tabs.length-1:(index+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];activateTab(target);target.focus()})});
+      if(n.kind==='person'&&presentationMode)activateTab(tabs[1]);
     }
     function profileHTML(name){const p=(window.FORUM_PROFILES||{})[name];if(!p)return '';return '<p class="person-role">'+esc(p.role)+'</p>'+(p.career?.length?'<ul class="person-career">'+p.career.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'')}
     function introduction(person){return {id:'intro-'+person.id,kind:'introduction',parent:person.id,person:person.label,chapter:person.chapter,label:'Q1',topic:'자기소개',question:'Q1. 현재 어떤 일을 하고 계신지, 본인의 활동을 중심으로 소개해 주세요.'}}
@@ -298,8 +323,10 @@
       }
       q('#transcript-section').hidden=!media.transcript;q('#transcript-section').open=false;q('#interview-transcript').textContent=media.transcript||'';
       const qs=isEpilogue?epilogueQuestions:personQuestions(n.person),index=qs.findIndex(x=>x.id===n.id);
-      q('#question-count').textContent=(index+1)+' / '+qs.length;q('#question-prev').disabled=index===0;q('#question-next').disabled=index===qs.length-1;
-      q('#question-prev').textContent=isEpilogue?'이전 인물':'이전 질문';q('#question-next').textContent=isEpilogue?'다음 인물':'다음 질문';q('#interview-related').parentElement.hidden=isEpilogue;
+      const plannedStep=presentationMode&&!isEpilogue?cues.findIndex(c=>c.id===n.id):-1;
+      q('#question-count').textContent=plannedStep>=0?'강연 단계 '+(plannedStep+1)+' / '+cues.length:(index+1)+' / '+qs.length;
+      q('#question-prev').disabled=plannedStep>=0?plannedStep===0:index===0;q('#question-next').disabled=plannedStep>=0?plannedStep===cues.length-1:index===qs.length-1;
+      q('#question-prev').textContent=plannedStep>=0?'이전 단계':isEpilogue?'이전 인물':'이전 질문';q('#question-next').textContent=plannedStep>=0?'다음 단계':isEpilogue?'다음 인물':'다음 질문';q('#interview-related').parentElement.hidden=isEpilogue;
       const related=n.kind==='introduction'?qs.slice(1):[...new Set(edges.filter(e=>e.kind!=='hierarchy'&&(e.source===n.id||e.target===n.id)).map(e=>e.source===n.id?e.target:e.source))].map(id=>nodes[id]).filter(x=>x.kind==='question');
       q('#interview-related').replaceChildren();
       if(!related.length){const t=document.createElement('span');t.textContent='지도의 다른 질문도 만나보세요.';q('#interview-related').append(t)}
@@ -307,7 +334,7 @@
       if(!dialog.open){dialog.showModal();if(!reducedMotion)dialog.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'ease-out'})}
       dialog.scrollTop=0;
     }
-    function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue'){openEpilogue(epilogueQuestions.findIndex(n=>n.id===currentQuestion.id)+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
+    function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue'){openEpilogue(epilogueQuestions.findIndex(n=>n.id===currentQuestion.id)+delta);return}const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
     q('#question-prev').addEventListener('click',()=>changeQuestion(-1));q('#question-next').addEventListener('click',()=>changeQuestion(1));
     function closeInterview(){recordStep(()=>{stopVideo();dialog.close()})}
     q('#interview-close').addEventListener('click',closeInterview);dialog.addEventListener('close',()=>{if(!dialog.open)stopVideo()});dialog.addEventListener('cancel',e=>{e.preventDefault();closeInterview()});dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeInterview()}});
@@ -330,13 +357,28 @@
     });
     video.addEventListener('ended',()=>{exitVideoFullscreen();q('#interview-play').hidden=false});
     q('.detail-close').addEventListener('click',()=>recordStep(()=>{panel.hidden=true}));
-    function updateCue(){q('#sequence-count').textContent=(cueIndex+1)+' / '+cues.length;q('#sequence-label').textContent=cueIndex<0?'주제 선택부터 시작합니다':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0;q('#sequence-next').disabled=cueIndex>=cues.length-1}
+    function updateCue(){q('#sequence-count').textContent=(cueIndex+1)+' / '+cues.length;q('#sequence-label').textContent=cueIndex<0?'제1장부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0;q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
-      cameraMotion++;const before=new Set(visible);cueIndex=Math.max(-1,Math.min(cues.length-1,index));expanded.clear();selected=null;
-      for(let i=0;i<=cueIndex;i++){const cue=cues[i];if(cue.epilogue){selected=null;continue}if(cue.all){for(const n of nodes)if(n.kind!=='question')expanded.add(n.id);selected=null;continue}for(const id of ancestors(cue.id))if(children(id).length)expanded.add(id);if(cue.deep)for(const id of descendants(cue.id))if(children(id).length)expanded.add(id);selected=cue.id}
-      updateVisible();showDetail(null);render();animateNodes(before);updateCue();save();
-      if(cues[cueIndex]?.epilogue)openEpilogue(0);
+      const nextIndex=Math.max(-1,Math.min(cues.length-1,index));
+      if(dialog.open)closeInterview();
+      cueIndex=nextIndex;
+      const cue=cues[cueIndex];
+      if(!cue){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);fit();updateCue();save();return}
+      if(cue.all||cue.epilogue){
+        cameraMotion++;const before=new Set(visible);selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fit();showDetail(null);animateNodes(before);updateCue();save();
+        if(cue.epilogue)openEpilogue(0);
+        return;
+      }
+      expanded.clear();
+      for(let i=0;i<=cueIndex;i++){
+        const prior=cues[i];
+        if(prior.all||prior.epilogue)continue;
+        for(const id of ancestors(prior.id))if(children(id).length)expanded.add(id);
+      }
+      applyingCue=true;
+      try{selectStep(cue.id)}finally{applyingCue=false}
+      updateCue();
     }
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
     function showAll(){return recordStep(()=>{cameraMotion++;const before=new Set(visible);selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fit();showDetail(null);animateNodes(before);updateCue();save()})}
