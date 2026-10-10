@@ -899,7 +899,8 @@
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
         const revealState=fullRevealEdge(e,i),projectedLength=samples.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p.x-samples[j].x,p.y-samples[j].y),0);
         const traceStyle=revealState.trace?` style="stroke-dasharray:${projectedLength} ${projectedLength};stroke-dashoffset:${(revealState.reverse?-1:1)*projectedLength*(1-revealState.progress)}"`:'';
-        const markup=`<g opacity="${revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
+        const chapterPersonGuide=start.kind==='chapter'&&e.kind==='hierarchy';
+        const markup=`<g opacity="${chapterPersonGuide?0:revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
         if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-past'))pastLinks+=markup;
         else if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-cross'))crossLinks+=markup;
         else currentLinks+=markup;
@@ -967,7 +968,8 @@
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
         l.style.display=shown?'':'none';l.setAttribute('d',connectionPath(e));
         const revealState=fullReveal&&shown?fullRevealEdge(e,i):null;
-        l.style.filter=revealState?`opacity(${revealState.opacity})`:'';
+        const chapterPersonGuide=a.kind==='chapter'&&e.kind==='hierarchy';
+        l.style.filter=chapterPersonGuide?'opacity(0)':revealState?`opacity(${revealState.opacity})`:'';
         if(revealState?.trace){const length=l.getTotalLength();l.style.strokeDasharray=`${length} ${length}`;l.style.strokeDashoffset=String((revealState.reverse?-1:1)*length*(1-revealState.progress))}
         else{l.style.strokeDasharray='';l.style.strokeDashoffset=''}
         l.classList.toggle('person-current',focusedPerson!==null&&a.person===focusedPerson&&b.person===focusedPerson);
