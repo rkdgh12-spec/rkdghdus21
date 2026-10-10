@@ -538,18 +538,12 @@
       try{selectStep(cue.id)}finally{applyingCue=false}
       updateCue();
     }
-    function nextInterviewCueIndex(){
-      for(let index=cueIndex+1;index<cues.length;index++){
-        const target=nodes[cues[index].id];
-        if(target?.kind==='question')return index;
-      }
-      return -1;
-    }
     q('#interview-stage-next').addEventListener('click',()=>{
       if(!presentationMode||cueIndex>=cues.length-1)return;
-      const nextIndex=nextInterviewCueIndex();
-      if(nextIndex<0){runCue(cueIndex+1);return}
-      const target=nodes[cues[nextIndex].id];
+      const nextIndex=cueIndex+1;
+      const next=cues[nextIndex];
+      const target=next.id===undefined?null:nodes[next.id];
+      if(target?.kind!=='question'){runCue(nextIndex);return}
       recordStep(()=>{
         const previous=selected,before=new Set(visible);
         cueIndex=nextIndex;
@@ -565,6 +559,7 @@
         render();
         animateNodes(before);
         followConnectionToLabel(previous,target.id,()=>{});
+        if(previous!==null&&previous!==target.id&&!reducedMotion)traceRoute(previous,target.id);
         updateCue();
         openInterviewStep(target);
         save();
