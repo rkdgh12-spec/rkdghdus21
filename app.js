@@ -78,7 +78,7 @@
     const children=id=>nodes.filter(n=>n.parent===id);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elems=new Map(),paths=[],areas=new Map();
-    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,fullReveal=null;
+    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,guidedHiddenEdge=-1,fullReveal=null;
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
@@ -233,9 +233,10 @@
     function selectStep(id){
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
-      activeBranchRoute?.remove();activeBranchRoute=null;branchReveal=null;
+      activeBranchRoute?.remove();activeBranchRoute=null;branchReveal=null;guidedHiddenEdge=-1;
       const previous=selected,before=new Set(visible);selected=id;
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
+      if(guided&&nodes[previous].kind==='concept'&&nodes[id].kind==='subconcept')guidedHiddenEdge=edges.findIndex(e=>e.kind==='hierarchy'&&e.source===previous&&e.target===id);
       if(guided)for(const line of paths)for(const animation of line.getAnimations())animation.cancel();
       if(presentationMode&&!applyingCue){
         const upcoming=cues.findIndex((cue,index)=>index>=cueIndex&&cue.id===id);
@@ -263,7 +264,7 @@
         const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
           traceRoute(previous,id,null,NODE_TRAVEL_MS);
-        }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()},NODE_TRAVEL_MS);
+        }else traceRoute(previous,id,()=>{if(guidedHiddenEdge>=0){guidedHiddenEdge=-1;render()}routeArrived=true;revealQuestion()},NODE_TRAVEL_MS);
       }
       save();
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
@@ -323,7 +324,7 @@
       while(previous.has(cursor)&&previous.get(cursor)){const step=previous.get(cursor);route.unshift(step);cursor=step.from}
       if(!route.length&&from===to)return;
       const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','lecture-route');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
-      const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
+      const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r',guidedHiddenEdge>=0?'3.4':'2.7');if(guidedHiddenEdge>=0)line.style.strokeWidth='2.25';overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
       const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110);let start=null;
       function draw(progress){
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
@@ -913,7 +914,7 @@
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
         const revealState=fullRevealEdge(e,i),projectedLength=samples.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p.x-samples[j].x,p.y-samples[j].y),0);
         const traceStyle=revealState.trace?` style="stroke-dasharray:${projectedLength} ${projectedLength};stroke-dashoffset:${(revealState.reverse?-1:1)*projectedLength*(1-revealState.progress)}"`:'';
-        const markup=`<g opacity="${revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
+        const markup=`<g opacity="${guidedHiddenEdge===i?0:revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
         if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-past'))pastLinks+=markup;
         else if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-cross'))crossLinks+=markup;
         else currentLinks+=markup;
@@ -981,7 +982,7 @@
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
         l.style.display=shown?'':'none';l.setAttribute('d',connectionPath(e));
         const revealState=fullReveal&&shown?fullRevealEdge(e,i):null;
-        l.style.filter=revealState?`opacity(${revealState.opacity})`:'';
+        l.style.filter=guidedHiddenEdge===i?'opacity(0)':revealState?`opacity(${revealState.opacity})`:'';
         if(revealState?.trace){const length=l.getTotalLength();l.style.strokeDasharray=`${length} ${length}`;l.style.strokeDashoffset=String((revealState.reverse?-1:1)*length*(1-revealState.progress))}
         else{l.style.strokeDasharray='';l.style.strokeDashoffset=''}
         l.classList.toggle('person-current',focusedPerson!==null&&a.person===focusedPerson&&b.person===focusedPerson);
