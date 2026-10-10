@@ -237,7 +237,7 @@
       activeBranchRoute?.remove();activeBranchRoute=null;branchReveal=null;guidedHiddenEdge=-1;
       const previous=selected,before=new Set(visible);selected=id;
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
-      if(guided&&nodes[previous].kind==='concept'&&nodes[id].kind==='subconcept')guidedHiddenEdge=edges.findIndex(e=>e.kind==='hierarchy'&&e.source===previous&&e.target===id);
+      if(guided&&((nodes[previous].kind==='person'&&nodes[id].kind==='concept')||(nodes[previous].kind==='concept'&&nodes[id].kind==='subconcept')))guidedHiddenEdge=edges.findIndex(e=>e.kind==='hierarchy'&&e.source===previous&&e.target===id);
       if(guided)for(const line of paths)for(const animation of line.getAnimations())animation.cancel();
       if(presentationMode&&!applyingCue){
         const upcoming=cues.findIndex((cue,index)=>index>=cueIndex&&cue.id===id);
@@ -248,8 +248,6 @@
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
       updateVisible();if(nodes[id].kind==='question')panel.hidden=true;else showDetail(nodes[id]);
-      const newConcepts=nodes[id].kind==='person'&&!reducedMotion?children(id).filter(n=>n.kind==='concept'&&visible.has(n.id)&&!before.has(n.id)):[];
-      if(newConcepts.length)branchReveal={personId:id,ids:new Set(newConcepts.map(n=>n.id)),progress:0};
       autoCentered3D=false;stage.classList.toggle('guided-transition',guided);guidedStep=guided;render();guidedStep=false;animateNodes(before,guided);
       let cameraArrived=false,routeArrived=!guided;
       let interviewQueued=false;
@@ -260,7 +258,6 @@
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
       followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
-      if(branchReveal?.personId===id)traceBranches(id);
       if(guided){
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
@@ -1002,7 +999,7 @@
         l.classList.toggle('branch-route',branchRoute);
         l.classList.toggle('branch-other-chapter',branchKeep!==null&&(a.chapter!==personChapter||b.chapter!==personChapter));
         l.classList.toggle('branch-local-other',branchKeep!==null&&!branchRoute&&a.chapter===personChapter&&b.chapter===personChapter);
-        l.classList.toggle('branch',e.kind==='hierarchy'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
+        l.classList.toggle('branch',e.kind==='hierarchy'&&selected!==null&&nodes[selected].kind!=='person'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
         l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning||(hoverChapter!==null&&(selectedBranch.has(e.source)||selectedBranch.has(e.target))));
         if((activeChapter!==null&&(l.classList.contains('chapter-past')||l.classList.contains('chapter-cross')))||l.classList.contains('person-other-chapter')||(branchKeep!==null&&!branchRoute))for(const animation of l.getAnimations())animation.cancel();
         if(newlyShown&&!reducedMotion&&!guidedStep&&!fullReveal){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
