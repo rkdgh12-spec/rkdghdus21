@@ -2,7 +2,7 @@
   (()=>{
     const root=document.getElementById('forum-source-network');
     const data=window.FORUM_DATA;
-    const nodes=data.nodes,edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter'||data.nodes[e.source].chapter===5);
+    const nodes=data.nodes,edges=data.edges.filter(e=>e.kind==='hierarchy'||data.nodes[e.source].kind!=='chapter'||data.nodes[e.source].chapter===5);
     const coreConnections=[
       [134,147,'물질을 판단하고 사유하는 창작'],[134,150,'물질의 판단과 감각적 사고'],
       [134,148,'물질을 통해 세계를 읽는 태도'],[135,147,'물질의 성질에서 시작되는 사유'],
