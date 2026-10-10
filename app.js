@@ -305,7 +305,7 @@
         while(i<segments.length-1&&lengths[i+1]<distance)i++;
         const part=segments[i]?Math.max(0,Math.min(1,(distance-lengths[i])/segments[i])):1;
         const a=points[i],b=points[Math.min(i+1,points.length-1)];
-        frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part});
+        frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},t*t*(3-2*t));
         if(t<1)requestAnimationFrame(tick);
         else{done();if(selected!==null&&stepHistory[stepIndex]?.selected===selected){stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
       }
@@ -315,14 +315,19 @@
       cameraMotion++;
       if(depthEnabled){
         lastManual3D=performance.now();
-        const start={x:threePanX,y:threePanY},p=threeProjected[id];
+        const start={x:threePanX,y:threePanY},startElevation=threeElevation;
+        const openingChapterFocus=presentationMode&&nodes[id].chapter===1&&cueIndex>=2;
+        const goalElevation=openingChapterFocus?1.32:.82;
+        threeElevation=goalElevation;render3D();
+        const p=threeProjected[id];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
         for(let i=0;i<2;i++){const label=selectedTextPoint(id);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
-        const goal={x:threePanX,y:threePanY};threePanX=start.x;threePanY=start.y;render3D();
-        const finish=()=>{threePanX=goal.x;threePanY=goal.y;render3D();after()};
+        const goal={x:threePanX,y:threePanY};
+        threePanX=start.x;threePanY=start.y;threeElevation=startElevation;render3D();
+        const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeElevation=goalElevation;render3D();after()};
         if(reducedMotion){finish();return}
         const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
-        travel([start,goal],Math.min(780,Math.max(400,400+distance*.28)),p=>{threePanX=p.x;threePanY=p.y;render3D()},finish);
+        travel([start,goal],Math.min(980,Math.max(520,520+distance*.28)),(p,progress)=>{threePanX=p.x;threePanY=p.y;threeElevation=startElevation+(goalElevation-startElevation)*progress;render3D()},finish);
         return;
       }
       const start={x:ox,y:oy},node=nodes[id];
