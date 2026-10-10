@@ -485,7 +485,7 @@
         updateCue();save();transitionToEpilogue();return;
       }
       if(cue.all||cue.epilogue){
-        cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?{before,anchorPerson,start:performance.now(),radius:Math.max(...points.map(n=>Math.hypot(n.x-threeCenter.x,n.y-threeCenter.y)))}:null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save();
+        cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?createFullReveal(before,anchorPerson):null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save();
         if(cue.epilogue)transitionToEpilogue();
         return;
       }
@@ -500,7 +500,7 @@
       updateCue();
     }
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
-    function showAll(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?{before,anchorPerson,start:performance.now(),radius:Math.max(...points.map(n=>Math.hypot(n.x-threeCenter.x,n.y-threeCenter.y)))}:null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
+    function showAll(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?createFullReveal(before,anchorPerson):null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
     function reset(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);updateCue();save()})}
     function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset();threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
     q('#enter-presentation').addEventListener('click',()=>enter('presentation'));q('#enter-explore').addEventListener('click',()=>enter('explore'));q('#enter-resume').addEventListener('click',()=>enter('resume'));
@@ -640,24 +640,43 @@
       return 'M'+point(a.x,a.y)+'Q'+point(mx+bx*2,my+by*2)+' '+point(b.x,b.y);
     }
     const threeCenter=chapters.find(n=>n.chapter===5);
+    const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
+    function createFullReveal(before,anchorPerson){
+      const distance=nodes.map(()=>Infinity),parentEdge=nodes.map(()=>-1),parentNode=nodes.map(()=>-1),used=new Set();
+      distance[threeCenter.id]=0;
+      for(let count=0;count<nodes.length;count++){
+        let u=-1;for(const n of nodes)if(!used.has(n.id)&&(u<0||distance[n.id]<distance[u]))u=n.id;
+        if(u<0||!Number.isFinite(distance[u]))break;used.add(u);
+        for(const [index,e] of edges.entries()){
+          const v=e.source===u?e.target:e.target===u?e.source:-1;if(v<0||used.has(v))continue;
+          const length=Math.hypot(nodes[u].x-nodes[v].x,nodes[u].y-nodes[v].y);
+          const next=distance[u]+120+Math.pow(length,.7);
+          if(next<distance[v]){distance[v]=next;parentEdge[v]=index;parentNode[v]=u}
+        }
+      }
+      const finite=distance.filter(Number.isFinite),maximum=Math.max(...finite,1);
+      const arrival=distance.map((value,id)=>id===threeCenter.id?0:Number.isFinite(value)?280+value/maximum*2150:280+Math.hypot(nodes[id].x-threeCenter.x,nodes[id].y-threeCenter.y)/1200*2150);
+      return {before,anchorPerson,start:performance.now(),arrival,parentEdge,parentNode};
+    }
     function fullRevealAmount(x,y){
       if(!fullReveal)return 1;
-      const distance=Math.hypot(x-threeCenter.x,y-threeCenter.y)/fullReveal.radius;
-      const delay=Math.min(1850,distance*1850);
-      const t=Math.max(0,Math.min(1,(performance.now()-fullReveal.start-delay)/700));
-      return t*t*(3-2*t);
+      const distance=Math.hypot(x-threeCenter.x,y-threeCenter.y);
+      return smooth((performance.now()-fullReveal.start-280-distance/1200*1850)/500);
     }
     function fullRevealNode(n){
       if(!fullReveal||n.person===fullReveal.anchorPerson||n.kind==='chapter'&&n.chapter===5)return 1;
-      const amount=fullRevealAmount(n.x,n.y);
-      return fullReveal.before.has(n.id) ? .18+.82*amount : amount;
+      const amount=smooth((performance.now()-fullReveal.start-fullReveal.arrival[n.id])/300);
+      return fullReveal.before.has(n.id) ? .12+.88*amount : amount;
     }
-    function fullRevealEdge(e){
-      if(!fullReveal)return 1;
+    function fullRevealEdge(e,index){
+      if(!fullReveal)return {opacity:1,progress:1,reverse:false,trace:false};
       const a=nodes[e.source],b=nodes[e.target];
-      if(a.person===fullReveal.anchorPerson&&b.person===fullReveal.anchorPerson)return 1;
-      const amount=fullRevealAmount((a.x+b.x)/2,(a.y+b.y)/2);
-      return fullReveal.before.has(e.source)&&fullReveal.before.has(e.target) ? .12+.88*amount : amount;
+      if(a.person===fullReveal.anchorPerson&&b.person===fullReveal.anchorPerson)return {opacity:1,progress:1,reverse:false,trace:false};
+      const elapsed=performance.now()-fullReveal.start;
+      const child=fullReveal.parentEdge[e.source]===index?e.source:fullReveal.parentEdge[e.target]===index?e.target:-1;
+      if(child>=0){const parent=fullReveal.parentNode[child],start=fullReveal.arrival[parent],end=fullReveal.arrival[child];return {opacity:1,progress:smooth((elapsed-start)/Math.max(220,end-start)),reverse:e.target===parent,trace:true}}
+      const amount=smooth((elapsed-Math.max(fullReveal.arrival[e.source],fullReveal.arrival[e.target]))/520);
+      return {opacity:amount,progress:1,reverse:false,trace:false};
     }
     const threeHeight=n=>({chapter:0,person:120,concept:210,subconcept:300,question:355})[n.kind]+(n.coreLayout?40:0);
     const zoomLabelFallback=(x,y,w,h)=>({x:w>width-16?Math.min(width-8,x+12):Math.max(8,Math.min(width-w-8,x+12)),y:Math.max(8,Math.min(height-h-8,y-h/2)),w,h});
@@ -724,8 +743,9 @@
         const start=nodes[e.source],end=nodes[e.target],a=threeHeight(start),b=threeHeight(end);
         const samples=Array.from({length:13},(_,j)=>{const t=j/12,p=path.getPointAtLength(length*t);return project((p.x-ox)/k,(p.y-oy)/k,a+(b-a)*t)});
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
-        const opacity=fullRevealEdge(e);
-        const markup=`<g opacity="${opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"/></g>`;
+        const revealState=fullRevealEdge(e,i),projectedLength=samples.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p.x-samples[j].x,p.y-samples[j].y),0);
+        const traceStyle=revealState.trace?` style="stroke-dasharray:${projectedLength} ${projectedLength};stroke-dashoffset:${(revealState.reverse?-1:1)*projectedLength*(1-revealState.progress)}"`:'';
+        const markup=`<g opacity="${revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
         if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-past'))pastLinks+=markup;
         else if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-cross'))crossLinks+=markup;
         else currentLinks+=markup;
@@ -784,7 +804,10 @@
         if(shown&&linkedMeaning){if(a.kind==='question')connectedQuestions.add(e.source);if(b.kind==='question')connectedQuestions.add(e.target)}
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
         l.style.display=shown?'':'none';l.setAttribute('d',connectionPath(e));
-        l.style.filter=fullReveal&&shown?`opacity(${fullRevealEdge(e)})`:'';
+        const revealState=fullReveal&&shown?fullRevealEdge(e,i):null;
+        l.style.filter=revealState?`opacity(${revealState.opacity})`:'';
+        if(revealState?.trace){const length=l.getTotalLength();l.style.strokeDasharray=`${length} ${length}`;l.style.strokeDashoffset=String((revealState.reverse?-1:1)*length*(1-revealState.progress))}
+        else{l.style.strokeDasharray='';l.style.strokeDashoffset=''}
         l.classList.toggle('person-current',focusedPerson!==null&&a.person===focusedPerson&&b.person===focusedPerson);
         l.classList.toggle('person-cross',focusedPerson!==null&&((a.person===focusedPerson)!==(b.person===focusedPerson)));
         l.classList.toggle('person-past',focusedPerson!==null&&a.person!==focusedPerson&&b.person!==focusedPerson);
