@@ -308,7 +308,7 @@
       const box=element.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
-    const NODE_TRAVEL_MS=3700;
+    const NODE_TRAVEL_MS=2470;
     function travel(points,duration,frame,done){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
