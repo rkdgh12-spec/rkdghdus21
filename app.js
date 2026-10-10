@@ -186,7 +186,7 @@
         fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
       }
       if(reducedMotion&&!depthEnabled)return;
-      const token=++cameraMotion,duration=depthEnabled?2400:1400,start=performance.now();
+      const token=++cameraMotion,duration=depthEnabled?3300:1400,start=performance.now();
       if(depthEnabled){
         const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
