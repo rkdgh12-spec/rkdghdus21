@@ -256,7 +256,8 @@
       followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
       if(guided){
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
-        if(chapterTransfer){
+        const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
+        if(chapterTransfer||personTransfer){
           activeRoute?.remove();activeRoute=null;
           const motion=cameraMotion;
           setTimeout(()=>{if(cameraMotion===motion&&selected===id)traceRoute(previous,id)},900);
@@ -335,29 +336,37 @@
         const startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
         const node=nodes[id],kind=node.kind;
         const chapterTransit=presentationMode&&kind==='chapter'&&previous!==null&&nodes[previous].chapter!==node.chapter;
-        const goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
+        const personTransit=presentationMode&&kind==='person'&&previous!==null&&nodes[previous].person&&nodes[previous].person!==node.person;
+        const wideTransit=chapterTransit||personTransit;
+        const focusId=kind==='question'?node.parent:id;
+        let goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
         const goalYaw=start.yaw;
         const goalElevation=start.elevation;
         threeZoom=goalZoom;threeYaw=goalYaw;threeElevation=goalElevation;render3D();
-        const p=threeProjected[id];
+        if(kind==='question'){
+          const parentPoint=threeProjected[focusId],questionPoint=threeProjected[id];
+          const fitPair=Math.min(1,width*.37/Math.max(1,Math.abs(questionPoint.x-parentPoint.x)),height*.28/Math.max(1,Math.abs(questionPoint.y-parentPoint.y)));
+          if(fitPair<1){goalZoom=Math.max(2.2,goalZoom*fitPair);threeZoom=goalZoom;render3D()}
+        }
+        const p=threeProjected[focusId];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
-        for(let i=0;i<2;i++){const label=selectedTextPoint(id);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
+        for(let i=0;i<2;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
-        const goalFocus={x:threeProjected[id].x,y:threeProjected[id].y};
+        const goalFocus={x:threeProjected[focusId].x,y:threeProjected[focusId].y};
         threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
         const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();after()};
         if(reducedMotion){finish();return}
         const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
         const zoomSteps=Math.abs(Math.log2(goal.zoom/start.zoom));
         const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
-        if(chapterTransit){
-          const overviewZoom=.82,ratio=overviewZoom/start.zoom;
+        if(wideTransit){
+          const overviewZoom=chapterTransit ? .62 : .72,ratio=overviewZoom/start.zoom;
           const out={x:startFocus.x-width/2-(startFocus.x-width/2-start.x)*ratio,y:startFocus.y-height/2-(startFocus.y-height/2-start.y)*ratio};
           threeZoom=overviewZoom;threePanX=out.x;threePanY=out.y;render3D();
-          for(let i=0;i<2;i++){const label=selectedTextPoint(id);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
+          for(let i=0;i<2;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
           const across={x:threePanX,y:threePanY};
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
-          travel([start,goal],2300,(_p,progress)=>{
+          travel([start,goal],chapterTransit?2450:2300,(_p,progress)=>{
             lastManual3D=performance.now();
             if(progress<.36){
               const t=smooth(progress/.36);
@@ -381,7 +390,7 @@
             threePanX=p.x;threePanY=p.y;
             threeZoom=start.zoom+(goal.zoom-start.zoom)*progress;
             render3D();
-            const from=previous!==null?threeProjected[previous]:null,to=threeProjected[id];
+            const from=previous!==null?threeProjected[previous]:null,to=threeProjected[focusId];
             if(to){
               const currentX=(from?from.x:startFocus.x)*(1-progress)+to.x*progress;
               const currentY=(from?from.y:startFocus.y)*(1-progress)+to.y*progress;
@@ -902,7 +911,8 @@
         if(!chosen){const x=Math.max(w/2+8,Math.min(width-w/2-8,p.x)),y=Math.max(h/2+8,Math.min(height-h/2-8,p.y));chosen={x,y,box:{x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16}}}
         b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
       }
-      const labelPriority=n=>n.id===selected?0:n.kind==='person'?1:n.kind==='concept'?2:selectedBranch.has(n.id)?3:connectedQuestions.has(n.id)?4:n.kind==='subconcept'?5:6;
+      const selectedQuestionParent=selected!==null&&nodes[selected].kind==='question'?nodes[selected].parent:null;
+      const labelPriority=n=>n.id===selectedQuestionParent?0:n.id===selected?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
         b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));setRevealOpacity(b,n);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
