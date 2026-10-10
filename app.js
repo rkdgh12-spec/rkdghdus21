@@ -474,13 +474,19 @@
       const plannedStep=presentationMode&&!isEpilogue?cues.findIndex(c=>c.id===n.id):-1;
       q('#question-count').textContent=plannedStep>=0?'강연 단계 '+(plannedStep+1)+' / '+cues.length:(index+1)+' / '+qs.length;
       q('#question-prev').disabled=plannedStep>=0?plannedStep===0:index===0;q('#question-next').disabled=plannedStep>=0?plannedStep===cues.length-1:index===qs.length-1;
-      q('#question-prev').textContent=plannedStep>=0?'이전 단계':'이전 질문';q('#question-next').textContent=plannedStep>=0?'다음 단계':'다음 질문';q('#interview-related').parentElement.hidden=isEpilogue;
+      q('#question-prev').textContent=plannedStep>=0?'이전 단계':'이전 질문';q('#question-next').textContent=plannedStep>=0?'다음 단계':'다음 질문';q('#question-next').hidden=presentationMode&&!isEpilogue;q('#interview-related').parentElement.hidden=isEpilogue;
       const related=n.kind==='introduction'?qs.slice(1):[...new Set(edges.filter(e=>e.kind!=='hierarchy'&&(e.source===n.id||e.target===n.id)).map(e=>e.source===n.id?e.target:e.source))].map(id=>nodes[id]).filter(x=>x.kind==='question');
       q('#interview-related').replaceChildren();
       if(!related.length){const t=document.createElement('span');t.textContent='지도의 다른 질문도 만나보세요.';q('#interview-related').append(t)}
       for(const other of related.slice(0,6)){const b=document.createElement('button');b.type='button';b.textContent=other.person+' · '+other.topic;b.addEventListener('click',()=>select(other.id));q('#interview-related').append(b)}
       q('#interview-stage-next').hidden=!presentationMode||isEpilogue||cueIndex>=cues.length-1;
-      if(!dialog.open){dialog.showModal();if(!reducedMotion)dialog.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'ease-out'})}
+      if(!dialog.open){
+        const reference=q('#sequence-next').getBoundingClientRect(),nextButton=q('#interview-stage-next');
+        nextButton.style.right=Math.max(0,document.documentElement.clientWidth-reference.right)+'px';
+        nextButton.style.bottom=Math.max(0,window.innerHeight-reference.bottom)+'px';
+        dialog.showModal();
+        if(!reducedMotion)dialog.animate([{opacity:0},{opacity:1}],{duration:240,easing:'ease-out'});
+      }
       dialog.scrollTop=0;
     }
     function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue')return;const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
