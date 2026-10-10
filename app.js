@@ -251,10 +251,17 @@
         if(nodes[id].kind!=='question'||!cameraArrived||!routeArrived||interviewQueued)return;
         interviewQueued=true;
         const arrivalMotion=cameraMotion;
-        setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},1000);
+        setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
       followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
-      if(guided)traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()});
+      if(guided){
+        const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
+        if(chapterTransfer){
+          activeRoute?.remove();activeRoute=null;
+          const motion=cameraMotion;
+          setTimeout(()=>{if(cameraMotion===motion&&selected===id)traceRoute(previous,id)},720);
+        }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()});
+      }
       save();
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
     }
@@ -327,6 +334,7 @@
         const start={x:threePanX,y:threePanY,zoom:threeZoom,yaw:threeYaw,elevation:threeElevation};
         const startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
         const node=nodes[id],kind=node.kind;
+        const chapterTransit=presentationMode&&kind==='chapter'&&previous!==null&&nodes[previous].chapter!==node.chapter;
         const orbit=Math.atan2(node.y-threeCenter.y,node.x-threeCenter.x);
         const goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
         const goalYaw=presentationMode?-.24+.14*Math.sin(orbit):start.yaw;
@@ -343,19 +351,24 @@
         if(reducedMotion){finish();return}
         const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
         const zoomSteps=Math.abs(Math.log2(goal.zoom/start.zoom));
-        const duration=Math.min(1800,Math.max(900,850+distance*.2+zoomSteps*260));
+        const duration=chapterTransit?2200:Math.min(1800,Math.max(900,850+distance*.2+zoomSteps*260));
+        const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
         travel([start,goal],duration,(p,progress)=>{
-          threePanX=p.x;threePanY=p.y;
-          threeZoom=start.zoom+(goal.zoom-start.zoom)*progress;
-          threeYaw=start.yaw+(goal.yaw-start.yaw)*progress;
-          threeElevation=start.elevation+(goal.elevation-start.elevation)*progress;
+          const move=chapterTransit?smooth((progress-.28)/.72):progress;
+          threePanX=chapterTransit?start.x+(goal.x-start.x)*move:p.x;
+          threePanY=chapterTransit?start.y+(goal.y-start.y)*move:p.y;
+          if(chapterTransit){
+            threeZoom=progress<.38?start.zoom+(.78-start.zoom)*smooth(progress/.38):progress<.72 ? .78 : .78+(goal.zoom-.78)*smooth((progress-.72)/.28);
+          }else threeZoom=start.zoom+(goal.zoom-start.zoom)*progress;
+          threeYaw=start.yaw+(goal.yaw-start.y)*move;
+          threeElevation=start.elevation+(goal.elevation-start.elevation)*move;
           render3D();
           const from=previous!==null?threeProjected[previous]:null,to=threeProjected[id];
           if(to){
-            const currentX=(from?from.x:startFocus.x)*(1-progress)+to.x*progress;
-            const currentY=(from?from.y:startFocus.y)*(1-progress)+to.y*progress;
-            const desiredX=startFocus.x+(goalFocus.x-startFocus.x)*progress;
-            const desiredY=startFocus.y+(goalFocus.y-startFocus.y)*progress;
+            const currentX=(from?from.x:startFocus.x)*(1-move)+to.x*move;
+            const currentY=(from?from.y:startFocus.y)*(1-move)+to.y*move;
+            const desiredX=startFocus.x+(goalFocus.x-startFocus.x)*move;
+            const desiredY=startFocus.y+(goalFocus.y-startFocus.y)*move;
             threePanX+=desiredX-currentX;threePanY+=desiredY-currentY;
             render3D();
           }
