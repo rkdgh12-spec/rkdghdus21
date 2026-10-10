@@ -2,7 +2,7 @@
   (()=>{
     const root=document.getElementById('forum-source-network');
     const data=window.FORUM_DATA;
-    const nodes=data.nodes,edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter');
+    const nodes=data.nodes,edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter'||data.nodes[e.source].chapter===5);
     const coreConnections=[
       [134,147,'물질을 판단하고 사유하는 창작'],[134,150,'물질의 판단과 감각적 사고'],
       [134,148,'물질을 통해 세계를 읽는 태도'],[135,147,'물질의 성질에서 시작되는 사유'],
@@ -191,7 +191,7 @@
       const centeredX=(width/2-ox)/k,centeredY=(height/2-oy)/k;
       k*=1.09;ox=width/2-centeredX*k;oy=height/2-centeredY*k;
       if(reducedMotion&&!depthEnabled){render();return}
-      const token=++cameraMotion,duration=depthEnabled?(ringTransition?6500:5200):5000,start=performance.now();
+      const token=++cameraMotion,duration=depthEnabled?(ringTransition?7600:5200):5000,start=performance.now();
       if(depthEnabled){
         const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
@@ -203,12 +203,12 @@
         threeYaw=start3D.yaw;threeElevation=start3D.elevation;threeZoom=start3D.zoom;threePanX=start3D.x;threePanY=start3D.y;render3D();
         function tick(now){if(token!==cameraMotion)return;const t=Math.min(1,(now-start)/duration),ease=t*t*(3-2*t);
           if(ringTransition){
-            const sideYaw=start3D.yaw-.5,sweepYaw=sideYaw+1.55,sideElevation=.12;
-            if(t<.27){const p=smooth(t/.27);threeYaw=start3D.yaw+(sideYaw-start3D.yaw)*p;threeElevation=start3D.elevation+(sideElevation-start3D.elevation)*p}
-            else if(t<.73){const p=smooth((t-.27)/.46);threeYaw=sideYaw+(sweepYaw-sideYaw)*p;threeElevation=sideElevation+.12*Math.sin(Math.PI*p)}
-            else{const p=smooth((t-.73)/.27);threeYaw=sweepYaw+(goal.yaw-sweepYaw)*p;threeElevation=sideElevation+(goal.elevation-sideElevation)*p}
+            const sideYaw=-.32,sweepYaw=.34,sideElevation=.035;
+            if(t<.28){const p=smooth(t/.28);threeYaw=start3D.yaw+(sideYaw-start3D.yaw)*p;threeElevation=start3D.elevation+(sideElevation-start3D.elevation)*p}
+            else if(t<.72){const p=smooth((t-.28)/.44);threeYaw=sideYaw+(sweepYaw-sideYaw)*p;threeElevation=sideElevation+.025*Math.sin(Math.PI*p)}
+            else{const p=smooth((t-.72)/.28);threeYaw=sweepYaw+(goal.yaw-sweepYaw)*p;threeElevation=sideElevation+(goal.elevation-sideElevation)*p}
           }else{const orbit=Math.sin(Math.PI*t);threeYaw=start3D.yaw+(goal.yaw-start3D.yaw)*ease+orbit*.55;threeElevation=start3D.elevation+(goal.elevation-start3D.elevation)*ease-orbit*.32}
-          const layoutEase=ringTransition?smooth(t/.34):ease;
+          const layoutEase=ringTransition?smooth(t/.52):ease;
           threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*layoutEase+(ringTransition?.18*Math.sin(Math.PI*t):0);
           threePanX=start3D.x+(goal.x-start3D.x)*layoutEase;threePanY=start3D.y+(goal.y-start3D.y)*layoutEase;lastManual3D=now;render3D();
           if(t<1)requestAnimationFrame(tick);else{fullReveal=null;render3D();stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
@@ -508,7 +508,11 @@
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
       const nextIndex=Math.max(-1,Math.min(cues.length-1,index));
-      if(dialog.open)closeInterview();
+      const upcomingCue=cues[nextIndex];
+      if(dialog.open){
+        if((upcomingCue?.all||upcomingCue?.epilogue)&&!reducedMotion){stopVideo();const fade=dialog.animate([{opacity:1},{opacity:0}],{duration:480,easing:'ease-in-out',fill:'forwards'});fade.onfinish=()=>{if(dialog.open)dialog.close()}}
+        else closeInterview();
+      }
       cueIndex=nextIndex;
       const cue=cues[cueIndex];
       if(!cue){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);fit();updateCue();save();return}
