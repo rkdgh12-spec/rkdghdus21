@@ -78,7 +78,7 @@
     const children=id=>nodes.filter(n=>n.parent===id);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elems=new Map(),paths=[],areas=new Map();
-    let guidedStep=false,activeRoute=null,fullReveal=null;
+    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,fullReveal=null;
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
@@ -233,6 +233,7 @@
     function selectStep(id){
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
+      activeBranchRoute?.remove();activeBranchRoute=null;branchReveal=null;
       const previous=selected,before=new Set(visible);selected=id;
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
       if(guided)for(const line of paths)for(const animation of line.getAnimations())animation.cancel();
@@ -245,6 +246,8 @@
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
       updateVisible();if(nodes[id].kind==='question')panel.hidden=true;else showDetail(nodes[id]);
+      const newConcepts=nodes[id].kind==='person'&&!reducedMotion?children(id).filter(n=>n.kind==='concept'&&visible.has(n.id)&&!before.has(n.id)):[];
+      if(newConcepts.length)branchReveal={personId:id,ids:new Set(newConcepts.map(n=>n.id)),progress:0};
       autoCentered3D=false;stage.classList.toggle('guided-transition',guided);guidedStep=guided;render();guidedStep=false;animateNodes(before,guided);
       let cameraArrived=false,routeArrived=!guided;
       let interviewQueued=false;
@@ -254,7 +257,7 @@
         const arrivalMotion=cameraMotion;
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
-      followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
+      followConnectionToLabel(previous,id,()=>{cameraArrived=true;if(branchReveal?.personId===id)traceBranches(id);revealQuestion()});
       if(guided){
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
@@ -270,6 +273,43 @@
       if(fullReveal)return;
       if(depthEnabled)return;
       let index=0;for(const nid of visible){if(before.has(nid)||!elems.has(nid))continue;const n=nodes[nid],p=nodes[n.parent],{b}=elems.get(nid);b.animate(guided?[{opacity:0},{opacity:1}]:[{transform:`translate(calc(-50% + ${(p.x-n.x)*k}px),calc(-50% + ${(p.y-n.y)*k}px))`,opacity:0},{transform:'translate(-50%,-50%)',opacity:1}],{duration:guided?480:520,delay:guided?Math.min(500+index++*12,780):Math.min(index++*18,320),easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});}
+    }
+    function traceBranches(personId){
+      const reveal=branchReveal;
+      if(!reveal||reveal.personId!==personId)return;
+      const branches=[...reveal.ids].map(id=>({id,index:edges.findIndex(e=>e.kind==='hierarchy'&&e.source===personId&&e.target===id)})).filter(item=>item.index>=0);
+      if(!branches.length){branchReveal=null;render();return}
+      const overlay=document.createElementNS(NS,'svg');
+      overlay.setAttribute('class','lecture-route lecture-branches');
+      overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
+      overlay.setAttribute('aria-hidden','true');
+      for(const branch of branches){
+        const line=document.createElementNS(NS,'path');
+        line.setAttribute('class','lecture-route-line');
+        overlay.append(line);branch.line=line;
+      }
+      stage.append(overlay);activeBranchRoute=overlay;
+      const token=cameraMotion,duration=1300;let started=null;
+      function tick(now){
+        if(token!==cameraMotion||selected!==personId||branchReveal!==reveal){
+          overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null;return;
+        }
+        if(started===null)started=now;
+        const t=Math.min(1,(now-started)/duration),progress=t*t*(3-2*t);
+        reveal.progress=progress;render();
+        overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
+        for(const branch of branches){
+          const source=depthEnabled?threeSvg.querySelector(`[data-edge-index="${branch.index}"]`):paths[branch.index];
+          if(!source)continue;
+          const length=source.getTotalLength();
+          branch.line.setAttribute('d',source.getAttribute('d'));
+          branch.line.style.strokeDasharray=`${length} ${length}`;
+          branch.line.style.strokeDashoffset=String(length*(1-progress));
+        }
+        if(t<1)requestAnimationFrame(tick);
+        else{branchReveal=null;render();overlay.classList.add('finish');setTimeout(()=>{overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null},330)}
+      }
+      requestAnimationFrame(tick);
     }
     function traceRoute(from,to,onComplete,durationOverride){
       activeRoute?.remove();activeRoute=null;
@@ -826,7 +866,7 @@
       const reveal=fullReveal;
       const revealAmount=(x,y)=>fullRevealAmount(x,y);
       const nodeReveal=n=>fullRevealNode(n);
-      const setRevealOpacity=(element,n)=>{if(reveal&&n.person!==reveal.anchorPerson)element.style.setProperty('opacity',String(nodeReveal(n)),'important');else element.style.removeProperty('opacity')};
+      const setRevealOpacity=(element,n)=>{if(branchReveal?.ids.has(n.id))element.style.setProperty('opacity',String(Math.max(0,Math.min(1,(branchReveal.progress-.62)/.38))),'important');else if(reveal&&n.person!==reveal.anchorPerson)element.style.setProperty('opacity',String(nodeReveal(n)),'important');else element.style.removeProperty('opacity')};
       const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
@@ -1006,7 +1046,7 @@
       const ordered=[...points].sort((a,b)=>labelPriority(a)-labelPriority(b));
       for(const n of ordered){
         const {b,label}=elems.get(n.id),x=n.x*k+ox,y=n.y*k+oy;
-        b.style.left=x+'px';b.style.top=y+'px';b.style.filter=fullReveal?`opacity(${fullRevealNode(n)})`:'';b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.hidden=!visible.has(n.id)||x<0||x>width||y<0||y>height;
+        b.style.left=x+'px';b.style.top=y+'px';b.style.filter=branchReveal?.ids.has(n.id)?`opacity(${Math.max(0,Math.min(1,(branchReveal.progress-.62)/.38))})`:fullReveal?`opacity(${fullRevealNode(n)})`:'';b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.hidden=!visible.has(n.id)||x<0||x>width||y<0||y>height;
         b.classList.toggle('connected',connectedQuestions.has(n.id));
         if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='none';
