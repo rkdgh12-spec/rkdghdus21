@@ -113,7 +113,7 @@
       {chapter:4,people:[['최지혜',['Q3','Q4','Q5']],['서해영',['Q2','Q7','Q6']]]},
       {chapter:5,people:[['권현빈',['Q4','Q5','Q6']],['채길원',['Q5','Q7','Q4']]]}
     ];
-    const cues=[];let applyingCue=false;
+    const cues=[];let applyingCue=false,interviewClosedAt=0,pendingCueTimer=null;
     for(const c of [...chapters].sort((a,b)=>a.chapter-b.chapter)){
       const nav=document.createElement('button');nav.type='button';nav.dataset.chapter=c.id;nav.innerHTML='<span class="nav-number">0'+c.chapter+'</span>'+esc(c.label);nav.addEventListener('click',()=>select(c.id));q('.chapter-nav').append(nav);
       cues.push({id:c.id,label:displayLabel(c)});
@@ -231,6 +231,7 @@
     }
     function select(id){return recordStep(()=>selectStep(id))}
     function selectStep(id){
+      if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
       const previous=selected,before=new Set(visible);selected=id;
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
@@ -260,7 +261,7 @@
         if(chapterTransfer||personTransfer){
           activeRoute?.remove();activeRoute=null;
           const motion=cameraMotion;
-          setTimeout(()=>{if(cameraMotion===motion&&selected===id)traceRoute(previous,id,null,chapterTransfer?2400:2000)},chapterTransfer?1750:1500);
+          setTimeout(()=>{if(cameraMotion===motion&&selected===id)traceRoute(previous,id,null,chapterTransfer?3400:2000)},chapterTransfer?2500:1500);
         }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()});
       }
       save();
@@ -366,7 +367,7 @@
           for(let i=0;i<2;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
           const across={x:threePanX,y:threePanY};
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
-          travel([start,goal],chapterTransit?4200:3600,(_p,progress)=>{
+          travel([start,goal],chapterTransit?6200:3600,(_p,progress)=>{
             lastManual3D=performance.now();
             if(progress<.36){
               const t=smooth(progress/.36);
@@ -569,7 +570,7 @@
     }
     function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue')return;const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
     q('#question-prev').addEventListener('click',()=>changeQuestion(-1));q('#question-next').addEventListener('click',()=>changeQuestion(1));
-    function closeInterview(){recordStep(()=>{stopVideo();dialog.close()})}
+    function closeInterview(){recordStep(()=>{if(dialog.open)interviewClosedAt=performance.now();stopVideo();dialog.close()})}
     q('#interview-close').addEventListener('click',closeInterview);dialog.addEventListener('close',()=>{if(!dialog.open)stopVideo()});dialog.addEventListener('cancel',e=>{e.preventDefault();closeInterview()});dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeInterview()}});
     video.addEventListener('error',()=>{if(video.getAttribute('src'))q('#video-error').hidden=false});
     q('#interview-play').addEventListener('click',()=>{
@@ -593,11 +594,21 @@
     function updateCue(){q('#sequence-count').textContent=(cueIndex+1)+' / '+cues.length;q('#sequence-label').textContent=cueIndex<0?'제1장부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0;q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!presentationMode||cueIndex>=cues.length-1;q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
+      if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}
       const nextIndex=Math.max(-1,Math.min(cues.length-1,index));
       const upcomingCue=cues[nextIndex];
       if(dialog.open){
         if((upcomingCue?.all||upcomingCue?.epilogue)&&!reducedMotion){stopVideo();const fade=dialog.animate([{opacity:1},{opacity:0}],{duration:480,easing:'ease-in-out',fill:'forwards'});fade.onfinish=()=>{if(dialog.open)dialog.close()}}
         else closeInterview();
+      }
+      if(nextIndex>cueIndex&&upcomingCue&&!upcomingCue.all&&!upcomingCue.epilogue&&interviewClosedAt){
+        const remaining=2000-(performance.now()-interviewClosedAt);
+        if(remaining>0){
+          const waitingAt=cueIndex;
+          pendingCueTimer=setTimeout(()=>{pendingCueTimer=null;if(cueIndex===waitingAt&&!dialog.open){interviewClosedAt=0;runCue(nextIndex)}},remaining);
+          return;
+        }
+        interviewClosedAt=0;
       }
       cueIndex=nextIndex;
       const cue=cues[cueIndex];
