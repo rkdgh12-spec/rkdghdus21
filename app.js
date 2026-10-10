@@ -103,7 +103,7 @@
     const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const displayLabel=n=>n.kind==='chapter'?`제${n.chapter}장 · ${n.label}`:n.label;
     const dialog=q('#interview-dialog'),video=q('#interview-video'),panel=q('.detail-panel');
-    let interviewMode='person';
+    let interviewMode='person',videoStarted=false;
     let stepHistory=[],stepIndex=-1,stepDepth=0,restoringStep=false;
     const epilogueFilm={id:'epilogue-film',kind:'epilogue',person:'열 명의 목소리',label:'통합 영상',topic:'조소과 교육의 앞으로',question:'조소과 교육에서 계속 지켜야 할 것과 새롭게 시도할 것은 무엇일까요?'};
     const lectureOrder=[
@@ -450,7 +450,7 @@
     }
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
     function openInterviewStep(n,mode='person'){
-      currentQuestion=n;stopVideo();
+      currentQuestion=n;stopVideo();videoStarted=false;
       interviewMode=mode;const isEpilogue=mode==='epilogue';q('#epilogue-collection').hidden=!isEpilogue;dialog.classList.toggle('epilogue-mode',isEpilogue);
       const content=q('#interview-content');
       content.removeAttribute('role');content.removeAttribute('aria-labelledby');content.removeAttribute('tabindex');
@@ -495,7 +495,7 @@
       video.play().catch(()=>{});
     });
     video.addEventListener('play',async()=>{
-      q('#interview-play').hidden=true;
+      videoStarted=true;q('#interview-play').hidden=true;
       if(!video.getAttribute('src')||document.fullscreenElement===video||video.webkitDisplayingFullscreen)return;
       try{
         if(typeof video.requestFullscreen==='function')await video.requestFullscreen();
@@ -540,7 +540,7 @@
     }
     q('#interview-stage-next').addEventListener('click',()=>{
       if(!presentationMode||cueIndex>=cues.length-1)return;
-      if(dialog.open&&currentQuestion?.kind==='question'&&video.getAttribute('src')&&video.paused&&video.currentTime<0.25){
+      if(dialog.open&&video.getAttribute('src')&&!videoStarted){
         try{
           if(typeof video.requestFullscreen==='function')video.requestFullscreen().catch(()=>{});
           else if(typeof video.webkitEnterFullscreen==='function')video.webkitEnterFullscreen();
