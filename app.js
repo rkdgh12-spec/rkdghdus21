@@ -171,6 +171,43 @@
       const rx=Math.max(cx-minx,maxx-cx),ry=Math.max(cy-miny,maxy-cy);
       k=Math.min((width-36)/(2*rx),(height-48)/(2*ry),1.9);fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
     }
+    function fitWholeConnection(){
+      const start2D={k,ox,oy};
+      const start3D={yaw:threeYaw,elevation:threeElevation,zoom:threeZoom,x:threePanX,y:threePanY};
+      fit();
+      const contour=networkContours?.core||[];
+      if(contour.length){
+        const xs=contour.map(p=>p[0]),ys=contour.map(p=>p[1]);
+        const cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;
+        const minx=Math.min(...nodes.map(n=>n.x),...xs)-150,maxx=Math.max(...nodes.map(n=>n.x),...xs)+190;
+        const miny=Math.min(...nodes.map(n=>n.y),...ys)-100,maxy=Math.max(...nodes.map(n=>n.y),...ys)+110;
+        k=Math.min((width-36)/(2*Math.max(cx-minx,maxx-cx)),(height-48)/(2*Math.max(cy-miny,maxy-cy)),1.9);
+        fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
+      }
+      if(reducedMotion&&!depthEnabled)return;
+      const token=++cameraMotion,duration=1400,start=performance.now();
+      if(depthEnabled){
+        const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
+        const goalYaw=start3D.yaw+turn;
+        autoCentered3D=false;idleYaw=0;idleElevation=0;lastManual3D=performance.now();
+        threeYaw=goalYaw;threeElevation=1.38;threeZoom=1;render3D();
+        const region=threeSvg.querySelector('.three-volume.core');
+        if(region){const box=region.getBBox();threePanX+=width/2-box.x-box.width/2;threePanY+=height/2-box.y-box.height/2;render3D()}
+        const goal={yaw:threeYaw,elevation:threeElevation,zoom:threeZoom,x:threePanX,y:threePanY};
+        if(reducedMotion)return;
+        threeYaw=start3D.yaw;threeElevation=start3D.elevation;threeZoom=start3D.zoom;threePanX=start3D.x;threePanY=start3D.y;render3D();
+        function tick(now){if(token!==cameraMotion)return;const t=Math.min(1,(now-start)/duration),ease=t*t*(3-2*t);
+          threeYaw=start3D.yaw+(goal.yaw-start3D.yaw)*ease;threeElevation=start3D.elevation+(goal.elevation-start3D.elevation)*ease;threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*ease;
+          threePanX=start3D.x+(goal.x-start3D.x)*ease;threePanY=start3D.y+(goal.y-start3D.y)*ease;lastManual3D=now;render3D();
+          if(t<1)requestAnimationFrame(tick);else{stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
+        requestAnimationFrame(tick);return;
+      }
+      const goal={k,ox,oy};k=start2D.k;ox=start2D.ox;oy=start2D.oy;render();
+      function tick(now){if(token!==cameraMotion)return;const t=Math.min(1,(now-start)/duration),ease=t*t*(3-2*t);
+        k=start2D.k+(goal.k-start2D.k)*ease;ox=start2D.ox+(goal.ox-start2D.ox)*ease;oy=start2D.oy+(goal.oy-start2D.oy)*ease;render();
+        if(t<1)requestAnimationFrame(tick);else{stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
+      requestAnimationFrame(tick);
+    }
     function updateVisible(){
       visible=new Set(chapters.map(n=>n.id));
       for(const chapter of chapters){
@@ -389,7 +426,7 @@
       const cue=cues[cueIndex];
       if(!cue){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);fit();updateCue();save();return}
       if(cue.all||cue.epilogue){
-        cameraMotion++;const before=new Set(visible);selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fit();showDetail(null);animateNodes(before);updateCue();save();
+        cameraMotion++;const before=new Set(visible);selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save();
         if(cue.epilogue)transitionToEpilogue();
         return;
       }
@@ -404,7 +441,7 @@
       updateCue();
     }
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
-    function showAll(){return recordStep(()=>{cameraMotion++;const before=new Set(visible);selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fit();showDetail(null);animateNodes(before);updateCue();save()})}
+    function showAll(){return recordStep(()=>{cameraMotion++;const before=new Set(visible);selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
     function reset(){return recordStep(()=>{cameraMotion++;selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);updateCue();save()})}
     function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset();threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
     q('#enter-presentation').addEventListener('click',()=>enter('presentation'));q('#enter-explore').addEventListener('click',()=>enter('explore'));q('#enter-resume').addEventListener('click',()=>enter('resume'));
