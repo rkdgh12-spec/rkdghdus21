@@ -385,6 +385,7 @@
       const motion=cameraMotion;
       if(!reducedMotion){
         const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','epilogue-network');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
+        const wash=document.createElement('div');wash.className='epilogue-wash';wash.setAttribute('aria-hidden','true');
         const source=depthEnabled?threeSvg:svg;
         epilogueOverlay=overlay;epilogueEchoes=new Map();
         let index=0;
@@ -395,10 +396,10 @@
           epilogueEchoes.set(Number(path.dataset.edgeIndex),echo);
           echo.style.setProperty('--epi-delay',((index*47)%390)+'ms');overlay.append(echo);index++;
         }
-        stage.append(overlay);
-        await new Promise(resolve=>setTimeout(resolve,4800));
-        if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
-        overlay.remove();if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null}
+        stage.append(wash,overlay);
+        await new Promise(resolve=>setTimeout(resolve,4550));
+        if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
+        overlay.remove();wash.remove();if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null}
       }
       epilogueTransitioning=false;
       if(reducedMotion&&motion===cameraMotion)openEpilogue();
