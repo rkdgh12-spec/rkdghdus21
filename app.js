@@ -133,7 +133,7 @@
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
-    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:5300)});q('.tools').insertBefore(epilogueNav,depthButton);
+    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:6800)});q('.tools').insertBefore(epilogueNav,depthButton);
     const quickStep=document.createElement('button');quickStep.type='button';quickStep.className='control quick-step';quickStep.textContent='87단계로 이동 · 임시';quickStep.title='87단계로 바로 이동';quickStep.addEventListener('click',()=>runCue(86));q('.tools').insertBefore(quickStep,epilogueNav);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
@@ -174,6 +174,7 @@
       k=Math.min((width-36)/(2*rx),(height-48)/(2*ry),1.9);fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
     }
     function fitWholeConnection(){
+      const ringTransition=depthEnabled&&fullReveal?.anchorPerson==='채길원';
       const start2D={k,ox,oy};
       const start3D={yaw:threeYaw+idleYaw,elevation:threeElevation+idleElevation,zoom:threeZoom,x:threePanX,y:threePanY};
       if(depthEnabled){autoCentered3D=false;threeYaw=start3D.yaw;threeElevation=start3D.elevation;idleYaw=0;idleElevation=0;lastManual3D=performance.now()}
@@ -190,7 +191,7 @@
       const centeredX=(width/2-ox)/k,centeredY=(height/2-oy)/k;
       k*=1.09;ox=width/2-centeredX*k;oy=height/2-centeredY*k;
       if(reducedMotion&&!depthEnabled){render();return}
-      const token=++cameraMotion,duration=depthEnabled?5200:5000,start=performance.now();
+      const token=++cameraMotion,duration=depthEnabled?(ringTransition?6500:5200):5000,start=performance.now();
       if(depthEnabled){
         const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
@@ -201,9 +202,15 @@
         if(reducedMotion)return;
         threeYaw=start3D.yaw;threeElevation=start3D.elevation;threeZoom=start3D.zoom;threePanX=start3D.x;threePanY=start3D.y;render3D();
         function tick(now){if(token!==cameraMotion)return;const t=Math.min(1,(now-start)/duration),ease=t*t*(3-2*t);
-          const orbit=Math.sin(Math.PI*t);
-          threeYaw=start3D.yaw+(goal.yaw-start3D.yaw)*ease+orbit*.55;threeElevation=start3D.elevation+(goal.elevation-start3D.elevation)*ease-orbit*.32;threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*ease;
-          threePanX=start3D.x+(goal.x-start3D.x)*ease;threePanY=start3D.y+(goal.y-start3D.y)*ease;lastManual3D=now;render3D();
+          if(ringTransition){
+            const sideYaw=start3D.yaw-.5,sweepYaw=sideYaw+1.55,sideElevation=.12;
+            if(t<.27){const p=smooth(t/.27);threeYaw=start3D.yaw+(sideYaw-start3D.yaw)*p;threeElevation=start3D.elevation+(sideElevation-start3D.elevation)*p}
+            else if(t<.73){const p=smooth((t-.27)/.46);threeYaw=sideYaw+(sweepYaw-sideYaw)*p;threeElevation=sideElevation+.12*Math.sin(Math.PI*p)}
+            else{const p=smooth((t-.73)/.27);threeYaw=sweepYaw+(goal.yaw-sweepYaw)*p;threeElevation=sideElevation+(goal.elevation-sideElevation)*p}
+          }else{const orbit=Math.sin(Math.PI*t);threeYaw=start3D.yaw+(goal.yaw-start3D.yaw)*ease+orbit*.55;threeElevation=start3D.elevation+(goal.elevation-start3D.elevation)*ease-orbit*.32}
+          const layoutEase=ringTransition?smooth(t/.34):ease;
+          threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*layoutEase;
+          threePanX=start3D.x+(goal.x-start3D.x)*layoutEase;threePanY=start3D.y+(goal.y-start3D.y)*layoutEase;lastManual3D=now;render3D();
           if(t<1)requestAnimationFrame(tick);else{fullReveal=null;render3D();stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
         requestAnimationFrame(tick);return;
       }
