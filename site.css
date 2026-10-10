@@ -146,3 +146,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .stage.person-focus:not(.branch-focus) .links.person-concept:not(.active){stroke:var(--secondary)!important;stroke-width:.85!important;opacity:.34!important}
 
 #forum-source-network .stage.person-focus.person-branches-complete .links.person-concept.person-current:not(.active){stroke:var(--accent)!important;stroke-width:1.05!important;opacity:.78!important}
+
+#forum-source-network .stage .links.branch-complete{stroke:var(--accent)!important;opacity:.85!important}
+#forum-source-network .stage .links.chapter-person.branch-complete{stroke-width:2.15!important}
+#forum-source-network .stage .links.person-concept.branch-complete{stroke-width:1.65!important}
+#forum-source-network .stage .links.concept-subconcept.branch-complete{stroke-width:1.3!important}
+#forum-source-network .stage .links.subconcept-question.branch-complete{stroke-width:1.1!important}
