@@ -259,8 +259,8 @@
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
-          traceRoute(previous,id,null,chapterTransfer?9600:7400);
-        }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()});
+          traceRoute(previous,id,null,NODE_TRAVEL_MS);
+        }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()},NODE_TRAVEL_MS);
       }
       save();
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
@@ -308,6 +308,7 @@
       const box=element.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
+    const NODE_TRAVEL_MS=7400;
     function travel(points,duration,frame,done){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
@@ -372,7 +373,7 @@
           const finalAnchor=anchorAt(goal.zoom);
           const correction={x:goal.x-finalAnchor.x-drift.x,y:goal.y-finalAnchor.y-drift.y};
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
-          travel([start,goal],chapterTransit?9600:7400,(_p,progress)=>{
+          travel([start,goal],NODE_TRAVEL_MS,(_p,progress)=>{
             lastManual3D=performance.now();
             const outPhase=smooth(progress/.52),inPhase=smooth((progress-.52)/.48);
             threeZoom=progress<.52?start.zoom+(overviewZoom-start.zoom)*outPhase:overviewZoom+(goal.zoom-overviewZoom)*inPhase;
@@ -382,8 +383,7 @@
             render3D();
           },finish);
         }else{
-          const duration=Math.min(1800,Math.max(900,850+distance*.2+zoomSteps*260));
-          travel([start,goal],duration,(p,progress)=>{
+          travel([start,goal],NODE_TRAVEL_MS,(p,progress)=>{
             lastManual3D=performance.now();
             threePanX=p.x;threePanY=p.y;
             threeZoom=start.zoom+(goal.zoom-start.zoom)*progress;
@@ -408,7 +408,7 @@
       const finish=()=>{ox=goal.x;oy=goal.y;render();after()};
       if(reducedMotion){finish();return}
       const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
-      travel([start,goal],Math.min(780,Math.max(400,400+distance*.28)),p=>{ox=p.x;oy=p.y;render()},finish);
+      travel([start,goal],NODE_TRAVEL_MS,p=>{ox=p.x;oy=p.y;render()},finish);
     }
     function showDetail(n,openQuestion=true){
       if(!n){panel.hidden=true;detail.hidden=true;detail.innerHTML='';return}
