@@ -190,15 +190,24 @@
         fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
       }
       const centeredX=(width/2-ox)/k,centeredY=(height/2-oy)/k;
-      k*=1.09;ox=width/2-centeredX*k;oy=height/2-centeredY*k;
+      ox=width/2-centeredX*k;oy=height/2-centeredY*k;
       if(reducedMotion&&!depthEnabled){render();return}
       const token=++cameraMotion,duration=depthEnabled?(ringTransition?7600:5200):5000,start=performance.now();
       if(depthEnabled){
         const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
         threeYaw=goalYaw;threeElevation=1.38;threeZoom=1.09;render3D();
-        const region=threeSvg.querySelector('.three-volume.core');
-        if(region){const box=region.getBBox();threePanX+=width/2-box.x-box.width/2;threePanY+=height/2-box.y-box.height/2;render3D()}
+        let region=threeSvg.querySelector('.three-volume.outer');
+        if(region){
+          const box=region.getBBox();
+          const fitScale=Math.min((width-112)/Math.max(1,box.width),(height-112)/Math.max(1,box.height));
+          threeZoom=Math.max(.45,Math.min(maxThreeZoom,threeZoom*fitScale));render3D();
+          region=threeSvg.querySelector('.three-volume.outer');
+          const fitted=region.getBBox();
+          threePanX+=width/2-fitted.x-fitted.width/2;
+          threePanY+=height/2-fitted.y-fitted.height/2;
+          render3D();
+        }
         const goal={yaw:threeYaw,elevation:threeElevation,zoom:threeZoom,x:threePanX,y:threePanY};
         if(reducedMotion)return;
         threeYaw=start3D.yaw;threeElevation=start3D.elevation;threeZoom=start3D.zoom;threePanX=start3D.x;threePanY=start3D.y;render3D();
