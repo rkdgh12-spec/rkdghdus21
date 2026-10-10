@@ -180,17 +180,16 @@
       const start3D={yaw:threeYaw+idleYaw,elevation:threeElevation+idleElevation,zoom:threeZoom,x:threePanX,y:threePanY};
       if(depthEnabled){autoCentered3D=false;threeYaw=start3D.yaw;threeElevation=start3D.elevation;idleYaw=0;idleElevation=0;lastManual3D=performance.now()}
       fit();
-      const contour=networkContours?.core||[];
-      if(contour.length){
-        const xs=contour.map(p=>p[0]),ys=contour.map(p=>p[1]);
-        const cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;
-        const minx=Math.min(...nodes.map(n=>n.x),...xs)-150,maxx=Math.max(...nodes.map(n=>n.x),...xs)+190;
-        const miny=Math.min(...nodes.map(n=>n.y),...ys)-100,maxy=Math.max(...nodes.map(n=>n.y),...ys)+110;
-        k=Math.min((width-36)/(2*Math.max(cx-minx,maxx-cx)),(height-48)/(2*Math.max(cy-miny,maxy-cy)),1.9);
-        fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
+      for(let pass=0;pass<2;pass++){
+        render();
+        const box=outerOutline.getBBox();
+        if(!box.width||!box.height)break;
+        const scale=Math.min((width-80)/box.width,(height-96)/box.height);
+        const centerX=(box.x+box.width/2-ox)/k,centerY=(box.y+box.height/2-oy)/k;
+        k=Math.min(1.9,k*scale);
+        ox=width/2-centerX*k;oy=height/2-centerY*k;
       }
-      const centeredX=(width/2-ox)/k,centeredY=(height/2-oy)/k;
-      ox=width/2-centeredX*k;oy=height/2-centeredY*k;
+      fitK=k;render();
       if(reducedMotion&&!depthEnabled){render();return}
       const token=++cameraMotion,duration=depthEnabled?(ringTransition?7600:5200):5000,start=performance.now();
       if(depthEnabled){
@@ -200,7 +199,7 @@
         let region=threeSvg.querySelector('.three-volume.outer');
         if(region){
           const box=region.getBBox();
-          const fitScale=Math.min((width-112)/Math.max(1,box.width),(height-112)/Math.max(1,box.height));
+          const fitScale=Math.min((width-80)/Math.max(1,box.width),(height-96)/Math.max(1,box.height));
           threeZoom=Math.max(.45,Math.min(maxThreeZoom,threeZoom*fitScale));render3D();
           region=threeSvg.querySelector('.three-volume.outer');
           const fitted=region.getBBox();
