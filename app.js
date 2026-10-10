@@ -313,11 +313,10 @@
           if(getComputedStyle(path).display==='none')continue;
           const d=path.getAttribute('d');if(!d)continue;
           const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
-          const length=path.getTotalLength();echo.style.strokeDasharray=`${length} ${length}`;echo.style.setProperty('--epi-length',String(length));
           echo.style.setProperty('--epi-delay',((index*47)%390)+'ms');overlay.append(echo);index++;
         }
         stage.append(overlay);
-        await new Promise(resolve=>setTimeout(resolve,1550));
+        await new Promise(resolve=>setTimeout(resolve,3650));
         overlay.remove();
       }
       epilogueTransitioning=false;
