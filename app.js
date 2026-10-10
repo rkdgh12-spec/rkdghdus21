@@ -259,8 +259,7 @@
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
-          const routeStart=personTransfer?ancestors(previous).find(aid=>nodes[aid].kind==='person'):previous;
-          traceRoute(routeStart,id,null,NODE_TRAVEL_MS);
+          traceRoute(previous,id,null,NODE_TRAVEL_MS,personTransfer);
         }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()},NODE_TRAVEL_MS);
       }
       save();
@@ -272,7 +271,7 @@
       if(depthEnabled)return;
       let index=0;for(const nid of visible){if(before.has(nid)||!elems.has(nid))continue;const n=nodes[nid],p=nodes[n.parent],{b}=elems.get(nid);b.animate(guided?[{opacity:0},{opacity:1}]:[{transform:`translate(calc(-50% + ${(p.x-n.x)*k}px),calc(-50% + ${(p.y-n.y)*k}px))`,opacity:0},{transform:'translate(-50%,-50%)',opacity:1}],{duration:guided?480:520,delay:guided?Math.min(500+index++*12,780):Math.min(index++*18,320),easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});}
     }
-    function traceRoute(from,to,onComplete,durationOverride){
+    function traceRoute(from,to,onComplete,durationOverride,direct=false){
       activeRoute?.remove();activeRoute=null;
       const adjacent=new Map();
       edges.forEach((edge,index)=>{if(!visible.has(edge.source)||!visible.has(edge.target)||paths[index].style.display==='none')return;
@@ -282,6 +281,7 @@
       for(let head=0;head<queue.length&&!previous.has(to);head++)for(const step of adjacent.get(queue[head])||[]){if(previous.has(step.to))continue;previous.set(step.to,{from:queue[head],...step});queue.push(step.to)}
       const route=[];let cursor=to;
       while(previous.has(cursor)&&previous.get(cursor)){const step=previous.get(cursor);route.unshift(step);cursor=step.from}
+      if(direct)route.length=0;
       if(!route.length&&from===to)return;
       const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','lecture-route');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
       const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
@@ -339,7 +339,7 @@
         const chapterTransit=presentationMode&&kind==='chapter'&&previous!==null&&nodes[previous].chapter!==node.chapter;
         const personTransit=presentationMode&&kind==='person'&&previous!==null&&nodes[previous].person&&nodes[previous].person!==node.person;
         const wideTransit=chapterTransit||personTransit;
-        const sourceId=wideTransit&&previous!==null?ancestors(previous).find(aid=>nodes[aid].kind===(chapterTransit?'chapter':'person')):previous;
+        const sourceId=chapterTransit&&previous!==null?ancestors(previous).find(aid=>nodes[aid].kind==='chapter'):previous;
         if(sourceId!==undefined&&sourceId!==null&&threeProjected[sourceId])startFocus={x:threeProjected[sourceId].x,y:threeProjected[sourceId].y};
         const focusId=kind==='question'?node.parent:id;
         let goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
