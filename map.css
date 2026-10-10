@@ -198,4 +198,3 @@
   #forum-source-network :is(.node-layer,.three-nodes) :is(.dot,.area-heading){animation:none}
 }
 
-#forum-source-network .stage.three-view.chapter-one-detail .three-node.area-heading[title^="제1장"]{transform:translate(calc(-50% - 100px),-50%);transition:transform .72s ease}
