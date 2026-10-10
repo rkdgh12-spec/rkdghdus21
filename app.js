@@ -416,6 +416,7 @@
           echo.style.setProperty('animation','none','important');echo.style.setProperty('stroke','#078694','important');echo.style.setProperty('opacity','0','important');
           epilogueEchoes.set(index,echo);
           const child=route.parentEdge[edge.source]===index?edge.source:route.parentEdge[edge.target]===index?edge.target:-1;
+          if(child<0){epilogueEchoes.delete(index);continue}
           if(child>=0){
             const parent=route.parentNode[child],start=route.arrival[parent]+(parent===threeCenter.id?route.branchDelay[child]:0);
             echo.classList.add('trace');echo.style.setProperty('stroke-width','2.7','important');echo.style.strokeDasharray=`${length} ${length}`;
@@ -435,7 +436,7 @@
               const progress=smooth((elapsed-view.start)/view.duration);
               view.echo.style.strokeDashoffset=String((view.reverse?-1:1)*view.length*(1-progress));
               view.echo.style.setProperty('opacity',elapsed<view.start?'0':progress<1?'.96':'.46','important');
-            }else view.echo.style.setProperty('opacity',String(.28*smooth((elapsed-view.start)/700)),'important');
+            }
           }
           requestAnimationFrame(drawRoute);
         }
