@@ -78,7 +78,7 @@
     const children=id=>nodes.filter(n=>n.parent===id);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elems=new Map(),paths=[],areas=new Map();
-    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,guidedHiddenEdge=-1,fullReveal=null;
+    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,guidedHiddenEdge=-1,cameraTravelProgress=0,fullReveal=null;
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
@@ -325,7 +325,7 @@
       if(!route.length&&from===to)return;
       const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','lecture-route');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
       const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r',guidedHiddenEdge>=0?'3.4':'2.7');if(guidedHiddenEdge>=0)line.style.strokeWidth='2.25';overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
-      const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110);let start=null;
+      const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110),syncToCamera=guidedHiddenEdge>=0;let start=null;
       function draw(progress){
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
         const samples=[];
@@ -338,8 +338,8 @@
         const p=line.getPointAtLength(length*progress);head.setAttribute('cx',p.x);head.setAttribute('cy',p.y);
       }
       function tick(now){if(token!==cameraMotion){overlay.remove();if(activeRoute===overlay)activeRoute=null;return}if(start===null)start=now;
-        const t=Math.min(1,(now-start)/duration);draw(t*t*(3-2*t));
-        if(t<1)requestAnimationFrame(tick);else{stage.classList.remove('guided-transition');overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
+        const t=Math.min(1,(now-start)/duration),progress=syncToCamera?cameraTravelProgress:t*t*(3-2*t);draw(progress);
+        if(progress<1)requestAnimationFrame(tick);else{stage.classList.remove('guided-transition');overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
       requestAnimationFrame(tick);
     }
     function selectedTextPoint(id){
@@ -351,7 +351,7 @@
     }
     const NODE_TRAVEL_MS=2470;
     function travel(points,duration,frame,done){
-      const token=++cameraMotion,segments=[],lengths=[0];let total=0;
+      const token=++cameraMotion,segments=[],lengths=[0];let total=0;cameraTravelProgress=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
       let start=null,last=0;
       function tick(now){
@@ -363,7 +363,9 @@
         while(i<segments.length-1&&lengths[i+1]<distance)i++;
         const part=segments[i]?Math.max(0,Math.min(1,(distance-lengths[i])/segments[i])):1;
         const a=points[i],b=points[Math.min(i+1,points.length-1)];
-        frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},t*t*(3-2*t));
+        const eased=t*t*(3-2*t);
+        frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},eased);
+        cameraTravelProgress=eased;
         if(t<1)requestAnimationFrame(tick);
         else{done();if(selected!==null&&stepHistory[stepIndex]?.selected===selected){stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
       }
