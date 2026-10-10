@@ -257,9 +257,10 @@
       followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
       if(guided){
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
-        const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
+        const personTransfer=nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
-          traceRoute(previous,id,null,NODE_TRAVEL_MS);
+          const routeStart=personTransfer?ancestors(previous).find(aid=>nodes[aid].kind==='person'):previous;
+          traceRoute(routeStart,id,null,NODE_TRAVEL_MS);
         }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()},NODE_TRAVEL_MS);
       }
       save();
