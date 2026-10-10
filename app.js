@@ -316,7 +316,7 @@
           echo.style.setProperty('--epi-delay',((index*47)%390)+'ms');overlay.append(echo);index++;
         }
         stage.append(overlay);
-        await new Promise(resolve=>setTimeout(resolve,3700));
+        await new Promise(resolve=>setTimeout(resolve,4800));
         if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
         overlay.remove();
       }
