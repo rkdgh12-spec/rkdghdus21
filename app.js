@@ -184,7 +184,7 @@
         render();
         const box=outerOutline.getBBox();
         if(!box.width||!box.height)break;
-        const scale=Math.min((width-80)/box.width,(height-96)/box.height);
+        const scale=Math.min((width-32)/box.width,(height-24)/box.height);
         const centerX=(box.x+box.width/2-ox)/k,centerY=(box.y+box.height/2-oy)/k;
         k=Math.min(1.9,k*scale);
         ox=width/2-centerX*k;oy=height/2-centerY*k;
@@ -199,7 +199,7 @@
         let region=threeSvg.querySelector('.three-volume.outer');
         if(region){
           const box=region.getBBox();
-          const fitScale=Math.min((width-80)/Math.max(1,box.width),(height-96)/Math.max(1,box.height));
+          const fitScale=Math.min((width-32)/Math.max(1,box.width),(height-24)/Math.max(1,box.height));
           threeZoom=Math.max(.45,Math.min(maxThreeZoom,threeZoom*fitScale));render3D();
           region=threeSvg.querySelector('.three-volume.outer');
           const fitted=region.getBBox();
