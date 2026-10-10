@@ -104,7 +104,7 @@
     const dialog=q('#interview-dialog'),video=q('#interview-video'),panel=q('.detail-panel');
     let interviewMode='person';
     let stepHistory=[],stepIndex=-1,stepDepth=0,restoringStep=false;
-    const epilogueQuestions=(window.FORUM_EPILOGUE||[]).map(row=>{const person=points.find(n=>n.kind==='person'&&n.label===row.person);return {...row,id:'epilogue-'+person.id,kind:'epilogue',parent:person.id,chapter:person.chapter}});
+    const epilogueFilm={id:'epilogue-film',kind:'epilogue',person:'열 명의 목소리',label:'통합 영상',topic:'조소과 교육의 앞으로',question:'조소과 교육에서 계속 지켜야 할 것과 새롭게 시도할 것은 무엇일까요?'};
     const lectureOrder=[
       {chapter:1,people:[['최고은',['Q4','Q5']]]},
       {chapter:2,people:[['류성실',['Q5','Q6']],['강인애',['Q3','Q5']]]},
@@ -132,8 +132,7 @@
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
-    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>recordStep(()=>{showAll();openEpilogue(0)}));q('.tools').insertBefore(epilogueNav,depthButton);
-    epilogueQuestions.forEach((n,index)=>{const tab=document.createElement('button');tab.type='button';tab.id='epilogue-person-'+index;tab.textContent=n.person;tab.setAttribute('role','tab');tab.setAttribute('aria-controls','interview-content');tab.addEventListener('click',()=>openEpilogue(index));tab.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?epilogueQuestions.length-1:(index+(e.key==='ArrowRight'?1:epilogueQuestions.length-1))%epilogueQuestions.length;openEpilogue(next);q('#epilogue-person-'+next).focus()});q('#epilogue-people').append(tab)});
+    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{showAll();transitionToEpilogue()});q('.tools').insertBefore(epilogueNav,depthButton);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
     for(const c of [...chapters].sort((a,b)=>(a.chapter===5)-(b.chapter===5))){
@@ -300,33 +299,67 @@
       else if(video.webkitDisplayingFullscreen&&typeof video.webkitExitFullscreen==='function')video.webkitExitFullscreen();
     }
     function stopVideo(){exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
-    function openEpilogue(index){const n=epilogueQuestions[index];if(n)openInterview(n,'epilogue')}
+    function openEpilogue(){openInterview(epilogueFilm,'epilogue')}
+    let epilogueTransitioning=false;
+    async function transitionToEpilogue(){
+      if(epilogueTransitioning)return;
+      epilogueTransitioning=true;
+      const motion=cameraMotion;
+      const core=chapters.find(n=>n.chapter===5);
+      const heading=depthEnabled?threeNodes.get(core.id):areas.get(core.id).heading;
+      const target=heading?.querySelector('strong')||heading;
+      const targetRect=target?.getBoundingClientRect();
+      const stageRect=stage.getBoundingClientRect();
+      const overlay=document.createElement('div');overlay.className='epilogue-convergence';overlay.setAttribute('aria-hidden','true');
+      stage.append(overlay);stage.classList.add('epilogue-transition');
+      const animations=[];
+      if(!reducedMotion&&targetRect){
+        const tx=targetRect.left+targetRect.width/2-stageRect.left,ty=targetRect.top+targetRect.height/2-stageRect.top;
+        for(const person of points.filter(n=>n.kind==='person'&&visible.has(n.id))){
+          const button=depthEnabled?threeNodes.get(person.id):elems.get(person.id)?.b;
+          const label=button?.querySelector('.node-label-text');
+          if(!label)continue;
+          const rect=label.getBoundingClientRect();
+          if(!rect.width||!rect.height)continue;
+          const x=rect.left+rect.width/2-stageRect.left,y=rect.top+rect.height/2-stageRect.top;
+          const ghost=document.createElement('span');ghost.className='epilogue-name';ghost.textContent=person.label;
+          ghost.style.left=x+'px';ghost.style.top=y+'px';overlay.append(ghost);
+          const delay=Math.max(0,Math.round(Math.hypot(x-tx,y-ty)*.12));
+          animations.push(ghost.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1,filter:'blur(0px)'},{transform:`translate(calc(-50% + ${tx-x}px),calc(-50% + ${ty-y}px)) scale(.54)`,opacity:.72,filter:'blur(0px)',offset:.82},{transform:`translate(calc(-50% + ${tx-x}px),calc(-50% + ${ty-y}px)) scale(.2)`,opacity:0,filter:'blur(3px)'}],{duration:850,delay,easing:'cubic-bezier(.33,0,.2,1)',fill:'forwards'}).finished.catch(()=>{}));
+        }
+        heading?.classList.add('epilogue-core-pulse');
+        await Promise.all(animations);
+      }
+      overlay.remove();stage.classList.remove('epilogue-transition');heading?.classList.remove('epilogue-core-pulse');epilogueTransitioning=false;
+      if(motion===cameraMotion)openEpilogue();
+    }
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
     function openInterviewStep(n,mode='person'){
       currentQuestion=n;stopVideo();
-      interviewMode=mode;const isEpilogue=mode==='epilogue';q('#epilogue-collection').hidden=!isEpilogue;
+      interviewMode=mode;const isEpilogue=mode==='epilogue';q('#epilogue-collection').hidden=!isEpilogue;dialog.classList.toggle('epilogue-mode',isEpilogue);
       const content=q('#interview-content');
-      if(isEpilogue){content.setAttribute('role','tabpanel');content.setAttribute('aria-labelledby','epilogue-person-'+epilogueQuestions.indexOf(n));content.tabIndex=0}else{content.removeAttribute('role');content.removeAttribute('aria-labelledby');content.removeAttribute('tabindex')}
-      q('#epilogue-people').querySelectorAll('button').forEach((tab,index)=>{const active=epilogueQuestions[index].id===n.id;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1});
-      const media=(window.FORUM_MEDIA||{})[n.person+'/'+n.label]||{};
+      content.removeAttribute('role');content.removeAttribute('aria-labelledby');content.removeAttribute('tabindex');
+      const media=(window.FORUM_MEDIA||{})[isEpilogue?'epilogue/film':n.person+'/'+n.label]||{};
       q('#interview-person').textContent=n.person;
-      q('#interview-profile').innerHTML=profileHTML(n.person);
+      q('#interview-profile').innerHTML=isEpilogue?'':profileHTML(n.person);
       q('#interview-chapter').textContent=(isEpilogue?'에필로그 · 교육에 관한 공통 질문':'제'+n.chapter+'장 · '+chapters.find(c=>c.chapter===n.chapter).label)+' / '+n.label;
       q('#interview-title').textContent=isEpilogue?n.topic:media.title||n.topic||nodes[n.parent].label;
       q('#interview-question').textContent=n.question;
       q('#interview-concepts').replaceChildren();
       for(const id of (isEpilogue?[]:n.kind==='introduction'?children(n.parent).map(x=>x.id):ancestors(n.id)).filter(id=>['concept','subconcept'].includes(nodes[id].kind))){const t=document.createElement('span');t.textContent=nodes[id].label;q('#interview-concepts').append(t)}
       const src=assetURL(media.src);video.hidden=!src;q('#interview-play').hidden=!src;q('#video-empty').hidden=!!src;q('#video-error').hidden=true;
+      q('#video-empty strong').textContent=isEpilogue?'에필로그 영상 준비 중':'영상 준비 중';
+      q('#video-empty p').textContent=isEpilogue?'열 명의 답변을 엮은 통합 영상을 이곳에서 보실 수 있습니다.':'인터뷰 영상은 추후 공개됩니다.';
       if(src){video.src=src;const poster=assetURL(media.poster);if(poster)video.poster=poster;video.style.objectFit=media.fit==='cover'?'cover':'contain';video.style.objectPosition=media.position||'center';
         for(const [i,caption] of (media.captions||[]).entries()){const url=assetURL(caption.src);if(!url)continue;const track=document.createElement('track');track.kind='subtitles';track.label=caption.label||'한국어';track.srclang=caption.language||'ko';track.src=url;track.default=i===0;video.append(track)}
         video.load();
       }
       q('#transcript-section').hidden=!media.transcript;q('#transcript-section').open=false;q('#interview-transcript').textContent=media.transcript||'';
-      const qs=isEpilogue?epilogueQuestions:personQuestions(n.person),index=qs.findIndex(x=>x.id===n.id);
+      const qs=isEpilogue?[epilogueFilm]:personQuestions(n.person),index=qs.findIndex(x=>x.id===n.id);
       const plannedStep=presentationMode&&!isEpilogue?cues.findIndex(c=>c.id===n.id):-1;
       q('#question-count').textContent=plannedStep>=0?'강연 단계 '+(plannedStep+1)+' / '+cues.length:(index+1)+' / '+qs.length;
       q('#question-prev').disabled=plannedStep>=0?plannedStep===0:index===0;q('#question-next').disabled=plannedStep>=0?plannedStep===cues.length-1:index===qs.length-1;
-      q('#question-prev').textContent=plannedStep>=0?'이전 단계':isEpilogue?'이전 인물':'이전 질문';q('#question-next').textContent=plannedStep>=0?'다음 단계':isEpilogue?'다음 인물':'다음 질문';q('#interview-related').parentElement.hidden=isEpilogue;
+      q('#question-prev').textContent=plannedStep>=0?'이전 단계':'이전 질문';q('#question-next').textContent=plannedStep>=0?'다음 단계':'다음 질문';q('#interview-related').parentElement.hidden=isEpilogue;
       const related=n.kind==='introduction'?qs.slice(1):[...new Set(edges.filter(e=>e.kind!=='hierarchy'&&(e.source===n.id||e.target===n.id)).map(e=>e.source===n.id?e.target:e.source))].map(id=>nodes[id]).filter(x=>x.kind==='question');
       q('#interview-related').replaceChildren();
       if(!related.length){const t=document.createElement('span');t.textContent='지도의 다른 질문도 만나보세요.';q('#interview-related').append(t)}
@@ -334,7 +367,7 @@
       if(!dialog.open){dialog.showModal();if(!reducedMotion)dialog.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'ease-out'})}
       dialog.scrollTop=0;
     }
-    function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue'){openEpilogue(epilogueQuestions.findIndex(n=>n.id===currentQuestion.id)+delta);return}const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
+    function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue')return;const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
     q('#question-prev').addEventListener('click',()=>changeQuestion(-1));q('#question-next').addEventListener('click',()=>changeQuestion(1));
     function closeInterview(){recordStep(()=>{stopVideo();dialog.close()})}
     q('#interview-close').addEventListener('click',closeInterview);dialog.addEventListener('close',()=>{if(!dialog.open)stopVideo()});dialog.addEventListener('cancel',e=>{e.preventDefault();closeInterview()});dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeInterview()}});
@@ -367,7 +400,7 @@
       if(!cue){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);fit();updateCue();save();return}
       if(cue.all||cue.epilogue){
         cameraMotion++;const before=new Set(visible);selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fit();showDetail(null);animateNodes(before);updateCue();save();
-        if(cue.epilogue)openEpilogue(0);
+        if(cue.epilogue)transitionToEpilogue();
         return;
       }
       expanded.clear();
@@ -415,7 +448,7 @@
         showDetail(s.panelOpen&&selected!==null?nodes[selected]:null,false);
         if(s.panelOpen&&nodes[selected]?.kind==='person')detail.querySelector('[data-person-tab="'+s.personTab+'"]')?.click();
         q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);if(depthEnabled)autoCentered3D=true;render();updateCue();animateNodes(before);panel.scrollTop=s.panelScroll;
-        if(s.interview){const item=s.interview.kind==='epilogue'?epilogueQuestions.find(n=>n.id===s.interview.id):s.interview.kind==='introduction'?introduction(points.find(n=>n.kind==='person'&&n.label===s.interview.person)):nodes[s.interview.id];if(item){openInterview(item,s.interview.mode);dialog.scrollTop=s.dialogScroll}}
+        if(s.interview){const item=s.interview.kind==='epilogue'?epilogueFilm:s.interview.kind==='introduction'?introduction(points.find(n=>n.kind==='person'&&n.label===s.interview.person)):nodes[s.interview.id];if(item){openInterview(item,s.interview.mode);dialog.scrollTop=s.dialogScroll}}
         save();
       }finally{restoringStep=false;updateStepControls()}
       q('#map-status').textContent=stepLabel(s)+' · '+(delta<0?'이전 단계':'다음 단계');
@@ -757,4 +790,5 @@
     new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
     fit();showDetail(null);restore();updateCue();q('#enter-resume').hidden=expanded.size===0;resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
+
 
