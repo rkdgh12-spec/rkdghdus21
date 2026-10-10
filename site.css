@@ -128,6 +128,6 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 /* Keep lecture progression available while an interview is open. */
 #interview-stage-next[hidden]{display:none!important}
-#interview-stage-next{position:fixed;right:24px;bottom:3px;z-index:20;border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--secondary);padding:7px 10px;font-family:inherit;font-size:12px;font-weight:400;line-height:normal;box-shadow:none;cursor:pointer;white-space:nowrap}
+#forum-source-network #interview-stage-next{position:fixed;right:24px;bottom:3px;z-index:20;border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--secondary);padding:7px 10px;font-family:inherit;font-size:12px;font-weight:400;line-height:normal;box-shadow:none;cursor:pointer;white-space:nowrap}
 #interview-stage-next:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 #question-next[hidden]{display:none!important}
