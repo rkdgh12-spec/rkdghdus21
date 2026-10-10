@@ -246,12 +246,12 @@
       updateVisible();if(nodes[id].kind==='question')panel.hidden=true;else showDetail(nodes[id]);
       autoCentered3D=false;stage.classList.toggle('guided-transition',guided);guidedStep=guided;render();guidedStep=false;animateNodes(before,guided);
       let cameraArrived=false,routeArrived=!guided;
-      const questionMotion=cameraMotion+1;
       let interviewQueued=false;
       const revealQuestion=()=>{
         if(nodes[id].kind!=='question'||!cameraArrived||!routeArrived||interviewQueued)return;
         interviewQueued=true;
-        setTimeout(()=>{if(selected===id&&cameraMotion===questionMotion&&!dialog.open)showDetail(nodes[id])},480);
+        const arrivalMotion=cameraMotion;
+        setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},1000);
       };
       followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
       if(guided)traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()});
