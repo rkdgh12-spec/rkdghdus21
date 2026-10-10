@@ -245,8 +245,16 @@
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
       updateVisible();if(nodes[id].kind==='question')panel.hidden=true;else showDetail(nodes[id]);
       autoCentered3D=false;stage.classList.toggle('guided-transition',guided);guidedStep=guided;render();guidedStep=false;animateNodes(before,guided);
-      followConnectionToLabel(previous,id,()=>{if(nodes[id].kind==='question'&&selected===id)showDetail(nodes[id])});
-      if(guided)traceRoute(previous,id);
+      let cameraArrived=false,routeArrived=!guided;
+      const questionMotion=cameraMotion+1;
+      let interviewQueued=false;
+      const revealQuestion=()=>{
+        if(nodes[id].kind!=='question'||!cameraArrived||!routeArrived||interviewQueued)return;
+        interviewQueued=true;
+        setTimeout(()=>{if(selected===id&&cameraMotion===questionMotion&&!dialog.open)showDetail(nodes[id])},480);
+      };
+      followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
+      if(guided)traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()});
       save();
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
     }
@@ -256,7 +264,7 @@
       if(depthEnabled)return;
       let index=0;for(const nid of visible){if(before.has(nid)||!elems.has(nid))continue;const n=nodes[nid],p=nodes[n.parent],{b}=elems.get(nid);b.animate(guided?[{opacity:0},{opacity:1}]:[{transform:`translate(calc(-50% + ${(p.x-n.x)*k}px),calc(-50% + ${(p.y-n.y)*k}px))`,opacity:0},{transform:'translate(-50%,-50%)',opacity:1}],{duration:guided?480:520,delay:guided?Math.min(500+index++*12,780):Math.min(index++*18,320),easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});}
     }
-    function traceRoute(from,to){
+    function traceRoute(from,to,onComplete){
       activeRoute?.remove();activeRoute=null;
       const adjacent=new Map();
       edges.forEach((edge,index)=>{if(!visible.has(edge.source)||!visible.has(edge.target)||paths[index].style.display==='none')return;
@@ -283,7 +291,7 @@
       }
       function tick(now){if(token!==cameraMotion){overlay.remove();if(activeRoute===overlay)activeRoute=null;return}if(start===null)start=now;
         const t=Math.min(1,(now-start)/duration);draw(t*t*(3-2*t));
-        if(t<1)requestAnimationFrame(tick);else{stage.classList.remove('guided-transition');overlay.classList.add('finish');setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
+        if(t<1)requestAnimationFrame(tick);else{stage.classList.remove('guided-transition');overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
       requestAnimationFrame(tick);
     }
     function selectedTextPoint(id){
