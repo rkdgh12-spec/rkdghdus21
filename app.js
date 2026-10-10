@@ -151,6 +151,7 @@
       const l=document.createElementNS(NS,'path');l.classList.add('links');l.dataset.edgeIndex=String(edgeIndex);
       if(e.kind!=='hierarchy')l.classList.add(e.kind);if(e.core)l.classList.add('core');
       const t=document.createElementNS(NS,'title'),a=nodes[e.source],b=nodes[e.target];
+      if(e.kind==='hierarchy')l.classList.add(a.kind+'-'+b.kind);
       const edgeLabel=n=>n.kind==='question'?n.person+' · '+n.label:n.label;
       t.textContent=e.kind!=='hierarchy'?edgeLabel(a)+' ↔ '+edgeLabel(b)+' · '+e.reason:edgeLabel(a)+' → '+edgeLabel(b);
       l.append(t);personCurrentLayer.append(l);paths.push(l);
@@ -212,7 +213,7 @@
           const layoutEase=ringTransition?smooth(t/.52):ease;
           threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*layoutEase+(ringTransition?.18*Math.sin(Math.PI*t):0);
           threePanX=start3D.x+(goal.x-start3D.x)*layoutEase;threePanY=start3D.y+(goal.y-start3D.y)*layoutEase;lastManual3D=now;render3D();
-          if(t<1)requestAnimationFrame(tick);else{fullReveal=null;render3D();stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
+          if(progress<1)requestAnimationFrame(tick);else{fullReveal=null;render3D();stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
         requestAnimationFrame(tick);return;
       }
       const goal={k,ox,oy};k=start2D.k;ox=start2D.ox;oy=start2D.oy;render();
@@ -258,7 +259,8 @@
         const arrivalMotion=cameraMotion;
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
-      followConnectionToLabel(previous,id,()=>{cameraArrived=true;if(branchReveal?.personId===id)traceBranches(id);revealQuestion()});
+      followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
+      if(branchReveal?.personId===id)traceBranches(id);
       if(guided){
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
@@ -290,13 +292,12 @@
         overlay.append(line);branch.line=line;
       }
       stage.append(overlay);activeBranchRoute=overlay;
-      const token=cameraMotion,duration=1300;let started=null;
+      const token=cameraMotion;
       function tick(now){
         if(token!==cameraMotion||selected!==personId||branchReveal!==reveal){
           overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null;return;
         }
-        if(started===null)started=now;
-        const t=Math.min(1,(now-started)/duration),progress=t*t*(3-2*t);
+        const progress=cameraTravelProgress;
         reveal.progress=progress;render();
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
         for(const branch of branches){
@@ -324,7 +325,7 @@
       while(previous.has(cursor)&&previous.get(cursor)){const step=previous.get(cursor);route.unshift(step);cursor=step.from}
       if(!route.length&&from===to)return;
       const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','lecture-route');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
-      const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r',guidedHiddenEdge>=0?'3.4':'2.7');if(guidedHiddenEdge>=0)line.style.strokeWidth='2.25';overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
+      const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');line.style.strokeWidth=nodes[from].kind==='chapter'&&nodes[to].kind==='person'?'2.15':'1.65';overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
       const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110),syncToCamera=guidedHiddenEdge>=0;let start=null;
       function draw(progress){
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
@@ -916,7 +917,8 @@
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
         const revealState=fullRevealEdge(e,i),projectedLength=samples.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p.x-samples[j].x,p.y-samples[j].y),0);
         const traceStyle=revealState.trace?` style="stroke-dasharray:${projectedLength} ${projectedLength};stroke-dashoffset:${(revealState.reverse?-1:1)*projectedLength*(1-revealState.progress)}"`:'';
-        const markup=`<g opacity="${guidedHiddenEdge===i?0:revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
+        const branchHidden=branchReveal?.personId===e.source&&branchReveal.ids.has(e.target);
+        const markup=`<g opacity="${guidedHiddenEdge===i||branchHidden?0:revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
         if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-past'))pastLinks+=markup;
         else if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-cross'))crossLinks+=markup;
         else currentLinks+=markup;
@@ -984,7 +986,7 @@
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
         l.style.display=shown?'':'none';l.setAttribute('d',connectionPath(e));
         const revealState=fullReveal&&shown?fullRevealEdge(e,i):null;
-        l.style.filter=guidedHiddenEdge===i?'opacity(0)':revealState?`opacity(${revealState.opacity})`:'';
+        l.style.filter=(guidedHiddenEdge===i||branchReveal?.personId===e.source&&branchReveal.ids.has(e.target))?'opacity(0)':revealState?`opacity(${revealState.opacity})`:'';
         if(revealState?.trace){const length=l.getTotalLength();l.style.strokeDasharray=`${length} ${length}`;l.style.strokeDashoffset=String((revealState.reverse?-1:1)*length*(1-revealState.progress))}
         else{l.style.strokeDasharray='';l.style.strokeDashoffset=''}
         l.classList.toggle('person-current',focusedPerson!==null&&a.person===focusedPerson&&b.person===focusedPerson);
