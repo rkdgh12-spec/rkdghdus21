@@ -260,7 +260,7 @@
         if(chapterTransfer||personTransfer){
           activeRoute?.remove();activeRoute=null;
           const motion=cameraMotion;
-          setTimeout(()=>{if(cameraMotion===motion&&selected===id)traceRoute(previous,id)},900);
+          setTimeout(()=>{if(cameraMotion===motion&&selected===id)traceRoute(previous,id,null,chapterTransfer?2400:2000)},chapterTransfer?1750:1500);
         }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()});
       }
       save();
@@ -272,7 +272,7 @@
       if(depthEnabled)return;
       let index=0;for(const nid of visible){if(before.has(nid)||!elems.has(nid))continue;const n=nodes[nid],p=nodes[n.parent],{b}=elems.get(nid);b.animate(guided?[{opacity:0},{opacity:1}]:[{transform:`translate(calc(-50% + ${(p.x-n.x)*k}px),calc(-50% + ${(p.y-n.y)*k}px))`,opacity:0},{transform:'translate(-50%,-50%)',opacity:1}],{duration:guided?480:520,delay:guided?Math.min(500+index++*12,780):Math.min(index++*18,320),easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});}
     }
-    function traceRoute(from,to,onComplete){
+    function traceRoute(from,to,onComplete,durationOverride){
       activeRoute?.remove();activeRoute=null;
       const adjacent=new Map();
       edges.forEach((edge,index)=>{if(!visible.has(edge.source)||!visible.has(edge.target)||paths[index].style.display==='none')return;
@@ -285,7 +285,7 @@
       if(!route.length&&from===to)return;
       const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','lecture-route');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
       const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
-      const token=cameraMotion,duration=Math.min(1500,950+route.length*110);let start=null;
+      const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110);let start=null;
       function draw(progress){
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
         const samples=[];
@@ -366,7 +366,7 @@
           for(let i=0;i<2;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
           const across={x:threePanX,y:threePanY};
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
-          travel([start,goal],chapterTransit?2450:2300,(_p,progress)=>{
+          travel([start,goal],chapterTransit?4200:3600,(_p,progress)=>{
             lastManual3D=performance.now();
             if(progress<.36){
               const t=smooth(progress/.36);
