@@ -398,25 +398,39 @@
         const contour=depthEnabled?threeSvg.querySelector('.three-volume.outer'):outerOutline;
         epilogueContours=[];
         if(contour?.getAttribute('d'))for(let i=0;i<2;i++){const echo=document.createElementNS(NS,'path');echo.setAttribute('d',contour.getAttribute('d'));echo.setAttribute('class','epilogue-contour'+(i?' second':''));overlay.append(echo);epilogueContours.push(echo)}
-        const route=createFullReveal(new Set(),null);
+        const route=createFullReveal(new Set(),null),routeViews=[];
         for(const path of source.querySelectorAll('.links')){
           if(getComputedStyle(path).display==='none')continue;
           const d=path.getAttribute('d');if(!d)continue;
           const index=Number(path.dataset.edgeIndex),edge=edges[index],length=path.getTotalLength();if(!edge||!length)continue;
           const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
+          echo.style.setProperty('animation','none','important');echo.style.setProperty('stroke','#079eae','important');echo.style.setProperty('opacity','0','important');
           epilogueEchoes.set(index,echo);
           const child=route.parentEdge[edge.source]===index?edge.source:route.parentEdge[edge.target]===index?edge.target:-1;
           if(child>=0){
             const parent=route.parentNode[child],start=route.arrival[parent]+(parent===threeCenter.id?route.branchDelay[child]:0);
-            echo.classList.add('trace');echo.style.strokeDasharray=`${length} ${length}`;
-            echo.style.setProperty('--epi-start-offset',`${(edge.target===parent?-1:1)*length}px`);
-            echo.style.setProperty('--epi-delay',Math.round(start)+'ms');echo.style.setProperty('--epi-duration',Math.round(Math.max(360,route.arrival[child]-start))+'ms');
-          }else echo.style.setProperty('--epi-delay',Math.round(Math.max(route.arrival[edge.source],route.arrival[edge.target])+(index*71%420))+'ms');
+            echo.classList.add('trace');echo.style.setProperty('stroke-width','3','important');echo.style.strokeDasharray=`${length} ${length}`;
+            routeViews.push({echo,trace:true,length,reverse:edge.target===parent,start,duration:Math.max(440,route.arrival[child]-start)});
+          }else{echo.style.setProperty('stroke-width','1.6','important');routeViews.push({echo,trace:false,start:Math.max(route.arrival[edge.source],route.arrival[edge.target])+(index*71%420)})}
           overlay.append(echo);
         }
         epilogueOrigin=document.createElementNS(NS,'circle');epilogueOrigin.setAttribute('class','epilogue-origin');const center=depthEnabled?threeProjected[threeCenter.id]:{x:threeCenter.x*k+ox,y:threeCenter.y*k+oy};epilogueOrigin.setAttribute('cx',center.x);epilogueOrigin.setAttribute('cy',center.y);epilogueOrigin.setAttribute('r','6');overlay.append(epilogueOrigin);
         stage.classList.add('epilogue-tracing');
         stage.append(wash,overlay);
+        const routeStart=performance.now();
+        function drawRoute(now){
+          if(!overlay.isConnected)return;
+          const elapsed=now-routeStart;
+          for(const view of routeViews){
+            if(view.trace){
+              const progress=smooth((elapsed-view.start)/view.duration);
+              view.echo.style.strokeDashoffset=String((view.reverse?-1:1)*view.length*(1-progress));
+              view.echo.style.setProperty('opacity',elapsed<view.start?'0':progress<1?'.94':'.34','important');
+            }else view.echo.style.setProperty('opacity',String(.26*smooth((elapsed-view.start)/700)),'important');
+          }
+          requestAnimationFrame(drawRoute);
+        }
+        requestAnimationFrame(drawRoute);
         await new Promise(resolve=>setTimeout(resolve,6300));
         if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
         overlay.remove();wash.remove();stage.classList.remove('epilogue-tracing');if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null;epilogueContours=null;epilogueOrigin=null}
