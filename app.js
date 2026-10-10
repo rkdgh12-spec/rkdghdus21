@@ -108,8 +108,8 @@
     const lectureOrder=[
       {chapter:1,people:[['최고은',['Q4','Q5']]]},
       {chapter:2,people:[['류성실',['Q5','Q6']],['강인애',['Q3','Q5']]]},
-      {chapter:3,people:[['박재영',['Q2','Q4','Q5']],['민지희',['Q5','Q4','Q3 후속질문']],['안정환',['Q5','Q6']]]},
-      {chapter:4,people:[['최지혜',['Q3','Q4']],['서해영',['Q5','Q6']]]},
+      {chapter:3,people:[['박재영',['Q2','Q4','Q5']],['민지희',['Q5','Q4','Q3 후속질문']],['안정환',['Q4','Q5']]]},
+      {chapter:4,people:[['최지혜',['Q3','Q4']],['서해영',['Q2','Q7']]]},
       {chapter:5,people:[['권현빈',['Q4','Q5']],['채길원',['Q5','Q7']]]}
     ];
     const cues=[];let applyingCue=false;
