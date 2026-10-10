@@ -186,7 +186,7 @@
         fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
       }
       if(reducedMotion&&!depthEnabled)return;
-      const token=++cameraMotion,duration=1400,start=performance.now();
+      const token=++cameraMotion,duration=depthEnabled?2400:1400,start=performance.now();
       if(depthEnabled){
         const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
@@ -198,7 +198,8 @@
         if(reducedMotion)return;
         threeYaw=start3D.yaw;threeElevation=start3D.elevation;threeZoom=start3D.zoom;threePanX=start3D.x;threePanY=start3D.y;render3D();
         function tick(now){if(token!==cameraMotion)return;const t=Math.min(1,(now-start)/duration),ease=t*t*(3-2*t);
-          threeYaw=start3D.yaw+(goal.yaw-start3D.yaw)*ease;threeElevation=start3D.elevation+(goal.elevation-start3D.elevation)*ease;threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*ease;
+          const orbit=Math.sin(Math.PI*t);
+          threeYaw=start3D.yaw+(goal.yaw-start3D.yaw)*ease+orbit*.55;threeElevation=start3D.elevation+(goal.elevation-start3D.elevation)*ease-orbit*.32;threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*ease;
           threePanX=start3D.x+(goal.x-start3D.x)*ease;threePanY=start3D.y+(goal.y-start3D.y)*ease;lastManual3D=now;render3D();
           if(t<1)requestAnimationFrame(tick);else{stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
         requestAnimationFrame(tick);return;
@@ -388,16 +389,18 @@
         const wash=document.createElement('div');wash.className='epilogue-wash';wash.setAttribute('aria-hidden','true');
         const source=depthEnabled?threeSvg:svg;
         epilogueOverlay=overlay;epilogueEchoes=new Map();
-        let index=0;
+        const reach=Math.hypot(width/2,height/2);
         for(const path of source.querySelectorAll('.links')){
           if(getComputedStyle(path).display==='none')continue;
           const d=path.getAttribute('d');if(!d)continue;
           const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
           epilogueEchoes.set(Number(path.dataset.edgeIndex),echo);
-          echo.style.setProperty('--epi-delay',((index*47)%390)+'ms');overlay.append(echo);index++;
+          const midpoint=path.getPointAtLength(path.getTotalLength()/2);
+          const distance=Math.hypot(midpoint.x-width/2,midpoint.y-height/2);
+          echo.style.setProperty('--epi-delay',Math.round(Math.min(850,distance/reach*1150))+'ms');overlay.append(echo);
         }
         stage.append(wash,overlay);
-        await new Promise(resolve=>setTimeout(resolve,4550));
+        await new Promise(resolve=>setTimeout(resolve,6300));
         if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
         overlay.remove();wash.remove();if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null}
       }
