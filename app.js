@@ -78,7 +78,7 @@
     const children=id=>nodes.filter(n=>n.parent===id);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elems=new Map(),paths=[],areas=new Map();
-    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,guidedHiddenEdge=-1,cameraTravelProgress=0,fullReveal=null;
+    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,completedBranchPerson=null,guidedHiddenEdge=-1,cameraTravelProgress=0,fullReveal=null;
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
@@ -213,7 +213,7 @@
           const layoutEase=ringTransition?smooth(t/.52):ease;
           threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*layoutEase+(ringTransition?.18*Math.sin(Math.PI*t):0);
           threePanX=start3D.x+(goal.x-start3D.x)*layoutEase;threePanY=start3D.y+(goal.y-start3D.y)*layoutEase;lastManual3D=now;render3D();
-          if(progress<1)requestAnimationFrame(tick);else{fullReveal=null;render3D();stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
+          if(t<1)requestAnimationFrame(tick);else{fullReveal=null;render3D();stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
         requestAnimationFrame(tick);return;
       }
       const goal={k,ox,oy};k=start2D.k;ox=start2D.ox;oy=start2D.oy;render();
@@ -234,7 +234,7 @@
     function selectStep(id){
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
-      activeBranchRoute?.remove();activeBranchRoute=null;branchReveal=null;guidedHiddenEdge=-1;
+      activeBranchRoute?.remove();activeBranchRoute=null;branchReveal=null;completedBranchPerson=null;guidedHiddenEdge=-1;
       const previous=selected,before=new Set(visible);selected=id;
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
       if(guided&&((nodes[previous].kind==='person'&&nodes[id].kind==='concept')||(nodes[previous].kind==='concept'&&nodes[id].kind==='subconcept')))guidedHiddenEdge=edges.findIndex(e=>e.kind==='hierarchy'&&e.source===previous&&e.target===id);
@@ -248,22 +248,24 @@
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
       updateVisible();if(nodes[id].kind==='question')panel.hidden=true;else showDetail(nodes[id]);
+      if(nodes[id].kind==='person'&&!reducedMotion){const concepts=children(id).filter(n=>n.kind==='concept'&&visible.has(n.id));if(concepts.length)branchReveal={personId:id,ids:new Set(concepts.map(n=>n.id)),progress:0,started:false}}
       autoCentered3D=false;stage.classList.toggle('guided-transition',guided);guidedStep=guided;render();guidedStep=false;animateNodes(before,guided);
       let cameraArrived=false,routeArrived=!guided;
       let interviewQueued=false;
+      const beginBranches=()=>{if(cameraArrived&&routeArrived&&branchReveal?.personId===id&&!branchReveal.started){branchReveal.started=true;traceBranches(id)}};
       const revealQuestion=()=>{
         if(nodes[id].kind!=='question'||!cameraArrived||!routeArrived||interviewQueued)return;
         interviewQueued=true;
         const arrivalMotion=cameraMotion;
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
-      followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
+      followConnectionToLabel(previous,id,()=>{cameraArrived=true;beginBranches();revealQuestion()});
       if(guided){
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
-          traceRoute(previous,id,null,NODE_TRAVEL_MS);
-        }else traceRoute(previous,id,()=>{if(guidedHiddenEdge>=0){guidedHiddenEdge=-1;render()}routeArrived=true;revealQuestion()},NODE_TRAVEL_MS);
+          traceRoute(previous,id,()=>{routeArrived=true;beginBranches()},NODE_TRAVEL_MS);
+        }else traceRoute(previous,id,()=>{if(guidedHiddenEdge>=0){guidedHiddenEdge=-1;render()}routeArrived=true;beginBranches();revealQuestion()},NODE_TRAVEL_MS);
       }
       save();
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
@@ -279,23 +281,35 @@
       if(!reveal||reveal.personId!==personId)return;
       const branches=[...reveal.ids].map(id=>({id,index:edges.findIndex(e=>e.kind==='hierarchy'&&e.source===personId&&e.target===id)})).filter(item=>item.index>=0);
       if(!branches.length){branchReveal=null;render();return}
+      const ids=[personId,...branches.map(b=>b.id)];
+      const positions=ids.map(id=>depthEnabled?threeProjected[id]:{x:nodes[id].x*k+ox,y:nodes[id].y*k+oy});
+      const minX=Math.min(...positions.map(p=>p.x)),maxX=Math.max(...positions.map(p=>p.x)),minY=Math.min(...positions.map(p=>p.y)),maxY=Math.max(...positions.map(p=>p.y));
+      const ratio=Math.min(1,Math.max(180,width-300)/Math.max(1,maxX-minX),Math.max(150,height-220)/Math.max(1,maxY-minY));
+      const startCamera=depthEnabled?{zoom:threeZoom,x:threePanX,y:threePanY}:{zoom:k,x:ox,y:oy};
+      const cx=depthEnabled?width/2:0,cy=depthEnabled?height/2:0;
+      const goalCamera={zoom:startCamera.zoom*ratio,x:width/2-cx-((minX+maxX)/2-cx-startCamera.x)*ratio,y:height/2-cy-((minY+maxY)/2-cy-startCamera.y)*ratio};
       const overlay=document.createElementNS(NS,'svg');
       overlay.setAttribute('class','lecture-route lecture-branches');
       overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
       overlay.setAttribute('aria-hidden','true');
       for(const branch of branches){
-        const line=document.createElementNS(NS,'path');
+        const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');
         line.setAttribute('class','lecture-route-line');
-        overlay.append(line);branch.line=line;
+        head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');
+        overlay.append(line,head);branch.line=line;branch.head=head;
       }
       stage.append(overlay);activeBranchRoute=overlay;
-      const token=cameraMotion;
+      const token=cameraMotion,duration=NODE_TRAVEL_MS;let started=null;
       function tick(now){
         if(token!==cameraMotion||selected!==personId||branchReveal!==reveal){
           overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null;return;
         }
-        const progress=cameraTravelProgress;
-        reveal.progress=progress;render();
+        if(started===null)started=now;
+        const t=Math.min(1,(now-started)/duration),progress=t*t*(3-2*t);
+        reveal.progress=progress;
+        const zoom=startCamera.zoom+(goalCamera.zoom-startCamera.zoom)*progress,x=startCamera.x+(goalCamera.x-startCamera.x)*progress,y=startCamera.y+(goalCamera.y-startCamera.y)*progress;
+        if(depthEnabled){threeZoom=zoom;threePanX=x;threePanY=y;lastManual3D=now}else{k=zoom;ox=x;oy=y}
+        render();
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
         for(const branch of branches){
           const source=depthEnabled?threeSvg.querySelector(`[data-edge-index="${branch.index}"]`):paths[branch.index];
@@ -304,9 +318,11 @@
           branch.line.setAttribute('d',source.getAttribute('d'));
           branch.line.style.strokeDasharray=`${length} ${length}`;
           branch.line.style.strokeDashoffset=String(length*(1-progress));
+          const p=source.getPointAtLength(length*progress);
+          branch.head.setAttribute('cx',p.x);branch.head.setAttribute('cy',p.y);
         }
         if(t<1)requestAnimationFrame(tick);
-        else{branchReveal=null;render();overlay.classList.add('finish');setTimeout(()=>{overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null},330)}
+        else{branchReveal=null;completedBranchPerson=personId;render();overlay.classList.add('finish');setTimeout(()=>{overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null},330);if(stepHistory[stepIndex]?.selected===personId){stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
       }
       requestAnimationFrame(tick);
     }
@@ -955,6 +971,7 @@
       }
     }
     function render(){
+      stage.classList.toggle('person-branches-complete',selected!==null&&nodes[selected].kind==='person'&&completedBranchPerson===selected);
       stage.classList.toggle('high-zoom-labels',(depthEnabled?threeZoom:k/fitK)>=3);
       flatPlane.style.setProperty('--flat-label-zoom',labelZoom(k/fitK).toFixed(2));
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
