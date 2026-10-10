@@ -90,7 +90,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network #sequence-label{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--secondary)}
 #forum-source-network .sequence-controls>div{flex:none}
 @media(max-width:700px){#forum-source-network #sequence-label{max-width:38vw}}
-#forum-source-network .stage .epilogue-network{position:absolute;inset:0;width:100%;height:100%;z-index:25;pointer-events:none;overflow:hidden;filter:drop-shadow(0 0 3px rgba(57,195,208,.38));transition:opacity 500ms ease}
+#forum-source-network .stage .epilogue-network{position:absolute;inset:0;width:100%;height:100%;z-index:25;pointer-events:none;overflow:hidden;transition:opacity 500ms ease}
 #forum-source-network .stage .epilogue-wash{position:absolute;inset:0;z-index:24;pointer-events:none;opacity:1;transition:opacity 500ms ease}
 #forum-source-network .stage .epilogue-wash::before,#forum-source-network .stage .epilogue-wash::after{content:"";position:absolute;left:50%;top:50%;width:min(84%,115vh);aspect-ratio:1;transform-origin:center;border-radius:50%;background:radial-gradient(circle,rgba(74,205,214,.11) 0%,rgba(74,205,214,.07) 36%,rgba(74,205,214,.025) 58%,transparent 76%);opacity:0;animation:epilogue-radiate 3200ms ease-out both}
 #forum-source-network .stage .epilogue-wash::after{animation-delay:2600ms}
@@ -108,7 +108,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .stage .epilogue-network.handoff{opacity:0}
 #forum-source-network .stage.epilogue-tracing :is(.map-plane,.three-wires) .links{opacity:.07!important;transition:opacity 650ms ease}
 #forum-source-network .stage .epilogue-link{fill:none;stroke:#55c4cf;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;opacity:0;animation:epilogue-signal 1800ms var(--epi-delay) ease-in-out both}
-#forum-source-network .stage .epilogue-link.trace{stroke:#26a9b7;stroke-width:2;filter:drop-shadow(0 0 1.5px rgba(29,169,183,.42));animation:epilogue-trace var(--epi-duration) var(--epi-delay) ease-in-out both}
+#forum-source-network .stage .epilogue-link.trace{stroke:#26a9b7;stroke-width:2;animation:epilogue-trace var(--epi-duration) var(--epi-delay) ease-in-out both}
 @keyframes epilogue-trace{0%{opacity:.85;stroke-dashoffset:var(--epi-start-offset)}70%{opacity:.9}100%{opacity:.3;stroke-dashoffset:0}}
 #forum-source-network .stage .epilogue-origin{fill:#39bbc5;filter:drop-shadow(0 0 8px rgba(42,184,195,.9));animation:epilogue-origin 1600ms ease-out both}
 @keyframes epilogue-origin{0%{opacity:0;r:3}30%{opacity:.85;r:8}100%{opacity:.35;r:5}}
