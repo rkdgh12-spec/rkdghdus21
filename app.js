@@ -333,11 +333,13 @@
       if(depthEnabled){
         lastManual3D=performance.now();
         const start={x:threePanX,y:threePanY,zoom:threeZoom,yaw:threeYaw,elevation:threeElevation};
-        const startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
+        let startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
         const node=nodes[id],kind=node.kind;
         const chapterTransit=presentationMode&&kind==='chapter'&&previous!==null&&nodes[previous].chapter!==node.chapter;
         const personTransit=presentationMode&&kind==='person'&&previous!==null&&nodes[previous].person&&nodes[previous].person!==node.person;
         const wideTransit=chapterTransit||personTransit;
+        const sourceId=wideTransit&&previous!==null?ancestors(previous).find(aid=>nodes[aid].kind===(chapterTransit?'chapter':'person')):previous;
+        if(sourceId!==undefined&&sourceId!==null&&threeProjected[sourceId])startFocus={x:threeProjected[sourceId].x,y:threeProjected[sourceId].y};
         const focusId=kind==='question'?node.parent:id;
         let goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
         const goalYaw=start.yaw;
@@ -360,7 +362,12 @@
         const zoomSteps=Math.abs(Math.log2(goal.zoom/start.zoom));
         const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
         if(wideTransit){
-          const overviewZoom=chapterTransit ? 1 : .72;
+          const sourcePoint=sourceId!==undefined&&sourceId!==null?threeProjected[sourceId]:null;
+          const targetPoint=threeProjected[id];
+          const spanX=sourcePoint&&targetPoint?Math.abs(targetPoint.x-sourcePoint.x):0;
+          const spanY=sourcePoint&&targetPoint?Math.abs(targetPoint.y-sourcePoint.y):0;
+          const pairFit=Math.min((width-260)/Math.max(1,spanX),(height-220)/Math.max(1,spanY));
+          const overviewZoom=Math.min(start.zoom,start.zoom*pairFit);
           const anchorAt=zoom=>{
             const ratio=zoom/start.zoom;
             return {x:startFocus.x-width/2-(startFocus.x-width/2-start.x)*ratio,y:startFocus.y-height/2-(startFocus.y-height/2-start.y)*ratio};
