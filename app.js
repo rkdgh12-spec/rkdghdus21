@@ -259,9 +259,7 @@
         const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=depthEnabled&&nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
-          activeRoute?.remove();activeRoute=null;
-          const motion=cameraMotion;
-          setTimeout(()=>{if(cameraMotion===motion&&selected===id)traceRoute(previous,id,null,chapterTransfer?3400:2000)},chapterTransfer?2500:1500);
+          traceRoute(previous,id,null,chapterTransfer?9600:7400);
         }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()});
       }
       save();
@@ -361,27 +359,26 @@
         const zoomSteps=Math.abs(Math.log2(goal.zoom/start.zoom));
         const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
         if(wideTransit){
-          const overviewZoom=chapterTransit ? .62 : .72,ratio=overviewZoom/start.zoom;
-          const out={x:startFocus.x-width/2-(startFocus.x-width/2-start.x)*ratio,y:startFocus.y-height/2-(startFocus.y-height/2-start.y)*ratio};
+          const overviewZoom=chapterTransit ? .62 : .72;
+          const anchorAt=zoom=>{
+            const ratio=zoom/start.zoom;
+            return {x:startFocus.x-width/2-(startFocus.x-width/2-start.x)*ratio,y:startFocus.y-height/2-(startFocus.y-height/2-start.y)*ratio};
+          };
+          const out=anchorAt(overviewZoom);
           threeZoom=overviewZoom;threePanX=out.x;threePanY=out.y;render3D();
           for(let i=0;i<2;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
           const across={x:threePanX,y:threePanY};
+          const drift={x:across.x-out.x,y:across.y-out.y};
+          const finalAnchor=anchorAt(goal.zoom);
+          const correction={x:goal.x-finalAnchor.x-drift.x,y:goal.y-finalAnchor.y-drift.y};
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
-          travel([start,goal],chapterTransit?6200:3600,(_p,progress)=>{
+          travel([start,goal],chapterTransit?9600:7400,(_p,progress)=>{
             lastManual3D=performance.now();
-            if(progress<.36){
-              const t=smooth(progress/.36);
-              threeZoom=start.zoom+(overviewZoom-start.zoom)*t;
-              threePanX=start.x+(out.x-start.x)*t;threePanY=start.y+(out.y-start.y)*t;
-            }else if(progress<.78){
-              const t=smooth((progress-.36)/.42);
-              threeZoom=overviewZoom;
-              threePanX=out.x+(across.x-out.x)*t;threePanY=out.y+(across.y-out.y)*t;
-            }else{
-              const t=smooth((progress-.78)/.22);
-              threeZoom=overviewZoom+(goal.zoom-overviewZoom)*t;
-              threePanX=across.x+(goal.x-across.x)*t;threePanY=across.y+(goal.y-across.y)*t;
-            }
+            const outPhase=smooth(progress/.52),inPhase=smooth((progress-.52)/.48);
+            threeZoom=progress<.52?start.zoom+(overviewZoom-start.zoom)*outPhase:overviewZoom+(goal.zoom-overviewZoom)*inPhase;
+            const anchored=anchorAt(threeZoom),move=smooth(progress),settle=smooth((progress-.58)/.42);
+            threePanX=anchored.x+drift.x*move+correction.x*settle;
+            threePanY=anchored.y+drift.y*move+correction.y*settle;
             render3D();
           },finish);
         }else{
@@ -416,43 +413,22 @@
     function showDetail(n,openQuestion=true){
       if(!n){panel.hidden=true;detail.hidden=true;detail.innerHTML='';return}
       if(n.kind==='question'&&openQuestion){panel.hidden=true;openInterview(n);return}
-      panel.hidden=false;
-      detail.hidden=false;
-      const route=ancestors(n.id).map(id=>'<button type="button" data-pick="'+id+'">'+esc(displayLabel(nodes[id]))+'</button>').join('<span aria-hidden="true">›</span>');
+      panel.hidden=false;detail.hidden=false;
       let out='<div class="small-label">'+kindNames[n.kind]+'</div><div class="detail-title">'+esc(n.kind==='question'?n.person+' · '+n.label:displayLabel(n))+'</div>';
       if(n.kind==='person'){
-        out+='<div class="person-profile">'+profileHTML(n.label)+'</div>';
-        out+='<div class="person-tabs" role="tablist" aria-label="'+esc(n.label)+' 소개"><button type="button" role="tab" id="person-intro-tab" aria-selected="true" aria-controls="person-intro-panel" data-person-tab="intro">자기소개 영상</button><button type="button" role="tab" id="person-concepts-tab" aria-selected="false" aria-controls="person-concepts-panel" tabindex="-1" data-person-tab="concepts">주요 개념</button></div>';
-        const hasVideo=!!assetURL(((window.FORUM_MEDIA||{})[n.label+'/Q1']||{}).src);
-        out+='<section role="tabpanel" id="person-intro-panel" aria-labelledby="person-intro-tab"><p class="intro-question">현재 어떤 일을 하고 계신지, 본인의 활동을 중심으로 소개해 주세요.</p><button type="button" class="person-video-button" data-introduction="'+n.id+'"><span aria-hidden="true">▷</span> 자기소개 영상 보기</button>'+(hasVideo?'':'<p class="person-media-status">영상 준비 중</p>')+'</section><section role="tabpanel" id="person-concepts-panel" aria-labelledby="person-concepts-tab" hidden>';
+        const profile=(window.FORUM_PROFILES||{})[n.label];
+        if(profile?.role)out+='<p class="person-role">'+esc(profile.role)+'</p>';
+        if(profile?.career?.length)out+='<details class="compact-career"><summary>주요 이력</summary><ul>'+profile.career.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul></details>';
+        out+='<button type="button" class="person-video-button" data-introduction="'+n.id+'">▷ 자기소개 영상</button>';
       }
-      out+='<div class="path">'+route+'</div>';
       if(n.subtitle)out+='<p class="question-text">'+esc(n.subtitle)+'</p>';
-      if(n.kind==='question')out+='<p class="question-text">'+esc(n.question)+'</p>';
-      else {
-        const next=children(n.id).filter(x=>visible.has(x.id));
-        if(next.length)out+='<div class="route-list">'+next.map(x=>'<button type="button" class="route-button" data-pick="'+x.id+'">'+esc(x.kind==='question'?x.label+' · '+x.topic:x.label)+(x.kind==='question'?' <em>인터뷰 보기</em>':' <em>펼치기</em>')+'</button>').join('')+'</div>';
-      }
-      if(n.kind==='person'){
-        const related=edges.filter(e=>e.kind==='related'&&visible.has(e.source)&&visible.has(e.target)&&(e.source===n.id||e.target===n.id));
-        if(related.length)out+='<div class="small-label">함께 펼쳐진 인물과의 연결</div><div class="relation-list">'+related.map(e=>{const id=e.source===n.id?e.target:e.source;return esc(nodes[id].label)+' — '+esc(e.reason)}).join('<br>')+'</div>';
-        if(related.some(e=>e.inferred))out+='<p class="source-note">원문의 인물 연결에 더해, 개념어와 질문의 공통 쟁점을 바탕으로 제안한 연결을 포함합니다.</p>';
-      }
-      const semanticLinks=edges.filter(e=>e.kind==='semantic'&&visible.has(e.source)&&visible.has(e.target)&&(e.source===n.id||e.target===n.id));
-      if(semanticLinks.length)out+='<div class="small-label">함께 이어지는 의미</div><div class="relation-list">'+semanticLinks.map(e=>{const id=e.source===n.id?e.target:e.source,other=nodes[id];return '<button type="button" class="route-button" data-pick="'+id+'">'+esc(other.person+' · '+other.label+(other.kind==='question'?' — '+other.topic:''))+'</button> — '+esc(e.reason)}).join('<br>')+'</div><p class="source-note">원문 개념어와 질문의 접점을 바탕으로 제안한 연결입니다.</p>';
-      const questionLinks=edges.filter(e=>e.kind==='question-related'&&visible.has(e.source)&&visible.has(e.target)&&(e.source===n.id||e.target===n.id));
-      if(questionLinks.length)out+='<div class="small-label">이어지는 질문</div><div class="relation-list">'+questionLinks.map(e=>{
-        const other=nodes[e.source===n.id?e.target:e.source];
-        return '<button type="button" class="route-button" data-pick="'+other.id+'">'+esc(other.person+' · '+other.label+' — '+other.topic)+'</button><br>'+esc(e.reason);
-      }).join('<br>')+'</div><p class="source-note">원문 질문의 공통 쟁점을 바탕으로 제안한 연결입니다.</p>';
+      const next=children(n.id).filter(x=>visible.has(x.id));
+      if(next.length)out+='<div class="route-list">'+next.map(x=>'<button type="button" class="route-button" data-pick="'+x.id+'">'+esc(x.kind==='question'?x.label+' · '+x.topic:x.label)+'</button>').join('')+'</div>';
       if(n.kind==='question')out+='<button type="button" class="route-button" data-pick="'+n.id+'">인터뷰 보기</button>';
-      if(n.kind==='person')out+='</section>';
-      detail.innerHTML=out;detail.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',()=>select(Number(b.dataset.pick))));
-      const introButton=detail.querySelector('[data-introduction]');if(introButton)introButton.addEventListener('click',()=>openInterview(introduction(nodes[Number(introButton.dataset.introduction)])));
-      const tabs=[...detail.querySelectorAll('[data-person-tab]')];
-      function activateTab(tab){recordStep(()=>{for(const t of tabs){const active=t===tab;t.setAttribute('aria-selected',String(active));t.tabIndex=active?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!active}})}
-      tabs.forEach((tab,index)=>{tab.addEventListener('click',()=>activateTab(tab));tab.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();e.stopPropagation();const target=tabs[e.key==='Home'?0:e.key==='End'?tabs.length-1:(index+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];activateTab(target);target.focus()})});
-      if(n.kind==='person'&&presentationMode)activateTab(tabs[1]);
+      detail.innerHTML=out;
+      detail.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',()=>select(Number(b.dataset.pick))));
+      const introButton=detail.querySelector('[data-introduction]');
+      if(introButton)introButton.addEventListener('click',()=>openInterview(introduction(nodes[Number(introButton.dataset.introduction)])));
     }
     function profileHTML(name){const p=(window.FORUM_PROFILES||{})[name];if(!p)return '';return '<p class="person-role">'+esc(p.role)+'</p>'+(p.career?.length?'<ul class="person-career">'+p.career.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'')}
     function introduction(person){return {id:'intro-'+person.id,kind:'introduction',parent:person.id,person:person.label,chapter:person.chapter,label:'Q1',topic:'자기소개',question:'Q1. 현재 어떤 일을 하고 계신지, 본인의 활동을 중심으로 소개해 주세요.'}}
@@ -597,11 +573,8 @@
       if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}
       const nextIndex=Math.max(-1,Math.min(cues.length-1,index));
       const upcomingCue=cues[nextIndex];
-      if(dialog.open){
-        if((upcomingCue?.all||upcomingCue?.epilogue)&&!reducedMotion){stopVideo();const fade=dialog.animate([{opacity:1},{opacity:0}],{duration:480,easing:'ease-in-out',fill:'forwards'});fade.onfinish=()=>{if(dialog.open)dialog.close()}}
-        else closeInterview();
-      }
-      if(nextIndex>cueIndex&&upcomingCue&&!upcomingCue.all&&!upcomingCue.epilogue&&interviewClosedAt){
+      if(dialog.open)closeInterview();
+      if(nextIndex>cueIndex&&upcomingCue&&interviewClosedAt){
         const remaining=2000-(performance.now()-interviewClosedAt);
         if(remaining>0){
           const waitingAt=cueIndex;
