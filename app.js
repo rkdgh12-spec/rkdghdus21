@@ -82,9 +82,9 @@
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
-    const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false;
+    const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false,chapterElevationBeforeFocus=null;
     function setDepthEnabled(enabled){
-      cameraMotion++;depthEnabled=enabled;
+      cameraMotion++;depthEnabled=enabled;if(!enabled)chapterElevationBeforeFocus=null;
       if(enabled){autoCentered3D=true;threePanX=0;threePanY=0}
       stage.classList.toggle('three-view',enabled);
       flatPlane.hidden=enabled;threeScene.hidden=!enabled;
@@ -317,7 +317,9 @@
         lastManual3D=performance.now();
         const start={x:threePanX,y:threePanY},startElevation=threeElevation;
         const openingChapterFocus=presentationMode&&nodes[id].chapter===1&&cueIndex>=2;
-        const goalElevation=openingChapterFocus?1.32:.82;
+        if(openingChapterFocus&&chapterElevationBeforeFocus===null)chapterElevationBeforeFocus=startElevation;
+        const goalElevation=openingChapterFocus?1.32:chapterElevationBeforeFocus??startElevation;
+        if(!openingChapterFocus)chapterElevationBeforeFocus=null;
         threeElevation=goalElevation;render3D();
         const p=threeProjected[id];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
