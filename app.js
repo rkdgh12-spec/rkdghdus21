@@ -335,11 +335,9 @@
         const startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
         const node=nodes[id],kind=node.kind;
         const chapterTransit=presentationMode&&kind==='chapter'&&previous!==null&&nodes[previous].chapter!==node.chapter;
-        const orbit=Math.atan2(node.y-threeCenter.y,node.x-threeCenter.x);
         const goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
-        const goalYaw=presentationMode?-.24+.14*Math.sin(orbit):start.yaw;
-        const openingChapterFocus=presentationMode&&node.chapter===1&&cueIndex>=2;
-        const goalElevation=presentationMode?(openingChapterFocus?1.32:kind==='chapter' ? .98 : kind==='person' ? 1.08 : 1.18):start.elevation;
+        const goalYaw=start.yaw;
+        const goalElevation=start.elevation;
         threeZoom=goalZoom;threeYaw=goalYaw;threeElevation=goalElevation;render3D();
         const p=threeProjected[id];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
@@ -354,6 +352,7 @@
         const duration=chapterTransit?2200:Math.min(1800,Math.max(900,850+distance*.2+zoomSteps*260));
         const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
         travel([start,goal],duration,(p,progress)=>{
+          lastManual3D=performance.now();
           const move=chapterTransit?smooth((progress-.28)/.72):progress;
           threePanX=chapterTransit?start.x+(goal.x-start.x)*move:p.x;
           threePanY=chapterTransit?start.y+(goal.y-start.y)*move:p.y;
