@@ -90,10 +90,13 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network #sequence-label{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--secondary)}
 #forum-source-network .sequence-controls>div{flex:none}
 @media(max-width:700px){#forum-source-network #sequence-label{max-width:38vw}}
-#forum-source-network .stage .epilogue-network{position:absolute;inset:0;width:100%;height:100%;z-index:25;pointer-events:none;overflow:hidden;filter:drop-shadow(0 0 2px rgba(23,107,120,.18))}
-#forum-source-network .stage .epilogue-link{fill:none;stroke:var(--accent);stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;opacity:0;animation:epilogue-signal 1050ms var(--epi-delay) ease-in-out 3 both}
+#forum-source-network .stage .epilogue-network{position:absolute;inset:0;width:100%;height:100%;z-index:25;pointer-events:none;overflow:hidden;filter:drop-shadow(0 0 2px rgba(23,107,120,.18));transition:opacity 500ms ease}
+#forum-source-network .stage .epilogue-network.handoff{opacity:0}
+#forum-source-network .stage .epilogue-link{fill:none;stroke:var(--accent);stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;opacity:0;animation:epilogue-signal 3300ms var(--epi-delay) ease-in-out both}
 #forum-source-network .stage .epilogue-link.core{stroke-width:1.45}
-@keyframes epilogue-signal{0%,100%{opacity:0}50%{opacity:.37}}
+@keyframes epilogue-signal{0%{opacity:0}17%,50%,83%,100%{opacity:.37}33%,66%{opacity:.08}}
+#interview-dialog.epilogue-mode::backdrop{animation:epilogue-backdrop 500ms ease-out both}
+@keyframes epilogue-backdrop{from{background:transparent;backdrop-filter:blur(0)}to{background:#0008;backdrop-filter:blur(4px)}}
 #interview-dialog.epilogue-mode{width:min(860px,calc(100vw - 48px))}
 #interview-dialog.epilogue-mode .interview-header{border-bottom:0;padding-bottom:8px}
 #interview-dialog.epilogue-mode #interview-person{font-size:14px;color:var(--secondary);font-weight:500}
