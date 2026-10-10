@@ -106,8 +106,11 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .stage .links.active,#forum-source-network .stage .links.branch{transition:stroke 320ms ease,stroke-width 320ms ease,opacity 320ms ease}
 #forum-source-network .stage.guided-transition .links.active,#forum-source-network .stage.guided-transition .links.branch{stroke:var(--secondary)!important;stroke-width:.8!important;opacity:.18!important}
 #forum-source-network .stage .epilogue-network.handoff{opacity:0}
-#forum-source-network .stage .epilogue-link{fill:none;stroke:#55c4cf;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;opacity:0;animation:epilogue-signal 5400ms var(--epi-delay) ease-in-out both}
+#forum-source-network .stage .epilogue-link{fill:none;stroke:#55c4cf;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;opacity:0;animation:epilogue-signal 1800ms var(--epi-delay) ease-in-out both}
+#forum-source-network .stage .epilogue-link.trace{animation:epilogue-trace var(--epi-duration) var(--epi-delay) ease-in-out both}
+@keyframes epilogue-trace{0%{opacity:.22;stroke-dashoffset:var(--epi-start-offset)}100%{opacity:.18;stroke-dashoffset:0}}
 #forum-source-network .stage .epilogue-link.core{stroke-width:1.45}
+#forum-source-network .tools .quick-step{font-size:10px;padding-inline:7px;opacity:.75}
 @keyframes epilogue-signal{0%{opacity:0}28%{opacity:.16}52%{opacity:.04}82%,100%{opacity:.16}}
 #interview-dialog.epilogue-mode::backdrop{animation:epilogue-backdrop 500ms ease-out both}
 @keyframes epilogue-backdrop{from{background:transparent;backdrop-filter:blur(0)}to{background:rgba(0,0,0,.18);backdrop-filter:blur(3px)}}
