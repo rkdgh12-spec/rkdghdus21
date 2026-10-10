@@ -366,27 +366,25 @@
           const targetPoint=threeProjected[id];
           const spanX=sourcePoint&&targetPoint?Math.abs(targetPoint.x-sourcePoint.x):0;
           const spanY=sourcePoint&&targetPoint?Math.abs(targetPoint.y-sourcePoint.y):0;
-          const pairFit=Math.min((width-260)/Math.max(1,spanX),(height-220)/Math.max(1,spanY));
+          const pairFit=Math.min(Math.max(180,width-320)/Math.max(1,spanX),Math.max(150,height-260)/Math.max(1,spanY));
           const overviewZoom=Math.min(start.zoom,start.zoom*pairFit);
-          const anchorAt=zoom=>{
-            const ratio=zoom/start.zoom;
-            return {x:startFocus.x-width/2-(startFocus.x-width/2-start.x)*ratio,y:startFocus.y-height/2-(startFocus.y-height/2-start.y)*ratio};
-          };
-          const out=anchorAt(overviewZoom);
-          threeZoom=overviewZoom;threePanX=out.x;threePanY=out.y;render3D();
-          for(let i=0;i<2;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
-          const across={x:threePanX,y:threePanY};
-          const drift={x:across.x-out.x,y:across.y-out.y};
-          const finalAnchor=anchorAt(goal.zoom);
-          const correction={x:goal.x-finalAnchor.x-drift.x,y:goal.y-finalAnchor.y-drift.y};
+          threeZoom=overviewZoom;threePanX=start.x;threePanY=start.y;render3D();
+          const from=sourceId!==undefined&&sourceId!==null?threeProjected[sourceId]:null,to=threeProjected[id];
+          const midpoint=from&&to?{x:start.x+width/2-(from.x+to.x)/2,y:start.y+height/2-(from.y+to.y)/2}:{x:start.x,y:start.y};
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
           travel([start,goal],NODE_TRAVEL_MS,(_p,progress)=>{
             lastManual3D=performance.now();
-            const outPhase=smooth(progress/.52),inPhase=smooth((progress-.52)/.48);
-            threeZoom=progress<.52?start.zoom+(overviewZoom-start.zoom)*outPhase:overviewZoom+(goal.zoom-overviewZoom)*inPhase;
-            const anchored=anchorAt(threeZoom),move=smooth(progress),settle=smooth((progress-.58)/.42);
-            threePanX=anchored.x+drift.x*move+correction.x*settle;
-            threePanY=anchored.y+drift.y*move+correction.y*settle;
+            if(progress<.42){
+              const t=smooth(progress/.42);
+              threeZoom=start.zoom+(overviewZoom-start.zoom)*t;
+              threePanX=start.x+(midpoint.x-start.x)*t;threePanY=start.y+(midpoint.y-start.y)*t;
+            }else if(progress<.58){
+              threeZoom=overviewZoom;threePanX=midpoint.x;threePanY=midpoint.y;
+            }else{
+              const t=smooth((progress-.58)/.42);
+              threeZoom=overviewZoom+(goal.zoom-overviewZoom)*t;
+              threePanX=midpoint.x+(goal.x-midpoint.x)*t;threePanY=midpoint.y+(goal.y-midpoint.y)*t;
+            }
             render3D();
           },finish);
         }else{
