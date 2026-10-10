@@ -325,9 +325,10 @@
       if(depthEnabled){
         lastManual3D=performance.now();
         const start={x:threePanX,y:threePanY,zoom:threeZoom,yaw:threeYaw,elevation:threeElevation};
+        const startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
         const node=nodes[id],kind=node.kind;
         const orbit=Math.atan2(node.y-threeCenter.y,node.x-threeCenter.x);
-        const goalZoom=presentationMode?({chapter:1.08,person:1.34,concept:1.67,subconcept:1.95,question:2.10}[kind]||1.08):start.zoom;
+        const goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
         const goalYaw=presentationMode?-.24+.14*Math.sin(orbit):start.yaw;
         const openingChapterFocus=presentationMode&&node.chapter===1&&cueIndex>=2;
         const goalElevation=presentationMode?(openingChapterFocus?1.32:kind==='chapter' ? .98 : kind==='person' ? 1.08 : 1.18):start.elevation;
@@ -336,18 +337,28 @@
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
         for(let i=0;i<2;i++){const label=selectedTextPoint(id);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
+        const goalFocus={x:threeProjected[id].x,y:threeProjected[id].y};
         threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
         const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();after()};
         if(reducedMotion){finish();return}
         const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
-        const duration=Math.min(1250,Math.max(700,650+distance*.27));
+        const zoomSteps=Math.abs(Math.log2(goal.zoom/start.zoom));
+        const duration=Math.min(1800,Math.max(900,850+distance*.2+zoomSteps*260));
         travel([start,goal],duration,(p,progress)=>{
-          const arc=Math.sin(Math.PI*progress)*.045*Math.sign(goal.yaw-start.yaw||1);
           threePanX=p.x;threePanY=p.y;
           threeZoom=start.zoom+(goal.zoom-start.zoom)*progress;
-          threeYaw=start.yaw+(goal.yaw-start.yaw)*progress+arc;
+          threeYaw=start.yaw+(goal.yaw-start.yaw)*progress;
           threeElevation=start.elevation+(goal.elevation-start.elevation)*progress;
           render3D();
+          const from=previous!==null?threeProjected[previous]:null,to=threeProjected[id];
+          if(to){
+            const currentX=(from?from.x:startFocus.x)*(1-progress)+to.x*progress;
+            const currentY=(from?from.y:startFocus.y)*(1-progress)+to.y*progress;
+            const desiredX=startFocus.x+(goalFocus.x-startFocus.x)*progress;
+            const desiredY=startFocus.y+(goalFocus.y-startFocus.y)*progress;
+            threePanX+=desiredX-currentX;threePanY+=desiredY-currentY;
+            render3D();
+          }
         },finish);
         return;
       }
