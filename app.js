@@ -305,32 +305,22 @@
       if(epilogueTransitioning)return;
       epilogueTransitioning=true;
       const motion=cameraMotion;
-      const core=chapters.find(n=>n.chapter===5);
-      const heading=depthEnabled?threeNodes.get(core.id):areas.get(core.id).heading;
-      const target=heading?.querySelector('strong')||heading;
-      const targetRect=target?.getBoundingClientRect();
-      const stageRect=stage.getBoundingClientRect();
-      const overlay=document.createElement('div');overlay.className='epilogue-convergence';overlay.setAttribute('aria-hidden','true');
-      stage.append(overlay);stage.classList.add('epilogue-transition');
-      const animations=[];
-      if(!reducedMotion&&targetRect){
-        const tx=targetRect.left+targetRect.width/2-stageRect.left,ty=targetRect.top+targetRect.height/2-stageRect.top;
-        for(const person of points.filter(n=>n.kind==='person'&&visible.has(n.id))){
-          const button=depthEnabled?threeNodes.get(person.id):elems.get(person.id)?.b;
-          const label=button?.querySelector('.node-label-text');
-          if(!label)continue;
-          const rect=label.getBoundingClientRect();
-          if(!rect.width||!rect.height)continue;
-          const x=rect.left+rect.width/2-stageRect.left,y=rect.top+rect.height/2-stageRect.top;
-          const ghost=document.createElement('span');ghost.className='epilogue-name';ghost.textContent=person.label;
-          ghost.style.left=x+'px';ghost.style.top=y+'px';overlay.append(ghost);
-          const delay=Math.max(0,Math.round(Math.hypot(x-tx,y-ty)*.12));
-          animations.push(ghost.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1,filter:'blur(0px)'},{transform:`translate(calc(-50% + ${tx-x}px),calc(-50% + ${ty-y}px)) scale(.54)`,opacity:.72,filter:'blur(0px)',offset:.82},{transform:`translate(calc(-50% + ${tx-x}px),calc(-50% + ${ty-y}px)) scale(.2)`,opacity:0,filter:'blur(3px)'}],{duration:850,delay,easing:'cubic-bezier(.33,0,.2,1)',fill:'forwards'}).finished.catch(()=>{}));
+      if(!reducedMotion){
+        const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','epilogue-network');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
+        const source=depthEnabled?threeSvg:svg;
+        let index=0;
+        for(const path of source.querySelectorAll('.links')){
+          if(getComputedStyle(path).display==='none')continue;
+          const d=path.getAttribute('d');if(!d)continue;
+          const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
+          const length=path.getTotalLength();echo.style.strokeDasharray=`${length} ${length}`;echo.style.setProperty('--epi-length',String(length));
+          echo.style.setProperty('--epi-delay',((index*47)%390)+'ms');overlay.append(echo);index++;
         }
-        heading?.classList.add('epilogue-core-pulse');
-        await Promise.all(animations);
+        stage.append(overlay);
+        await new Promise(resolve=>setTimeout(resolve,1550));
+        overlay.remove();
       }
-      overlay.remove();stage.classList.remove('epilogue-transition');heading?.classList.remove('epilogue-core-pulse');epilogueTransitioning=false;
+      epilogueTransitioning=false;
       if(motion===cameraMotion)openEpilogue();
     }
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
