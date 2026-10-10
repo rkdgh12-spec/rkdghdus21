@@ -256,10 +256,10 @@
       };
       followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
       if(guided){
-        const chapterTransfer=depthEnabled&&nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
+        const chapterTransfer=nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
-          traceRoute(previous,id,null,NODE_TRAVEL_MS,personTransfer);
+          traceRoute(previous,id,null,NODE_TRAVEL_MS,true);
         }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()},NODE_TRAVEL_MS);
       }
       save();
@@ -339,7 +339,7 @@
         const chapterTransit=presentationMode&&kind==='chapter'&&previous!==null&&nodes[previous].chapter!==node.chapter;
         const personTransit=presentationMode&&kind==='person'&&previous!==null&&nodes[previous].person&&nodes[previous].person!==node.person;
         const wideTransit=chapterTransit||personTransit;
-        const sourceId=chapterTransit&&previous!==null?ancestors(previous).find(aid=>nodes[aid].kind==='chapter'):previous;
+        const sourceId=previous;
         if(sourceId!==undefined&&sourceId!==null&&threeProjected[sourceId])startFocus={x:threeProjected[sourceId].x,y:threeProjected[sourceId].y};
         const focusId=kind==='question'?node.parent:id;
         let goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
