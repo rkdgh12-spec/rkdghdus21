@@ -78,7 +78,8 @@
     const children=id=>nodes.filter(n=>n.parent===id);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elems=new Map(),paths=[],areas=new Map();
-    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,completedBranchPerson=null,guidedHiddenEdge=-1,cameraTravelProgress=0,fullReveal=null;
+    let guidedStep=false,activeRoute=null,activeBranchRoute=null,branchReveal=null,completedBranchRoot=null,guidedHiddenEdge=-1,cameraTravelProgress=0,fullReveal=null;
+    const guidedHiddenEdges=new Set();
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
@@ -234,9 +235,9 @@
     function selectStep(id){
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
-      activeBranchRoute?.remove();activeBranchRoute=null;branchReveal=null;completedBranchPerson=null;guidedHiddenEdge=-1;
+      activeBranchRoute?.remove();activeBranchRoute=null;branchReveal=null;completedBranchRoot=null;guidedHiddenEdge=-1;guidedHiddenEdges.clear();
       const previous=selected,before=new Set(visible);selected=id;
-      const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
+      const guided=previous!==null&&previous!==id&&!reducedMotion;
       if(guided&&((nodes[previous].kind==='person'&&nodes[id].kind==='concept')||(nodes[previous].kind==='concept'&&nodes[id].kind==='subconcept')))guidedHiddenEdge=edges.findIndex(e=>e.kind==='hierarchy'&&e.source===previous&&e.target===id);
       if(guided)for(const line of paths)for(const animation of line.getAnimations())animation.cancel();
       if(presentationMode&&!applyingCue){
@@ -248,11 +249,11 @@
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
       for(const aid of ancestors(id))if(children(aid).length)expanded.add(aid);
       updateVisible();if(nodes[id].kind==='question')panel.hidden=true;else showDetail(nodes[id]);
-      if(nodes[id].kind==='person'&&!reducedMotion){const concepts=children(id).filter(n=>n.kind==='concept'&&visible.has(n.id));if(concepts.length)branchReveal={personId:id,ids:new Set(concepts.map(n=>n.id)),progress:0,started:false}}
+      if(!reducedMotion){const nextNodes=children(id).filter(n=>visible.has(n.id));if(nextNodes.length)branchReveal={rootId:id,ids:new Set(nextNodes.map(n=>n.id)),progress:0,started:false}}
       autoCentered3D=false;stage.classList.toggle('guided-transition',guided);guidedStep=guided;render();guidedStep=false;animateNodes(before,guided);
       let cameraArrived=false,routeArrived=!guided;
       let interviewQueued=false;
-      const beginBranches=()=>{if(cameraArrived&&routeArrived&&branchReveal?.personId===id&&!branchReveal.started){branchReveal.started=true;traceBranches(id)}};
+      const beginBranches=()=>{if(cameraArrived&&routeArrived&&branchReveal?.rootId===id&&!branchReveal.started){branchReveal.started=true;traceBranches(id)}};
       const revealQuestion=()=>{
         if(nodes[id].kind!=='question'||!cameraArrived||!routeArrived||interviewQueued)return;
         interviewQueued=true;
@@ -276,12 +277,12 @@
       if(depthEnabled)return;
       let index=0;for(const nid of visible){if(before.has(nid)||!elems.has(nid))continue;const n=nodes[nid],p=nodes[n.parent],{b}=elems.get(nid);b.animate(guided?[{opacity:0},{opacity:1}]:[{transform:`translate(calc(-50% + ${(p.x-n.x)*k}px),calc(-50% + ${(p.y-n.y)*k}px))`,opacity:0},{transform:'translate(-50%,-50%)',opacity:1}],{duration:guided?480:520,delay:guided?Math.min(500+index++*12,780):Math.min(index++*18,320),easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});}
     }
-    function traceBranches(personId){
+    function traceBranches(rootId){
       const reveal=branchReveal;
-      if(!reveal||reveal.personId!==personId)return;
-      const branches=[...reveal.ids].map(id=>({id,index:edges.findIndex(e=>e.kind==='hierarchy'&&e.source===personId&&e.target===id)})).filter(item=>item.index>=0);
+      if(!reveal||reveal.rootId!==rootId)return;
+      const branches=[...reveal.ids].map(id=>({id,index:edges.findIndex(e=>e.kind==='hierarchy'&&e.source===rootId&&e.target===id)}));
       if(!branches.length){branchReveal=null;render();return}
-      const ids=[personId,...branches.map(b=>b.id)];
+      const ids=[rootId,...branches.map(b=>b.id)];
       const positions=ids.map(id=>depthEnabled?threeProjected[id]:{x:nodes[id].x*k+ox,y:nodes[id].y*k+oy});
       const minX=Math.min(...positions.map(p=>p.x)),maxX=Math.max(...positions.map(p=>p.x)),minY=Math.min(...positions.map(p=>p.y)),maxY=Math.max(...positions.map(p=>p.y));
       const ratio=Math.min(1,Math.max(180,width-300)/Math.max(1,maxX-minX),Math.max(150,height-220)/Math.max(1,maxY-minY));
@@ -294,15 +295,15 @@
       overlay.setAttribute('aria-hidden','true');
       for(const branch of branches){
         const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');
-        line.setAttribute('class','lecture-route-line');
+        line.setAttribute('class','lecture-route-line');line.style.strokeWidth=({chapter:2.15,person:1.65,concept:1.3,subconcept:1.1})[nodes[rootId].kind]||1.1;
         head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');
         overlay.append(line,head);branch.line=line;branch.head=head;
       }
       stage.append(overlay);activeBranchRoute=overlay;
       const token=cameraMotion,duration=NODE_TRAVEL_MS;let started=null;
       function tick(now){
-        if(token!==cameraMotion||selected!==personId||branchReveal!==reveal){
-          overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null;return;
+        if(token!==cameraMotion||selected!==rootId||branchReveal!==reveal){
+          overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null;if(branchReveal===reveal){branchReveal=null;render()}return;
         }
         if(started===null)started=now;
         const t=Math.min(1,(now-started)/duration),progress=t*t*(3-2*t);
@@ -312,17 +313,20 @@
         render();
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
         for(const branch of branches){
-          const source=depthEnabled?threeSvg.querySelector(`[data-edge-index="${branch.index}"]`):paths[branch.index];
-          if(!source)continue;
-          const length=source.getTotalLength();
-          branch.line.setAttribute('d',source.getAttribute('d'));
+          const source=branch.index>=0?(depthEnabled?threeSvg.querySelector(`[data-edge-index="${branch.index}"]`):paths[branch.index]):null;
+          if(source)branch.line.setAttribute('d',source.getAttribute('d'));
+          else{
+            const from=depthEnabled?threeProjected[rootId]:{x:nodes[rootId].x*k+ox,y:nodes[rootId].y*k+oy},to=depthEnabled?threeProjected[branch.id]:{x:nodes[branch.id].x*k+ox,y:nodes[branch.id].y*k+oy};
+            branch.line.setAttribute('d',`M${from.x},${from.y}L${to.x},${to.y}`);
+          }
+          const length=branch.line.getTotalLength();
           branch.line.style.strokeDasharray=`${length} ${length}`;
           branch.line.style.strokeDashoffset=String(length*(1-progress));
-          const p=source.getPointAtLength(length*progress);
+          const p=branch.line.getPointAtLength(length*progress);
           branch.head.setAttribute('cx',p.x);branch.head.setAttribute('cy',p.y);
         }
         if(t<1)requestAnimationFrame(tick);
-        else{branchReveal=null;completedBranchPerson=personId;render();overlay.classList.add('finish');setTimeout(()=>{overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null},330);if(stepHistory[stepIndex]?.selected===personId){stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
+        else{branchReveal=null;completedBranchRoot=rootId;render();overlay.classList.add('finish');setTimeout(()=>{overlay.remove();if(activeBranchRoute===overlay)activeBranchRoute=null},330);if(stepHistory[stepIndex]?.selected===rootId){stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
       }
       requestAnimationFrame(tick);
     }
@@ -336,10 +340,11 @@
       for(let head=0;head<queue.length&&!previous.has(to);head++)for(const step of adjacent.get(queue[head])||[]){if(previous.has(step.to))continue;previous.set(step.to,{from:queue[head],...step});queue.push(step.to)}
       const route=[];let cursor=to;
       while(previous.has(cursor)&&previous.get(cursor)){const step=previous.get(cursor);route.unshift(step);cursor=step.from}
-      if(!route.length&&from===to)return;
+      if(!route.length&&from===to){onComplete?.();return}
+      guidedHiddenEdges.clear();for(const step of route)guidedHiddenEdges.add(step.index);render();
       const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','lecture-route');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
-      const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');line.style.strokeWidth=nodes[from].kind==='chapter'&&nodes[to].kind==='person'?'2.15':'1.65';overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
-      const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110),syncToCamera=guidedHiddenEdge>=0;let start=null;
+      const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');line.style.strokeWidth=String(({chapter:2.15,person:1.65,concept:1.3,subconcept:1.1,question:1.1})[nodes[from].kind]||1.3);overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
+      const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110),syncToCamera=true;let start=null;
       function draw(progress){
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
         const samples=[];
@@ -353,7 +358,7 @@
       }
       function tick(now){if(token!==cameraMotion){overlay.remove();if(activeRoute===overlay)activeRoute=null;return}if(start===null)start=now;
         const t=Math.min(1,(now-start)/duration),progress=syncToCamera?cameraTravelProgress:t*t*(3-2*t);draw(progress);
-        if(progress<1)requestAnimationFrame(tick);else{stage.classList.remove('guided-transition');overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
+        if(progress<1)requestAnimationFrame(tick);else{guidedHiddenEdges.clear();guidedHiddenEdge=-1;render();stage.classList.remove('guided-transition');overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
       requestAnimationFrame(tick);
     }
     function selectedTextPoint(id){
@@ -930,8 +935,8 @@
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
         const revealState=fullRevealEdge(e,i),projectedLength=samples.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p.x-samples[j].x,p.y-samples[j].y),0);
         const traceStyle=revealState.trace?` style="stroke-dasharray:${projectedLength} ${projectedLength};stroke-dashoffset:${(revealState.reverse?-1:1)*projectedLength*(1-revealState.progress)}"`:'';
-        const branchHidden=branchReveal?.personId===e.source&&branchReveal.ids.has(e.target);
-        const markup=`<g opacity="${guidedHiddenEdge===i||branchHidden?0:revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
+        const branchHidden=branchReveal?.rootId===e.source&&branchReveal.ids.has(e.target);
+        const markup=`<g opacity="${guidedHiddenEdge===i||guidedHiddenEdges.has(i)||branchHidden?0:revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
         if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-past'))pastLinks+=markup;
         else if(focusedPerson!==null&&branchKeep===null&&path.classList.contains('person-cross'))crossLinks+=markup;
         else currentLinks+=markup;
@@ -971,7 +976,7 @@
       }
     }
     function render(){
-      stage.classList.toggle('person-branches-complete',selected!==null&&nodes[selected].kind==='person'&&completedBranchPerson===selected);
+      stage.classList.toggle('person-branches-complete',selected!==null&&nodes[selected].kind==='person'&&completedBranchRoot===selected);
       stage.classList.toggle('high-zoom-labels',(depthEnabled?threeZoom:k/fitK)>=3);
       flatPlane.style.setProperty('--flat-label-zoom',labelZoom(k/fitK).toFixed(2));
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
@@ -1000,7 +1005,7 @@
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
         l.style.display=shown?'':'none';l.setAttribute('d',connectionPath(e));
         const revealState=fullReveal&&shown?fullRevealEdge(e,i):null;
-        l.style.filter=(guidedHiddenEdge===i||branchReveal?.personId===e.source&&branchReveal.ids.has(e.target))?'opacity(0)':revealState?`opacity(${revealState.opacity})`:'';
+        l.style.filter=(guidedHiddenEdge===i||guidedHiddenEdges.has(i)||branchReveal?.rootId===e.source&&branchReveal.ids.has(e.target))?'opacity(0)':revealState?`opacity(${revealState.opacity})`:'';
         if(revealState?.trace){const length=l.getTotalLength();l.style.strokeDasharray=`${length} ${length}`;l.style.strokeDashoffset=String((revealState.reverse?-1:1)*length*(1-revealState.progress))}
         else{l.style.strokeDasharray='';l.style.strokeDashoffset=''}
         l.classList.toggle('person-current',focusedPerson!==null&&a.person===focusedPerson&&b.person===focusedPerson);
@@ -1016,6 +1021,7 @@
         l.classList.toggle('branch-route',branchRoute);
         l.classList.toggle('branch-other-chapter',branchKeep!==null&&(a.chapter!==personChapter||b.chapter!==personChapter));
         l.classList.toggle('branch-local-other',branchKeep!==null&&!branchRoute&&a.chapter===personChapter&&b.chapter===personChapter);
+        l.classList.toggle('branch-complete',e.kind==='hierarchy'&&e.source===completedBranchRoot);
         l.classList.toggle('branch',e.kind==='hierarchy'&&selected!==null&&nodes[selected].kind!=='person'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
         l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning||(hoverChapter!==null&&(selectedBranch.has(e.source)||selectedBranch.has(e.target))));
         if((activeChapter!==null&&(l.classList.contains('chapter-past')||l.classList.contains('chapter-cross')))||l.classList.contains('person-other-chapter')||(branchKeep!==null&&!branchRoute))for(const animation of l.getAnimations())animation.cancel();
