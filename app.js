@@ -133,7 +133,7 @@
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
-    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{showAll();transitionToEpilogue()});q('.tools').insertBefore(epilogueNav,depthButton);
+    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:1450)});q('.tools').insertBefore(epilogueNav,depthButton);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
     for(const c of [...chapters].sort((a,b)=>(a.chapter===5)-(b.chapter===5))){
@@ -145,8 +145,8 @@
     const personPastLayer=document.createElementNS(NS,'g'),personCrossLayer=document.createElementNS(NS,'g'),personCurrentLayer=document.createElementNS(NS,'g');
     personPastLayer.setAttribute('class','person-past-layer');personCrossLayer.setAttribute('class','person-cross-layer');personCurrentLayer.setAttribute('class','person-current-layer');
     svg.append(personPastLayer,personCrossLayer,personCurrentLayer);
-    for(const e of edges){
-      const l=document.createElementNS(NS,'path');l.classList.add('links');
+    for(const [edgeIndex,e] of edges.entries()){
+      const l=document.createElementNS(NS,'path');l.classList.add('links');l.dataset.edgeIndex=String(edgeIndex);
       if(e.kind!=='hierarchy')l.classList.add(e.kind);if(e.core)l.classList.add('core');
       const t=document.createElementNS(NS,'title'),a=nodes[e.source],b=nodes[e.target];
       const edgeLabel=n=>n.kind==='question'?n.person+' · '+n.label:n.label;
@@ -372,7 +372,13 @@
     }
     function stopVideo(){exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
     function openEpilogue(){openInterview(epilogueFilm,'epilogue')}
-    let epilogueTransitioning=false;
+    let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null;
+    function syncEpilogueOverlay(){
+      if(!epilogueOverlay||!epilogueEchoes)return;
+      epilogueOverlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
+      const projected=depthEnabled?new Map([...threeSvg.querySelectorAll('.links[data-edge-index]')].map(path=>[Number(path.dataset.edgeIndex),path])):null;
+      for(const [index,echo] of epilogueEchoes){const path=projected?projected.get(index):paths[index];if(path)echo.setAttribute('d',path.getAttribute('d'))}
+    }
     async function transitionToEpilogue(){
       if(epilogueTransitioning)return;
       epilogueTransitioning=true;
@@ -380,17 +386,19 @@
       if(!reducedMotion){
         const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','epilogue-network');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
         const source=depthEnabled?threeSvg:svg;
+        epilogueOverlay=overlay;epilogueEchoes=new Map();
         let index=0;
         for(const path of source.querySelectorAll('.links')){
           if(getComputedStyle(path).display==='none')continue;
           const d=path.getAttribute('d');if(!d)continue;
           const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
+          epilogueEchoes.set(Number(path.dataset.edgeIndex),echo);
           echo.style.setProperty('--epi-delay',((index*47)%390)+'ms');overlay.append(echo);index++;
         }
         stage.append(overlay);
         await new Promise(resolve=>setTimeout(resolve,4800));
         if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
-        overlay.remove();
+        overlay.remove();if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null}
       }
       epilogueTransitioning=false;
       if(reducedMotion&&motion===cameraMotion)openEpilogue();
@@ -460,6 +468,11 @@
       cueIndex=nextIndex;
       const cue=cues[cueIndex];
       if(!cue){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);fit();updateCue();save();return}
+      if(cue.epilogue&&points.every(n=>visible.has(n.id))){
+        stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;
+        if(selected!==null){selected=null;showDetail(null);render()}
+        updateCue();save();transitionToEpilogue();return;
+      }
       if(cue.all||cue.epilogue){
         cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible);selected=null;expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save();
         if(cue.epilogue)transitionToEpilogue();
@@ -683,6 +696,7 @@
         else currentLinks+=markup;
       }
       threeSvg.innerHTML=ground+stems+`<g class="person-past-layer">${pastLinks}</g><g class="person-cross-layer">${crossLinks}</g><g class="person-current-layer">${currentLinks}</g>`;
+      if(epilogueOverlay)syncEpilogueOverlay();
       const lineage=selected===null?new Set():new Set(ancestors(selected)),selectedBranch=selected===null?new Set():descendants(selected);
       const connectedQuestions=new Set();for(const e of edges)if(e.kind!=='hierarchy'&&(e.source===selected||e.target===selected)){if(nodes[e.source].kind==='question')connectedQuestions.add(e.source);if(nodes[e.target].kind==='question')connectedQuestions.add(e.target)}
       const boxes=[],pointBoxes=points.filter(n=>visible.has(n.id)).map(n=>({id:n.id,x:pos[n.id].x-7,y:pos[n.id].y-7,w:14,h:14}));
@@ -753,6 +767,7 @@
         if((activeChapter!==null&&(l.classList.contains('chapter-past')||l.classList.contains('chapter-cross')))||l.classList.contains('person-other-chapter')||(branchKeep!==null&&!branchRoute))for(const animation of l.getAnimations())animation.cancel();
         if(newlyShown&&!reducedMotion&&!guidedStep){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
       });
+      if(epilogueOverlay&&!depthEnabled)syncEpilogueOverlay();
       if(allConnected&&!networkContours)networkContours=connectedContours();
       const boxes=[],envelopePoints=[];
       const pointBoxes=points.filter(n=>visible.has(n.id)).map(n=>{
