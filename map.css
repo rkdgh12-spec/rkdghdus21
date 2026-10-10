@@ -19,7 +19,7 @@
     #forum-source-network .three-volume.core{fill:url(#three-core-shade);stroke:color-mix(in srgb,var(--accent) 30%,transparent)}
     #forum-source-network .three-wires .links{vector-effect:non-scaling-stroke}
     #forum-source-network .three-stem{stroke:color-mix(in srgb,var(--secondary) 19%,transparent);stroke-width:1;stroke-dasharray:2 4}
-    #forum-source-network .three-node.area-heading{transform:translate(-50%,-50%)}
+    #forum-source-network .three-node.area-heading{transform:translate(-50%,-50%);transition:transform .72s ease}
     #forum-source-network .stage.three-view{cursor:grab}
     #forum-source-network .stage.three-view:active{cursor:grabbing}
     #forum-source-network .depth-hint{position:absolute;left:12px;bottom:9px;z-index:8;margin:0;padding:5px 8px;background:color-mix(in srgb,var(--paper) 88%,transparent);color:var(--secondary);font-size:11px;pointer-events:none}
