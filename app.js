@@ -540,37 +540,15 @@
     }
     q('#interview-stage-next').addEventListener('click',()=>{
       if(!presentationMode||cueIndex>=cues.length-1)return;
-      const nextIndex=cueIndex+1;
-      const next=cues[nextIndex];
-      const target=next.id===undefined?null:nodes[next.id];
-      if(target?.kind!=='question'){runCue(nextIndex);return}
-      recordStep(()=>{
-        const previous=selected,before=new Set(visible);
-        cueIndex=nextIndex;
-        expanded.clear();
-        for(let i=0;i<=cueIndex;i++){
-          const prior=cues[i];
-          if(prior.all||prior.epilogue)continue;
-          for(const id of ancestors(prior.id))if(children(id).length)expanded.add(id);
-        }
-        selected=target.id;
-        updateVisible();
-        panel.hidden=true;
-        render();
-        animateNodes(before);
-        followConnectionToLabel(previous,target.id,()=>{});
-        if(previous!==null&&previous!==target.id&&!reducedMotion)traceRoute(previous,target.id);
-        updateCue();
-        openInterviewStep(target);
-        save();
-      });
-      if(video.getAttribute('src')){
+      if(dialog.open&&currentQuestion?.kind==='question'&&video.getAttribute('src')&&video.paused&&video.currentTime<0.25){
         try{
           if(typeof video.requestFullscreen==='function')video.requestFullscreen().catch(()=>{});
           else if(typeof video.webkitEnterFullscreen==='function')video.webkitEnterFullscreen();
         }catch{}
         video.play().catch(()=>{});
+        return;
       }
+      runCue(cueIndex+1);
     });
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
     function showAll(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?createFullReveal(before,anchorPerson):null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
