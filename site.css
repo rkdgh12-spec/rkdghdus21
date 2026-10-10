@@ -128,7 +128,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 /* Keep lecture progression available while an interview is open. */
 #interview-stage-next[hidden]{display:none!important}
-#interview-stage-next{position:fixed;left:20px;bottom:20px;z-index:20;border:1px solid #176b78;background:#176b78;color:#fff;padding:12px 17px;font-family:inherit;font-size:13px;font-weight:700;line-height:1.2;box-shadow:0 5px 20px #123b4240;cursor:pointer;white-space:nowrap}
-#interview-stage-next:hover{background:#10545f}
-#interview-stage-next:focus-visible{outline:3px solid #9ad0d4;outline-offset:3px}
-@media(max-width:700px){#interview-stage-next{left:12px;bottom:12px;padding:10px 13px;font-size:12px}}
+#interview-stage-next{position:fixed;right:20px;bottom:20px;z-index:20;border:1px solid var(--line);background:var(--background,#fff);color:inherit;padding:9px 12px;font-family:inherit;font-size:12px;font-weight:400;line-height:1.2;box-shadow:none;cursor:pointer;white-space:nowrap}
+#interview-stage-next:hover{background:var(--faint,#f5f5f5)}
+#interview-stage-next:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:700px){#interview-stage-next{right:12px;bottom:12px}}
