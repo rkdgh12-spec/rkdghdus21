@@ -350,9 +350,21 @@
           const fitPair=Math.min(1,width*.37/Math.max(1,Math.abs(questionPoint.x-parentPoint.x)),height*.28/Math.max(1,Math.abs(questionPoint.y-parentPoint.y)));
           if(fitPair<1){goalZoom=Math.max(2.2,goalZoom*fitPair);threeZoom=goalZoom;render3D()}
         }
+        const conceptGroup=kind==='concept'?[id,...children(id).filter(n=>n.kind==='subconcept').map(n=>n.id)]:[];
+        if(conceptGroup.length>=3){
+          const xs=conceptGroup.map(nid=>threeProjected[nid].x),ys=conceptGroup.map(nid=>threeProjected[nid].y);
+          const fitGroup=Math.min(1,width*.56/Math.max(1,Math.max(...xs)-Math.min(...xs)),height*.50/Math.max(1,Math.max(...ys)-Math.min(...ys)));
+          if(fitGroup<1){goalZoom=Math.max(.45,goalZoom*fitGroup);threeZoom=goalZoom;render3D()}
+        }
         const p=threeProjected[focusId];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
         for(let i=0;i<2;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
+        if(conceptGroup.length>=3){
+          const xs=conceptGroup.map(nid=>threeProjected[nid].x),ys=conceptGroup.map(nid=>threeProjected[nid].y);
+          threePanX+=width/2-(Math.min(...xs)+Math.max(...xs))/2;
+          threePanY+=height/2-(Math.min(...ys)+Math.max(...ys))/2;
+          render3D();
+        }
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
         const goalFocus={x:threeProjected[focusId].x,y:threeProjected[focusId].y};
         threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
@@ -406,7 +418,19 @@
         }
         return;
       }
-      const start={x:ox,y:oy},node=nodes[id];
+      const start={x:ox,y:oy,k},node=nodes[id];
+      const conceptGroup=node.kind==='concept'?[node,...children(id).filter(n=>n.kind==='subconcept')]:[];
+      if(conceptGroup.length>=3){
+        const xs=conceptGroup.map(n=>n.x),ys=conceptGroup.map(n=>n.y);
+        const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+        k=Math.max(fitK*.45,Math.min(start.k,width*.56/Math.max(1,maxx-minx),height*.50/Math.max(1,maxy-miny)));
+        ox=width/2-(minx+maxx)*k/2;oy=height/2-(miny+maxy)*k/2;render();
+        const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
+        const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();after()};
+        if(reducedMotion){finish();return}
+        travel([start,goal],NODE_TRAVEL_MS,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish);
+        return;
+      }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
       for(let i=0;i<2;i++){const label=selectedTextPoint(id);ox+=width/2-label.x;oy+=height/2-label.y;render()}
       const goal={x:ox,y:oy};ox=start.x;oy=start.y;render();
