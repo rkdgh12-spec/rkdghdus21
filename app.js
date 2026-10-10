@@ -174,7 +174,8 @@
     }
     function fitWholeConnection(){
       const start2D={k,ox,oy};
-      const start3D={yaw:threeYaw,elevation:threeElevation,zoom:threeZoom,x:threePanX,y:threePanY};
+      const start3D={yaw:threeYaw+idleYaw,elevation:threeElevation+idleElevation,zoom:threeZoom,x:threePanX,y:threePanY};
+      if(depthEnabled){autoCentered3D=false;threeYaw=start3D.yaw;threeElevation=start3D.elevation;idleYaw=0;idleElevation=0;lastManual3D=performance.now()}
       fit();
       const contour=networkContours?.core||[];
       if(contour.length){
@@ -190,7 +191,6 @@
       if(depthEnabled){
         const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
-        autoCentered3D=false;idleYaw=0;idleElevation=0;lastManual3D=performance.now();
         threeYaw=goalYaw;threeElevation=1.38;threeZoom=1;render3D();
         const region=threeSvg.querySelector('.three-volume.core');
         if(region){const box=region.getBBox();threePanX+=width/2-box.x-box.width/2;threePanY+=height/2-box.y-box.height/2;render3D()}
