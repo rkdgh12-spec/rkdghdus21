@@ -142,3 +142,5 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .stage.guided-transition .links.person-concept.active{stroke-width:1.05!important}
 #forum-source-network .stage.guided-transition .links.concept-subconcept.active{stroke-width:.85!important}
 #forum-source-network .stage.guided-transition .links.subconcept-question.active{stroke-width:.8!important}
+
+#forum-source-network .stage.person-focus:not(.branch-focus) .links.person-concept:not(.active){stroke:var(--secondary)!important;stroke-width:.85!important;opacity:.34!important}
