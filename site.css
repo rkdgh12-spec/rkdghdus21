@@ -133,22 +133,3 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #question-next[hidden]{display:none!important}
 
 #forum-source-network .detail{padding:8px 14px 13px}#forum-source-network .detail-title{font-size:16px;margin-bottom:6px}#forum-source-network .detail-toolbar{padding:4px 8px 0}#forum-source-network .detail-toolbar .history-controls button{padding:5px;font-size:11px}#forum-source-network .detail-close{padding:5px}#forum-source-network .detail .small-label{font-size:10px;margin-bottom:2px}#forum-source-network .detail .question-text{font-size:12px;line-height:1.45;margin:4px 0 8px}#forum-source-network .detail .route-list{margin:5px 0;gap:0}#forum-source-network .detail .route-button{font-size:12px;padding:5px 0;line-height:1.35}#forum-source-network .detail .person-role{font-size:11px;margin:2px 0 5px}#forum-source-network .detail .person-video-button{font-size:11px;padding:5px 0}#forum-source-network .detail .compact-career{font-size:11px;color:var(--secondary);margin:3px 0 7px}#forum-source-network .detail .compact-career ul{padding-left:17px;margin:5px 0}
-
-#forum-source-network .stage .links.chapter-person.active{stroke-width:2.35}
-#forum-source-network .stage .links.person-concept.active{stroke-width:1.65}
-#forum-source-network .stage .links.concept-subconcept.active{stroke-width:1.3}
-#forum-source-network .stage .links.subconcept-question.active{stroke-width:1.1}
-#forum-source-network .stage.guided-transition .links.chapter-person.active{stroke-width:1.35!important}
-#forum-source-network .stage.guided-transition .links.person-concept.active{stroke-width:1.05!important}
-#forum-source-network .stage.guided-transition .links.concept-subconcept.active{stroke-width:.85!important}
-#forum-source-network .stage.guided-transition .links.subconcept-question.active{stroke-width:.8!important}
-
-#forum-source-network .stage.person-focus:not(.branch-focus) .links.person-concept:not(.active){stroke:var(--secondary)!important;stroke-width:.85!important;opacity:.34!important}
-
-#forum-source-network .stage.person-focus.person-branches-complete .links.person-concept.person-current:not(.active){stroke:var(--accent)!important;stroke-width:1.05!important;opacity:.78!important}
-
-#forum-source-network .stage .links.branch-complete{stroke:var(--accent)!important;opacity:.85!important}
-#forum-source-network .stage .links.chapter-person.branch-complete{stroke-width:2.15!important}
-#forum-source-network .stage .links.person-concept.branch-complete{stroke-width:1.65!important}
-#forum-source-network .stage .links.concept-subconcept.branch-complete{stroke-width:1.3!important}
-#forum-source-network .stage .links.subconcept-question.branch-complete{stroke-width:1.1!important}
