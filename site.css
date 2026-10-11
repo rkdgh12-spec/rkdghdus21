@@ -219,3 +219,6 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 @media(max-width:640px){#forum-source-network .intro .intro-sequence{left:10px;right:10px}}
 
 #forum-source-network .area-heading.step-arrived[aria-label*="조각의 현재"]>span,#forum-source-network .area-heading.step-arrived[aria-label*="조각의 현재"]>strong,#forum-source-network .area-heading.step-arrived[aria-label*="조각의 현재"]>small{transition-duration:60ms}
+
+#forum-source-network .intro-forum-title{margin:0 0 26px;color:var(--secondary);font-size:18px;line-height:1.5;font-weight:500;letter-spacing:.02em}
+@media(max-width:700px){#forum-source-network .intro-forum-title{font-size:15px;margin-bottom:20px}}
