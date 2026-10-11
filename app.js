@@ -395,7 +395,7 @@
         const part=segments[i]?Math.max(0,Math.min(1,(distance-lengths[i])/segments[i])):1;
         const a=points[i],b=points[Math.min(i+1,points.length-1)];
         frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},t*t*(3-2*t));
-        if(!firstChapterEmphasized&&t>=.75&&selected!==null&&nodes[selected].kind==='chapter'&&nodes[selected].chapter===1){firstChapterEmphasized=true;markStepArrival(selected,true)}
+        if(!firstChapterEmphasized&&(now-start)>=1000&&selected!==null&&nodes[selected].kind==='chapter'&&nodes[selected].chapter===1){firstChapterEmphasized=true;markStepArrival(selected,true)}
         if(t<1)requestAnimationFrame(tick);
         else{done();if(selected!==null&&stepHistory[stepIndex]?.selected===selected){stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
       }
