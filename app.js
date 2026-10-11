@@ -172,7 +172,6 @@
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
     const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그';epilogueNav.title='조소과 교육의 앞으로';epilogueNav.addEventListener('click',()=>{if(!prologueOpen&&points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:6800)});q('.tool-flow').append(epilogueNav);
-    const quickStep=document.createElement('button');quickStep.type='button';quickStep.className='control quick-step';quickStep.textContent='마지막 단계 · 임시';quickStep.title='마지막 인터뷰 단계로 바로 이동';quickStep.addEventListener('click',()=>runCue(cues.findIndex(c=>c.all)-1));q('.tool-shortcut').append(quickStep);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
     for(const c of [...chapters].sort((a,b)=>(a.chapter===5)-(b.chapter===5))){
