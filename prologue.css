@@ -257,3 +257,7 @@
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade-range{font-size:9.504px}
 #forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{top:12px;left:12px}
 }
+
+/* Raise the first-slide diagram one line without moving its title. */
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(45px)}
+@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(22px)}}
