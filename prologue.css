@@ -154,3 +154,9 @@
 /* Lower the production sequence as one group while preserving its internal spacing. */
 #forum-source-network .prologue-axis .prologue-axis-label{margin-bottom:116px}
 @media(max-width:700px){#forum-source-network .prologue-axis .prologue-axis-label{margin-bottom:66px}}
+
+/* Align the chronology start with the theme text, below its dot. */
+#forum-source-network .prologue-decade-range{margin-top:22px;height:278px}
+@media(max-width:700px){#forum-source-network .prologue-decade-range{margin-top:21px;height:224px}}
+
+#forum-source-network .prologue-decade-range i::after{content:none;display:none}
