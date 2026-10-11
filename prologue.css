@@ -202,3 +202,14 @@
 #forum-source-network .prologue-footer{width:100%;box-sizing:border-box;text-align:center;margin-left:auto;margin-right:auto}
 #forum-source-network .prologue-bridge{font-size:12.5px;line-height:1.7;font-weight:800;-webkit-text-stroke:.18px currentColor;text-align:center;margin-left:auto;margin-right:auto;max-width:100%}
 @media(max-width:700px){#forum-source-network .prologue-decade{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr);column-gap:20px}#forum-source-network .prologue-decade-range{width:34px}#forum-source-network .prologue-bridge{font-size:11.5px}}
+
+/* A separate bridge question centered within the presentation stage. */
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-footer{display:none}
+#forum-source-network .prologue-question-only .prologue-topline,
+#forum-source-network .prologue-question-only #prologue-title{display:none}
+#forum-source-network .prologue-question-only .prologue-footer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;margin:0;padding:30px 8%;transform:none;width:100%;height:100%;box-sizing:border-box}
+#forum-source-network .prologue-question-only .prologue-bridge{margin:0;max-width:900px;text-align:center}
+
+/* Lower the decade diagram as a whole without moving its stage title. */
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(40px)}
+@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(24px)}}
