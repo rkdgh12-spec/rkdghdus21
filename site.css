@@ -249,3 +249,17 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-title-composition .intro-description{font-size:17px;font-weight:450;line-height:1.7;letter-spacing:-.015em;margin:0;word-break:keep-all}
 @media(max-width:700px){#forum-source-network .intro-title-composition{width:min(420px,100%);grid-template-columns:1fr;gap:28px}#forum-source-network .intro-title-composition .intro-forum-title{font-size:17px}#forum-source-network .intro-presentation-title{padding:28px 0 0;border-left:0;border-top:1px solid var(--line)}#forum-source-network .intro-title-composition h1{font-size:29px}#forum-source-network .intro-title-composition .intro-description{font-size:16px}}
 
+
+/* SeMA reference: clear sans-serif, neutral surfaces and restrained rules. */
+#forum-source-network{font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;--paper:light-dark(#ffffff,#181a1c);--ink:light-dark(#151515,#eef0f2);--secondary:light-dark(#66696c,#aeb9c3);--chapter-ink:light-dark(#292d30,#82cbd5);--concept-ink:light-dark(#41474c,#c2cbd3);--lower-ink:light-dark(#526781,#a9c1e0);--line:light-dark(#b6bcc0,#606872);--faint:light-dark(#edf0f2,#333a42)}
+#forum-source-network button,#interview-dialog button{font-family:inherit}
+#forum-source-network .header{border-bottom:1px solid var(--line)}
+#forum-source-network .intro-title-composition h1{font-size:31px;font-weight:700;letter-spacing:-.025em}
+#forum-source-network .intro-title-composition .intro-forum-title{font-size:20px;font-weight:550;letter-spacing:-.01em}
+#forum-source-network .intro-title-composition .intro-description{font-size:17px;font-weight:400;letter-spacing:-.01em}
+#forum-source-network .brand h2{font-weight:700;letter-spacing:-.035em}
+#forum-source-network .sequence-controls,#forum-source-network .intro .intro-sequence{border-color:var(--line)}
+#forum-source-network .control,#forum-source-network .sequence-controls button{font-weight:450}
+#forum-source-network .prologue-axis-label strong{color:var(--ink)}
+#interview-dialog.question-cinema #interview-question{color:#151515;font-weight:600;letter-spacing:-.02em}
+@media(max-width:700px){#forum-source-network .intro-title-composition h1{font-size:28px}#forum-source-network .intro-title-composition .intro-forum-title{font-size:17px}#forum-source-network .intro-title-composition .intro-description{font-size:16px}}
