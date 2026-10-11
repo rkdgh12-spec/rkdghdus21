@@ -9,7 +9,7 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q4": {
     "title": "최고은 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-q4-q5-20261010/choe-goeun-q4-intro.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-volume-matched-20261011/choe-goeun-q4-intro-balanced.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -23,7 +23,7 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q5": {
     "title": "최고은 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-q4-q5-20261010/choe-goeun-q5.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-volume-matched-20261011/choe-goeun-q5-balanced.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
