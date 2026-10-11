@@ -620,7 +620,7 @@
       q('#interview-profile').innerHTML=isEpilogue?'':profileHTML(n.person);
       q('#interview-chapter').textContent=(isEpilogue?'':n.person+' · ')+(isEpilogue?'에필로그 · 교육에 관한 공통 질문':'제'+n.chapter+'장 · '+chapters.find(c=>c.chapter===n.chapter).label)+' / '+n.label;
       q('#interview-title').textContent=isEpilogue?n.topic:media.title||n.topic||nodes[n.parent].label;
-      const screenQuestions={'최고은/Q4':'물질을 직접 경험한다는 것은 무엇인가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','최고은/Q7':'오늘날 조각은 어떤 언어로 존재하는가?','류성실/Q5':'하나의 세계관을 다양한 매체로 전개하는 이유는 무엇인가?','류성실/Q6':'서로 다른 플랫폼의 규칙을 어떻게 넘나드는가?'};
+      const screenQuestions={'최고은/Q4':'물질을 직접 경험한다는 것은 무엇인가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','최고은/Q7':'오늘날 조각은 어떤 언어로 존재하는가?','류성실/Q5':'하나의 세계관을 다양한 매체로 전개하는 이유는 무엇인가?','류성실/Q6':'미술 제도와 대중문화, 온라인 플랫폼을 넘나들며 작업해 온 경험은 어떠했는가?'};
       q('#interview-question').textContent=screenQuestions[n.person+'/'+n.label]||n.question;
       q('#interview-concepts').replaceChildren();
       for(const id of (isEpilogue?[]:n.kind==='introduction'?children(n.parent).map(x=>x.id):ancestors(n.id)).filter(id=>['concept','subconcept'].includes(nodes[id].kind))){const t=document.createElement('span');t.textContent=nodes[id].label;q('#interview-concepts').append(t)}
