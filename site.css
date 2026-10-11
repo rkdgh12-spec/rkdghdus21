@@ -249,23 +249,3 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-title-composition .intro-description{font-size:17px;font-weight:450;line-height:1.7;letter-spacing:-.015em;margin:0;word-break:keep-all}
 @media(max-width:700px){#forum-source-network .intro-title-composition{width:min(420px,100%);grid-template-columns:1fr;gap:28px}#forum-source-network .intro-title-composition .intro-forum-title{font-size:17px}#forum-source-network .intro-presentation-title{padding:28px 0 0;border-left:0;border-top:1px solid var(--line)}#forum-source-network .intro-title-composition h1{font-size:29px}#forum-source-network .intro-title-composition .intro-description{font-size:16px}}
 
-/* Restrained leaflet palette and title typography, preserving map geometry. */
-#forum-source-network{--ink:light-dark(#2e2c2b,#eef0f2);--secondary:light-dark(#696665,#aeb9c3);--line:light-dark(#bcbdbf,#606872);--faint:light-dark(#e9e9e9,#333a42);--chapter-ink:light-dark(#3c4144,#c2cbcf);--concept-ink:light-dark(#4e5154,#c2cbd3);--lower-ink:light-dark(#5f6972,#a9c1e0);--accent:light-dark(#527d81,#8bbbc1);--leaflet-title-font:"Noto Serif KR","Batang","AppleMyungjo",serif}
-#forum-source-network .intro-title-composition h1,
-#forum-source-network .intro-title-composition .intro-forum-title,
-#forum-source-network .intro-title-composition .intro-description,
-#forum-source-network .brand h2,
-#forum-source-network .area-heading>strong,
-#forum-source-network .area-heading>small,
-#forum-source-network .prologue-bridge,
-#interview-dialog.question-cinema #interview-question{font-family:var(--leaflet-title-font)}
-#forum-source-network .intro-title-composition h1{font-size:30px;letter-spacing:-.025em}
-#forum-source-network .intro-title-composition .intro-forum-title{font-size:20px;line-height:1.65}
-#forum-source-network .intro-title-composition .intro-description{font-size:17px}
-#forum-source-network .prologue-screen.prologue-question-only .prologue-bridge{font-size:24px}
-#forum-source-network .stage .lecture-route-line{stroke:#527d81}
-#forum-source-network .stage .lecture-route-head{fill:#94b8bb}
-#forum-source-network .stage .epilogue-link{stroke:#89b3b9}
-#forum-source-network .stage .epilogue-link.trace{stroke:#527d81}
-#interview-dialog.question-cinema #interview-question{color:#2e2c2b}
-@media(max-width:700px){#forum-source-network .intro-title-composition h1{font-size:28px}#forum-source-network .intro-title-composition .intro-forum-title{font-size:17px}#forum-source-network .intro-title-composition .intro-description{font-size:16px}#forum-source-network .prologue-screen.prologue-question-only .prologue-bridge{font-size:22px}}
