@@ -347,7 +347,7 @@
     function traceRoute(from,to,onComplete,durationOverride,direct=false){
       activeRoute?.remove();activeRoute=null;
       const adjacent=new Map();
-      const followPersonHierarchy=nodes[from].person==='권현빈'&&nodes[to].person==='권현빈';
+      const followPersonHierarchy=['권현빈','채길원'].includes(nodes[from].person)&&nodes[from].person===nodes[to].person;
       edges.forEach((edge,index)=>{
         if(followPersonHierarchy&&edge.kind!=='hierarchy')return;
         if(!visible.has(edge.source)||!visible.has(edge.target)||paths[index].style.display==='none')return;
