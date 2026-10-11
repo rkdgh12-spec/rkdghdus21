@@ -162,4 +162,6 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 
 #forum-source-network .detail .detail-career{font-size:9px;line-height:1.4;margin:4px 0 0;color:var(--secondary)}
-#forum-source-network .detail .detail-coordinates{font-size:8px;line-height:1.35;margin:6px 0 0;color:var(--secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+#forum-source-network .detail-path{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 4px;font-size:9px;line-height:1.5;margin:7px 0 0;color:var(--secondary);word-break:keep-all}
+#forum-source-network .detail-path .path-divider{opacity:.6}
+#forum-source-network .detail-path [aria-current]{color:var(--ink);font-weight:600}

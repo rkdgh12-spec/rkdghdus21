@@ -485,8 +485,8 @@
         if(profile?.role)out+='<p class="person-role">'+esc(profile.role)+'</p>';
         if(profile?.career?.length)out+='<p class="detail-career">'+profile.career.map(esc).join('<br>')+'</p>';
       }
-      const coords='X '+Math.round(n.x)+' · Y '+Math.round(n.y)+(depthEnabled?' · Z '+Math.round(threeHeight(n)):'');
-      out+='<p class="detail-coordinates" aria-label="노드 좌표">'+coords+'</p>';
+      const route=ancestors(n.id).map(id=>nodes[id]);
+      out+='<nav class="detail-path" aria-label="현재 항목의 단계 경로">'+route.map((item,i)=>(i?'<span class="path-divider" aria-hidden="true">›</span>':'')+'<span'+(i===route.length-1?' aria-current="location"':'')+'>'+esc(item.label)+'</span>').join('')+'</nav>';
       detail.innerHTML=out;
     }
     function profileHTML(name){const p=(window.FORUM_PROFILES||{})[name];if(!p)return '';return '<p class="person-role">'+esc(p.role)+'</p>'+(p.career?.length?'<ul class="person-career">'+p.career.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'')}
