@@ -216,3 +216,6 @@
 
 #forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{top:28px}
 @media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{top:20px}}
+
+#forum-source-network .prologue-question-only .prologue-bridge{font-size:25px}
+@media(max-width:700px){#forum-source-network .prologue-question-only .prologue-bridge{font-size:23px}}
