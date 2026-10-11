@@ -170,3 +170,7 @@
 #forum-source-network .prologue-axis-label::before{visibility:hidden;background:transparent}
 
 #forum-source-network .prologue-axis-label strong{font-weight:800}
+
+/* Start the timeline halfway between the theme heading and first term. */
+#forum-source-network .prologue-decade-range{margin-top:91px;height:209px}
+@media(max-width:700px){#forum-source-network .prologue-decade-range{margin-top:63px;height:182px}}
