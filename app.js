@@ -611,8 +611,8 @@
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
     function openInterviewStep(n,mode='person'){
       currentQuestion=n;stopVideo();videoStarted=false;
-      dialog.classList.toggle('question-cinema',mode!=='epilogue');
-      interviewMode=mode;const isEpilogue=mode==='epilogue';q('#epilogue-collection').hidden=!isEpilogue;dialog.classList.toggle('epilogue-mode',isEpilogue);
+      dialog.classList.add('question-cinema');
+      interviewMode=mode;const isEpilogue=mode==='epilogue';q('#epilogue-collection').hidden=true;dialog.classList.toggle('epilogue-mode',isEpilogue);
       const content=q('#interview-content');
       content.removeAttribute('role');content.removeAttribute('aria-labelledby');content.removeAttribute('tabindex');
       const media=(window.FORUM_MEDIA||{})[isEpilogue?'epilogue/film':n.person+'/'+n.label]||{};
@@ -650,7 +650,7 @@
         if(!reducedMotion)dialog.animate([{opacity:0},{opacity:1}],{duration:240,easing:'ease-out'});
       }
       dialog.scrollTop=0;
-      if(!isEpilogue){
+      {
         dialog.classList.add('question-intro');
         const token=questionScreenToken;
         questionScreenTimer=setTimeout(()=>{
