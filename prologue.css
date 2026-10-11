@@ -134,4 +134,6 @@
 @media(max-width:700px){#forum-source-network .prologue-content{padding-bottom:15px}#forum-source-network .prologue-screen h2{margin-top:8px}#forum-source-network .prologue-footer{padding-top:14px}}
 
 /* Separate each theme title from its first child without a connecting stroke. */
-#forum-source-network .prologue-axis-label::after{background:none}
+#forum-source-network .prologue-axis-label{margin-bottom:58px}
+#forum-source-network .prologue-axis-label::after{content:none;display:none}
+@media(max-width:700px){#forum-source-network .prologue-axis-label{margin-bottom:33px}}
