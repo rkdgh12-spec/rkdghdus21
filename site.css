@@ -188,9 +188,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 @media(max-width:700px){#forum-source-network .map-caption{top:12px;left:12px;font-size:12px}}
 
 /* Keep the active step text emphasized exactly like pointer hover. */
-#forum-source-network .dot.selected .node-label-text,
-#forum-source-network .area-heading.selected>span,
-#forum-source-network .area-heading.selected>strong,
-#forum-source-network .area-heading.selected>small{transform:scale(1.24);-webkit-text-stroke:.24px currentColor}
-#forum-source-network .stage.all-connected .area-heading.core.selected strong,
-#forum-source-network .stage.all-connected .area-heading.core.selected small{-webkit-text-stroke:.3px currentColor}
+#forum-source-network .dot.step-arrived .node-label-text,
+#forum-source-network .area-heading.step-arrived>span,
+#forum-source-network .area-heading.step-arrived>strong,
+#forum-source-network .area-heading.step-arrived>small{transform:scale(1.24);-webkit-text-stroke:.24px currentColor}
+#forum-source-network .stage.all-connected .area-heading.core.step-arrived strong,
+#forum-source-network .stage.all-connected .area-heading.core.step-arrived small{-webkit-text-stroke:.3px currentColor}

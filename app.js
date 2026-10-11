@@ -264,7 +264,15 @@
       for(const n of points)if(n.kind!=='person'&&visible.has(n.parent)&&expanded.has(n.parent))visible.add(n.id);
     }
     function select(id){return recordStep(()=>selectStep(id))}
+    function markStepArrival(id){
+      for(const el of root.querySelectorAll('.step-arrived'))el.classList.remove('step-arrived');
+      if(id===null||selected!==id)return;
+      const n=nodes[id];
+      (n.kind==='chapter'?areas.get(id)?.heading:elems.get(id)?.b)?.classList.add('step-arrived');
+      threeNodes.get(id)?.classList.add('step-arrived');
+    }
     function selectStep(id){
+      markStepArrival(null);
       setPrologueView(null);
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
@@ -289,13 +297,13 @@
         const arrivalMotion=cameraMotion;
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
-      followConnectionToLabel(previous,id,()=>{cameraArrived=true;revealQuestion()});
+      followConnectionToLabel(previous,id,()=>{cameraArrived=true;if(!guided)markStepArrival(id);revealQuestion()});
       if(guided){
         const chapterTransfer=nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
-          traceRoute(previous,id,null,NODE_TRAVEL_MS,true);
-        }else traceRoute(previous,id,()=>{routeArrived=true;revealQuestion()},NODE_TRAVEL_MS);
+          traceRoute(previous,id,()=>{routeArrived=true;markStepArrival(id);revealQuestion()},NODE_TRAVEL_MS,true);
+        }else traceRoute(previous,id,()=>{routeArrived=true;markStepArrival(id);revealQuestion()},NODE_TRAVEL_MS);
       }
       save();
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
@@ -476,7 +484,7 @@
       travel([start,goal],NODE_TRAVEL_MS,p=>{ox=p.x;oy=p.y;render()},finish);
     }
     function showDetail(n,openQuestion=true){
-      if(!n){panel.hidden=true;detail.hidden=true;detail.innerHTML='';return}
+      if(!n){markStepArrival(null);panel.hidden=true;detail.hidden=true;detail.innerHTML='';return}
       if(n.kind==='question'&&openQuestion){panel.hidden=true;openInterview(n);return}
       panel.hidden=false;detail.hidden=false;
       let out='<div class="detail-title">'+esc(n.kind==='question'?n.person+' · '+n.label:displayLabel(n))+'</div>';
