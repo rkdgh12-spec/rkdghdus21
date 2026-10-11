@@ -274,3 +274,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-title-composition .intro-forum-title{font-size:22px}
 #forum-source-network .intro-top{font-size:16px}
 @media(max-width:700px){#forum-source-network .intro-symposium-theme{padding-left:0}#forum-source-network .intro-title-composition .intro-forum-title{font-size:19px}#forum-source-network .intro-top{font-size:13px}}
+
+/* Shift the shared theme by its own text width, with room for the title. */
+#forum-source-network .intro-title-composition{grid-template-columns:310px minmax(0,1fr);column-gap:32px}
+#forum-source-network .intro-symposium-theme{width:max-content;padding-left:0;transform:translateX(100%)}
+#forum-source-network .intro-presentation-title{padding-left:40px}
+@media(max-width:700px){#forum-source-network .intro-title-composition{grid-template-columns:1fr;gap:28px}#forum-source-network .intro-symposium-theme{width:auto;transform:none}#forum-source-network .intro-presentation-title{padding-left:0}}
