@@ -624,7 +624,7 @@
 
       q('#interview-chapter').textContent=(isEpilogue?'':n.person+' · ')+(isEpilogue?'에필로그 · 교육에 관한 공통 질문':'제'+n.chapter+'장 · '+chapters.find(c=>c.chapter===n.chapter).label)+' / '+n.label;
       q('#interview-title').textContent=isEpilogue?n.topic:media.title||n.topic||nodes[n.parent].label;
-      const screenQuestions={'박재영/Q4':'오늘날 새로운 창작 플랫폼이 필요한 이유는 무엇인가?','박재영/Q2':'창작자의 활동은 어디까지 확장될 수 있는가?','강인애/Q5':'디지털 제작이 보편화된 오늘날, 손과 재료로 형태를 만들어 온 경험은 어떤 의미를 갖는가?','강인애/Q3':'예술과 산업, 대중문화의 경계가 흐려지며 문화콘텐츠가 확장되는 현상을 어떻게 바라보는가?','최고은/Q4':'물질을 직접 경험한다는 것은 무엇인가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','최고은/Q7':'오늘날 조각은 어떤 언어로 존재하는가?','류성실/Q5':'하나의 세계관을 다양한 매체로 전개하는 이유는 무엇인가?','류성실/Q6':'미술 제도와 대중문화, 온라인 플랫폼을 넘나들며 작업해 온 경험은 어떠했는가?'};
+      const screenQuestions={'박재영/Q4':'창작자가 직접 만드는 플랫폼은 어떤 모습이며, 이를 모색하는 이유는 무엇인가?','박재영/Q2':'창작자의 활동은 어디까지 확장될 수 있는가?','강인애/Q5':'디지털 제작이 보편화된 오늘날, 손과 재료로 형태를 만들어 온 경험은 어떤 의미를 갖는가?','강인애/Q3':'예술과 산업, 대중문화의 경계가 흐려지며 문화콘텐츠가 확장되는 현상을 어떻게 바라보는가?','최고은/Q4':'물질을 직접 경험한다는 것은 무엇인가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','최고은/Q7':'오늘날 조각은 어떤 언어로 존재하는가?','류성실/Q5':'하나의 세계관을 다양한 매체로 전개하는 이유는 무엇인가?','류성실/Q6':'미술 제도와 대중문화, 온라인 플랫폼을 넘나들며 작업해 온 경험은 어떠했는가?'};
       q('#interview-question').textContent=screenQuestions[n.person+'/'+n.label]||n.question;
       q('#interview-concepts').replaceChildren();
       for(const id of (isEpilogue?[]:n.kind==='introduction'?children(n.parent).map(x=>x.id):ancestors(n.id)).filter(id=>['concept','subconcept'].includes(nodes[id].kind))){const t=document.createElement('span');t.textContent=nodes[id].label;q('#interview-concepts').append(t)}
