@@ -71,6 +71,12 @@
       const kind=nodes[source].kind==='question'?'question-related':'semantic';
       edges.push({source,target,kind,core:true,reason});edgeKeys.add(key);
     }
+    for(let i=edges.length-1;i>=0;i--){
+      const a=nodes[edges[i].source],b=nodes[edges[i].target];
+      if(a.person==='채길원'&&b.person==='채길원'&&
+        [a.label,b.label].includes('감각과 사고')&&
+        [a.label,b.label].some(label=>label==='물질과 사유'||label==='창작 교육'))edges.splice(i,1);
+    }
     const crossChapterPairs=new Map(),thinnedCrossEdges=new Set();
     edges.forEach((e,i)=>{const a=nodes[e.source],b=nodes[e.target];if(e.kind==='hierarchy'||a.chapter===b.chapter||a.chapter===5||b.chapter===5)return;const pair=[a.chapter,b.chapter].sort((x,y)=>x-y).join('-');if(!crossChapterPairs.has(pair))crossChapterPairs.set(pair,[]);crossChapterPairs.get(pair).push(i)});
     for(const pairEdges of crossChapterPairs.values())pairEdges.forEach((i,j)=>{if(j%2===1)thinnedCrossEdges.add(i)});
