@@ -1,30 +1,39 @@
-/* The prologue shares the map viewport and its existing presentation controls. */
+/* A compact note beside the map keeps the chapter terrain in view. */
 #forum-source-network .prologue-screen[hidden]{display:none}
-#forum-source-network .prologue-screen{position:absolute;inset:0;z-index:28;background:var(--paper);color:var(--ink);overflow:auto;overscroll-behavior:contain;touch-action:pan-y;padding:clamp(22px,4vh,52px) clamp(20px,5vw,84px);box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:default}
-#forum-source-network .prologue-content{width:min(100%,1100px);margin:auto}
-#forum-source-network .prologue-topline{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:0 0 clamp(18px,3vh,36px)}
-#forum-source-network .prologue-eyebrow{margin:0;color:var(--accent);font-size:12px;font-weight:650;letter-spacing:.06em}
-#forum-source-network .prologue-pages{display:flex;gap:14px;flex-shrink:0}
-#forum-source-network .prologue-pages button{border:0;border-bottom:2px solid transparent;background:transparent;color:var(--secondary);padding:5px 2px;font:inherit;font-size:12px;line-height:1.2;font-variant-numeric:tabular-nums}
-#forum-source-network .prologue-pages button[aria-current=step]{border-color:var(--accent);color:var(--accent);font-weight:750}
-#forum-source-network .prologue-screen h2{font-size:clamp(26px,3.15vw,46px);font-weight:750;letter-spacing:-.045em;line-height:1.3;margin:0 0 16px;word-break:keep-all}
-#forum-source-network .prologue-lead{max-width:850px;font-size:clamp(15px,1.35vw,20px);line-height:1.75;letter-spacing:-.02em;color:var(--secondary);margin:0 0 clamp(24px,4vh,44px);word-break:keep-all}
+#forum-source-network .prologue-screen{position:absolute;z-index:28;top:clamp(18px,3vh,34px);left:clamp(16px,2.5vw,38px);width:min(370px,31vw);max-height:calc(100% - 36px);box-sizing:border-box;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;padding:17px 20px 15px;background:var(--paper);background:color-mix(in srgb,var(--paper) 94%,transparent);border:1px solid var(--line);box-shadow:0 10px 34px #172c2e0d;color:var(--ink);cursor:default}
+#forum-source-network .prologue-content{width:100%}
+#forum-source-network .prologue-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+#forum-source-network .prologue-eyebrow{margin:0;color:var(--accent);font-size:10px;font-weight:650;letter-spacing:.01em;line-height:1.4;word-break:keep-all}
+#forum-source-network .prologue-pages{display:flex;gap:8px;flex-shrink:0}
+#forum-source-network .prologue-pages button{border:0;border-bottom:1px solid transparent;background:transparent;color:var(--secondary);padding:3px 1px;font:inherit;font-size:10px;line-height:1.2;font-variant-numeric:tabular-nums}
+#forum-source-network .prologue-pages button[aria-current=step]{border-color:var(--accent);color:var(--accent);font-weight:700}
+#forum-source-network .prologue-screen h2{font-size:clamp(17px,1.45vw,21px);font-weight:720;letter-spacing:-.035em;line-height:1.4;margin:0 0 8px;word-break:keep-all}
+#forum-source-network .prologue-lead{font-size:12px;line-height:1.68;letter-spacing:-.015em;color:var(--secondary);margin:0 0 13px;word-break:keep-all}
 #forum-source-network .prologue-records{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
-#forum-source-network .prologue-records li{display:grid;grid-template-columns:112px minmax(150px,.7fr) minmax(220px,1.6fr);gap:24px;align-items:baseline;padding:clamp(13px,2.1vh,23px) 0;border-bottom:1px solid var(--faint)}
-#forum-source-network .prologue-record-year{color:var(--accent);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
-#forum-source-network .prologue-records h3{font-size:clamp(16px,1.45vw,21px);line-height:1.5;letter-spacing:-.035em;font-weight:700;margin:0;word-break:keep-all}
-#forum-source-network .prologue-records p{font-size:clamp(13px,1.1vw,16px);line-height:1.75;letter-spacing:-.015em;color:var(--secondary);margin:0;word-break:keep-all}
-#forum-source-network .prologue-thread{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0 0 28px;padding:0;list-style:none}
-#forum-source-network .prologue-thread li{position:relative;padding:24px 24px 0 0;border-top:1px solid var(--line)}
-#forum-source-network .prologue-thread li::before{content:'';position:absolute;left:0;top:-4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
-#forum-source-network .prologue-thread h3{margin:0 0 10px;font-size:clamp(17px,1.6vw,23px);letter-spacing:-.035em;line-height:1.5}
-#forum-source-network .prologue-thread p{margin:0;font-size:clamp(13px,1.1vw,16px);line-height:1.8;color:var(--secondary);word-break:keep-all}
-#forum-source-network .prologue-footer{margin-top:clamp(20px,3vh,34px);display:flex;align-items:baseline;justify-content:space-between;gap:24px;flex-wrap:wrap}
-#forum-source-network .prologue-bridge{max-width:760px;margin:0;font-size:clamp(14px,1.2vw,17px);line-height:1.75;word-break:keep-all}
-#forum-source-network .prologue-source{margin:12px 0 0;color:var(--secondary);font-size:10px;line-height:1.6;opacity:.78}
-#forum-source-network .stage.prologue-mode>.map-plane,#forum-source-network .stage.prologue-mode>.three-scene,#forum-source-network .stage.prologue-mode>.depth-hint,#forum-source-network .stage.prologue-mode>.epilogue-network,#forum-source-network .stage.prologue-mode>.epilogue-wash{visibility:hidden!important;pointer-events:none!important}
-#forum-source-network .tools>.prologue-nav{color:var(--accent);font-weight:700;white-space:nowrap}
-#forum-source-network .tools>.prologue-nav[aria-current=step]{border-bottom:1px solid var(--accent)}
-@media(max-width:1250px){#forum-source-network .header{flex-wrap:wrap;gap:5px}#forum-source-network .brand{width:100%}#forum-source-network .tools{width:100%;overflow-x:auto;scrollbar-width:none}}
-@media(max-width:700px){#forum-source-network .prologue-screen{padding:24px 16px;align-items:flex-start}#forum-source-network .prologue-content{margin:0}#forum-source-network .prologue-records li{grid-template-columns:82px 1fr;gap:7px 14px;padding:15px 0}#forum-source-network .prologue-records p{grid-column:2}#forum-source-network .prologue-thread{grid-template-columns:1fr;gap:20px}#forum-source-network .prologue-thread li{padding:14px 0 0}#forum-source-network .prologue-screen h2{font-size:27px}#forum-source-network .prologue-lead{font-size:14px;margin-bottom:22px}}
-@media(max-height:650px) and (min-width:701px){#forum-source-network .prologue-screen{padding-block:16px}#forum-source-network .prologue-topline{margin-bottom:12px}#forum-source-network .prologue-screen h2{font-size:29px;margin-bottom:8px}#forum-source-network .prologue-lead{font-size:15px;margin-bottom:18px}#forum-source-network .prologue-records li{padding-block:10px}#forum-source-network .prologue-footer{margin-top:16px}}
+#forum-source-network .prologue-records li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:3px 10px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--faint)}
+#forum-source-network .prologue-record-year{color:var(--accent);font-size:10px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+#forum-source-network .prologue-records h3{font-size:12px;line-height:1.45;letter-spacing:-.025em;font-weight:700;margin:0;word-break:keep-all}
+#forum-source-network .prologue-records p{grid-column:2;font-size:11px;line-height:1.55;letter-spacing:-.012em;color:var(--secondary);margin:0;word-break:keep-all}
+#forum-source-network .prologue-footer{margin-top:12px}
+#forum-source-network .prologue-bridge{margin:0;color:var(--ink);font-size:11px;line-height:1.65;word-break:keep-all}
+#forum-source-network .prologue-source{margin:9px 0 0;color:var(--secondary);font-size:9px;line-height:1.5;opacity:.75}
+#forum-source-network .prologue-decade{margin:12px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0 3px}
+#forum-source-network .prologue-decade-range{display:flex;align-items:center;gap:9px;color:var(--accent);font-size:9px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+#forum-source-network .prologue-decade-range i{display:block;flex:1;height:1px;background:linear-gradient(90deg,#cfd9db,var(--accent));position:relative}
+#forum-source-network .prologue-decade-range i::after{content:"";position:absolute;right:0;top:50%;width:5px;height:5px;border-radius:50%;background:var(--accent);transform:translate(50%,-50%)}
+#forum-source-network .prologue-axis{padding:12px 0 10px}
+#forum-source-network .prologue-axis+.prologue-axis{border-top:1px solid var(--faint)}
+#forum-source-network .prologue-axis-label{display:block;color:var(--accent);font-size:10px;font-weight:700;letter-spacing:.01em;margin-bottom:5px}
+#forum-source-network .prologue-axis-flow{display:grid;grid-template-columns:max-content minmax(18px,1fr) minmax(0,1.35fr);align-items:center;gap:7px;min-width:0}
+#forum-source-network .prologue-axis-flow span{font-size:11px;color:var(--secondary);white-space:nowrap}
+#forum-source-network .prologue-axis-flow i{display:block;height:1px;background:var(--accent);position:relative;opacity:.65}
+#forum-source-network .prologue-axis-flow i::after{content:"";position:absolute;right:0;top:50%;width:5px;height:5px;border-top:1px solid var(--accent);border-right:1px solid var(--accent);transform:translateY(-50%) rotate(45deg)}
+#forum-source-network .prologue-axis-flow strong{font-size:11px;line-height:1.4;font-weight:700;color:var(--ink);word-break:keep-all}
+#forum-source-network .prologue-axis p{margin:5px 0 0;color:var(--secondary);font-size:9px;line-height:1.5;word-break:keep-all}
+#forum-source-network .stage.prologue-mode>.map-plane,#forum-source-network .stage.prologue-mode>.three-scene{pointer-events:none!important}
+#forum-source-network .stage.prologue-mode>.depth-hint,#forum-source-network .stage.prologue-mode>.epilogue-network,#forum-source-network .stage.prologue-mode>.epilogue-wash{visibility:hidden!important;pointer-events:none!important}
+#forum-source-network .tools .prologue-nav{color:var(--accent);font-weight:650;white-space:nowrap}
+#forum-source-network .tools .prologue-nav[aria-current=step]{border-bottom-color:var(--accent)}
+@media(max-width:920px){#forum-source-network .prologue-screen{width:min(345px,40vw)}}
+@media(max-width:700px){#forum-source-network .prologue-screen{top:auto;bottom:12px;left:10px;width:min(365px,calc(100% - 20px));max-height:min(44%,310px);padding:13px 15px 11px}#forum-source-network .prologue-topline{margin-bottom:8px}#forum-source-network .prologue-screen h2{font-size:17px}#forum-source-network .prologue-lead{font-size:11px;margin-bottom:9px}#forum-source-network .prologue-records li{padding:7px 0}}
+@media(max-height:650px) and (min-width:701px){#forum-source-network .prologue-screen{top:12px;max-height:calc(100% - 24px);padding:12px 16px}#forum-source-network .prologue-topline{margin-bottom:8px}#forum-source-network .prologue-lead{margin-bottom:9px}#forum-source-network .prologue-records li{padding:6px 0}}

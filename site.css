@@ -114,6 +114,25 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 @keyframes epilogue-origin{0%{opacity:0;r:3}30%{opacity:.85;r:8}100%{opacity:.35;r:5}}
 #forum-source-network .stage .epilogue-link.core{stroke-width:1.45}
 #forum-source-network .tools .quick-step{font-size:10px;padding-inline:7px;opacity:.75}
+
+/* A narrow control strip, distinct from the symposium title. */
+#forum-source-network .map-shell>.header{align-items:center;gap:12px;padding:2px 0 7px;border-bottom:1px solid var(--faint)}
+#forum-source-network .map-shell .brand{flex:0 1 auto;min-width:0;padding-right:12px;border-right:1px solid var(--line)}
+#forum-source-network .map-shell .brand h2{font-size:18px}
+#forum-source-network .map-shell .brand .title-subline{font-size:11px;margin-left:10px;padding-left:10px}
+#forum-source-network .map-shell .brand>.subtitle{font-size:9px;margin-left:12px;padding-left:12px}
+#forum-source-network .tools{display:flex;align-items:center;justify-content:flex-end;gap:0;min-width:0}
+#forum-source-network .tools .tool-group{display:inline-flex;align-items:center;flex:none;gap:1px}
+#forum-source-network .tools .tool-group+.tool-group{margin-left:5px;padding-left:5px;border-left:1px solid var(--line)}
+#forum-source-network .tools .tool-group .control,#forum-source-network .tools .tool-group .history-controls button{min-height:25px;padding:4px 5px;font-size:10px;line-height:1.2;white-space:nowrap}
+#forum-source-network .tools .tool-group .history-controls{gap:0}
+#forum-source-network .tools .tool-group .history-count{display:none}
+#forum-source-network .tools .tool-flow .fit,#forum-source-network .tools .tool-flow .epilogue-nav,#forum-source-network .tools .tool-flow .prologue-nav{margin:0;border-bottom:1px solid transparent}
+#forum-source-network .tools .tool-flow .epilogue-nav{color:var(--accent);font-weight:700}
+#forum-source-network .tools .tool-flow .fit:hover,#forum-source-network .tools .tool-flow .epilogue-nav:hover,#forum-source-network .tools .tool-flow .prologue-nav:hover{border-bottom-color:var(--accent)}
+#forum-source-network .tools .tool-shortcut .quick-step{font-size:9px;color:var(--secondary);opacity:.7}
+@media(max-width:1160px){#forum-source-network .map-shell>.header{flex-wrap:wrap;gap:4px}#forum-source-network .map-shell .brand{width:100%;border-right:0;padding-right:0}#forum-source-network .tools{width:100%;justify-content:flex-start;overflow-x:auto;scrollbar-width:none}#forum-source-network .tools::-webkit-scrollbar{display:none}}
+@media(max-width:700px){#forum-source-network .map-shell .brand h2{font-size:17px}#forum-source-network .map-shell .brand .title-subline{font-size:10px;margin-left:7px;padding-left:7px}#forum-source-network .map-shell .brand>.subtitle{font-size:9px;margin-left:8px;padding-left:8px}#forum-source-network .tools .tool-group+.tool-group{margin-left:4px;padding-left:4px}}
 @keyframes epilogue-signal{0%{opacity:0}28%{opacity:.16}52%{opacity:.04}82%,100%{opacity:.16}}
 #interview-dialog.epilogue-mode::backdrop{animation:epilogue-backdrop 500ms ease-out both}
 @keyframes epilogue-backdrop{from{background:transparent;backdrop-filter:blur(0)}to{background:rgba(0,0,0,.18);backdrop-filter:blur(3px)}}
@@ -133,3 +152,4 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #question-next[hidden]{display:none!important}
 
 #forum-source-network .detail{padding:8px 14px 13px}#forum-source-network .detail-title{font-size:16px;margin-bottom:6px}#forum-source-network .detail-toolbar{padding:4px 8px 0}#forum-source-network .detail-toolbar .history-controls button{padding:5px;font-size:11px}#forum-source-network .detail-close{padding:5px}#forum-source-network .detail .small-label{font-size:10px;margin-bottom:2px}#forum-source-network .detail .question-text{font-size:12px;line-height:1.45;margin:4px 0 8px}#forum-source-network .detail .route-list{margin:5px 0;gap:0}#forum-source-network .detail .route-button{font-size:12px;padding:5px 0;line-height:1.35}#forum-source-network .detail .person-role{font-size:11px;margin:2px 0 5px}#forum-source-network .detail .person-video-button{font-size:11px;padding:5px 0}#forum-source-network .detail .compact-career{font-size:11px;color:var(--secondary);margin:3px 0 7px}#forum-source-network .detail .compact-career ul{padding-left:17px;margin:5px 0}
+

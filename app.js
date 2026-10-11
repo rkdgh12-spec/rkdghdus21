@@ -116,8 +116,8 @@
     const prologueData=window.FORUM_PROLOGUE||{slides:[]},prologueSlides=prologueData.slides;
     let prologueOpen=false,prologueIndex=0;
     const prologueScreen=document.createElement('section');prologueScreen.className='prologue-screen';prologueScreen.hidden=true;prologueScreen.setAttribute('aria-label','프롤로그');prologueScreen.setAttribute('aria-labelledby','prologue-title');stage.append(prologueScreen);
-    const prologueNav=document.createElement('button');prologueNav.type='button';prologueNav.className='control prologue-nav';prologueNav.textContent='프롤로그 · 지난 10년';prologueNav.setAttribute('aria-controls','prologue-content');
-    if(prologueSlides.length)q('.tools').insertBefore(prologueNav,q('#forum-fit'));
+    const prologueNav=document.createElement('button');prologueNav.type='button';prologueNav.className='control prologue-nav';prologueNav.textContent='프롤로그';prologueNav.title='지난 10년의 기록과 발표의 질문';prologueNav.setAttribute('aria-controls','prologue-content');
+    if(prologueSlides.length)q('.tool-flow').insertBefore(prologueNav,q('#forum-fit'));
     const cues=prologueSlides.map((slide,index)=>({prologue:index,label:'프롤로그 · '+slide.title}));let applyingCue=false,interviewClosedAt=0,pendingCueTimer=null;
     function setPrologueView(index,animate=false){
       prologueOpen=Number.isInteger(index)&&!!prologueSlides[index];
@@ -125,10 +125,11 @@
       if(!prologueOpen){prologueNav.removeAttribute('aria-current');return}
       prologueIndex=index;panel.hidden=true;prologueNav.setAttribute('aria-current','step');
       const slide=prologueSlides[index];
-      const pager=prologueSlides.map((item,i)=>`<button type="button" data-prologue-page="${i}" aria-label="프롤로그 ${i+1}: ${esc(item.title)}" ${i===index?'aria-current="step"':''}>${String(i+1).padStart(2,'0')}</button>`).join('');
+      const pager=prologueSlides.length>1?'<nav class="prologue-pages" aria-label="프롤로그 화면">'+prologueSlides.map((item,i)=>`<button type="button" data-prologue-page="${i}" aria-label="프롤로그 ${i+1}: ${esc(item.title)}" ${i===index?'aria-current="step"':''}>${String(i+1).padStart(2,'0')}</button>`).join('')+'</nav>':'';
       const records=slide.records?'<ol class="prologue-records">'+slide.records.map(item=>`<li><span class="prologue-record-year">${esc(item.year)}</span><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></li>`).join('')+'</ol>':'';
+      const axes=slide.axes?'<div class="prologue-decade" role="group" aria-label="지난 10년간 제작환경과 교육과정의 확장"><div class="prologue-decade-range"><span>2016</span><i></i><span>2026</span></div>'+slide.axes.map(item=>`<div class="prologue-axis"><span class="prologue-axis-label">${esc(item.label)}</span><div class="prologue-axis-flow"><span>${esc(item.before)}</span><i aria-hidden="true"></i><strong>${esc(item.after)}</strong></div><p>${esc(item.detail)}</p></div>`).join('')+'</div>':'';
       const thread=slide.thread?'<ol class="prologue-thread">'+slide.thread.map(item=>`<li><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></li>`).join('')+'</ol>':'';
-      prologueScreen.innerHTML=`<div class="prologue-content" id="prologue-content"><div class="prologue-topline"><p class="prologue-eyebrow">${esc(slide.eyebrow)}</p><nav class="prologue-pages" aria-label="프롤로그 화면">${pager}</nav></div><h2 id="prologue-title">${esc(slide.title)}</h2><p class="prologue-lead">${esc(slide.lead)}</p>${records}${thread}<div class="prologue-footer"><p class="prologue-bridge">${esc(slide.bridge)}</p></div>${slide.records?'<p class="prologue-source">'+esc(prologueData.source||'')+'</p>':''}</div>`;
+      prologueScreen.innerHTML=`<div class="prologue-content" id="prologue-content"><div class="prologue-topline"><p class="prologue-eyebrow">${esc(slide.eyebrow)}</p>${pager}</div><h2 id="prologue-title">${esc(slide.title)}</h2>${slide.lead?'<p class="prologue-lead">'+esc(slide.lead)+'</p>':''}${axes}${records}${thread}<div class="prologue-footer"><p class="prologue-bridge">${esc(slide.bridge)}</p></div>${slide.axes||slide.records?'<p class="prologue-source">'+esc(prologueData.source||'')+'</p>':''}</div>`;
       prologueScreen.scrollTop=0;
       if(animate&&!reducedMotion)prologueScreen.firstElementChild.animate([{opacity:0},{opacity:1}],{duration:220,easing:'ease-out'});
     }
@@ -154,8 +155,8 @@
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
-    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(!prologueOpen&&points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:6800)});q('.tools').insertBefore(epilogueNav,depthButton);
-    const quickStep=document.createElement('button');quickStep.type='button';quickStep.className='control quick-step';quickStep.textContent='전체 연결 직전 · 임시';quickStep.title='마지막 인터뷰 단계로 바로 이동';quickStep.addEventListener('click',()=>runCue(cues.findIndex(c=>c.all)-1));q('.tools').insertBefore(quickStep,epilogueNav);
+    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그';epilogueNav.title='조소과 교육의 앞으로';epilogueNav.addEventListener('click',()=>{if(!prologueOpen&&points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:6800)});q('.tool-flow').append(epilogueNav);
+    const quickStep=document.createElement('button');quickStep.type='button';quickStep.className='control quick-step';quickStep.textContent='마지막 단계 · 임시';quickStep.title='마지막 인터뷰 단계로 바로 이동';quickStep.addEventListener('click',()=>runCue(cues.findIndex(c=>c.all)-1));q('.tool-shortcut').append(quickStep);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
     for(const c of [...chapters].sort((a,b)=>(a.chapter===5)-(b.chapter===5))){
