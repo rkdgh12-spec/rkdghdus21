@@ -189,3 +189,6 @@
 
 #forum-source-network .prologue-source{display:none}
 #forum-source-network .prologue-bridge{font-weight:700}
+
+#forum-source-network .prologue-footer{transform:translateY(-32px)}
+#forum-source-network .prologue-bridge{font-weight:900;-webkit-text-stroke:.18px currentColor}
