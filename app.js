@@ -2,7 +2,12 @@
   (()=>{
     const root=document.getElementById('forum-source-network');
     const data=window.FORUM_DATA;
-    const nodes=data.nodes,edges=data.edges.filter(e=>data.nodes[e.source].kind!=='chapter'||data.nodes[e.source].chapter===5);
+    const nodes=data.nodes,edges=data.edges.filter(e=>{
+      if(nodes[e.source].kind==='chapter'&&nodes[e.source].chapter!==5)return false;
+      const a=nodes[e.source],b=nodes[e.target];
+      return !(a.person==='권현빈'&&b.person==='권현빈'&&
+        [a.label,b.label].includes('창작의 지속')&&[a.label,b.label].includes('직접 만드는 경험'));
+    });
     const coreConnections=[
       [134,147,'물질을 판단하고 사유하는 창작'],[134,150,'물질의 판단과 감각적 사고'],
       [134,148,'물질을 통해 세계를 읽는 태도'],[135,147,'물질의 성질에서 시작되는 사유'],
@@ -336,7 +341,10 @@
     function traceRoute(from,to,onComplete,durationOverride,direct=false){
       activeRoute?.remove();activeRoute=null;
       const adjacent=new Map();
-      edges.forEach((edge,index)=>{if(!visible.has(edge.source)||!visible.has(edge.target)||paths[index].style.display==='none')return;
+      const followPersonHierarchy=nodes[from].person==='권현빈'&&nodes[to].person==='권현빈';
+      edges.forEach((edge,index)=>{
+        if(followPersonHierarchy&&edge.kind!=='hierarchy')return;
+        if(!visible.has(edge.source)||!visible.has(edge.target)||paths[index].style.display==='none')return;
         for(const [a,b,forward] of [[edge.source,edge.target,true],[edge.target,edge.source,false]]){if(!adjacent.has(a))adjacent.set(a,[]);adjacent.get(a).push({to:b,index,forward,weight:edge.kind==='hierarchy'?0:1})}});
       for(const neighbors of adjacent.values())neighbors.sort((a,b)=>a.weight-b.weight);
       const queue=[from],previous=new Map([[from,null]]);
