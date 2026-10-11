@@ -152,5 +152,5 @@
 @media(max-width:700px){#forum-source-network .prologue-screen #prologue-title,#forum-source-network .stage .map-caption{top:12px;left:12px;font-size:12px}}
 
 /* Lower the production sequence as one group while preserving its internal spacing. */
-#forum-source-network .prologue-axis:nth-child(2) .prologue-axis-label{margin-bottom:116px}
-@media(max-width:700px){#forum-source-network .prologue-axis:nth-child(2) .prologue-axis-label{margin-bottom:66px}}
+#forum-source-network .prologue-axis .prologue-axis-label{margin-bottom:116px}
+@media(max-width:700px){#forum-source-network .prologue-axis .prologue-axis-label{margin-bottom:66px}}
