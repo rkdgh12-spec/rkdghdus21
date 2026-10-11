@@ -541,7 +541,7 @@
       else if(video.webkitDisplayingFullscreen&&typeof video.webkitExitFullscreen==='function')video.webkitExitFullscreen();
     }
     let questionScreenTimer=null,questionScreenToken=0;
-    function stopVideo(){clearTimeout(questionScreenTimer);questionScreenTimer=null;questionScreenToken++;dialog.classList.remove('question-intro','question-playing','play-blocked');exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
+    function stopVideo(){q('#interview-intro-caption').hidden=true;clearTimeout(questionScreenTimer);questionScreenTimer=null;questionScreenToken++;dialog.classList.remove('question-intro','question-playing','play-blocked');exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
     function openEpilogue(){openInterview(epilogueFilm,'epilogue')}
     let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null,epilogueContours=null,epilogueOrigin=null;
     function syncEpilogueOverlay(){
@@ -618,6 +618,10 @@
       const media=(window.FORUM_MEDIA||{})[isEpilogue?'epilogue/film':n.person+'/'+n.label]||{};
       q('#interview-person').textContent=n.person;
       q('#interview-profile').innerHTML=isEpilogue?'':profileHTML(n.person);
+      const caption=q('#interview-intro-caption'),profile=(window.FORUM_PROFILES||{})[n.person];
+      caption.hidden=true;
+      caption.innerHTML=!isEpilogue&&profile?'<div class="intro-caption-heading"><strong>'+esc(n.person)+'</strong><span>'+esc(profile.role)+'</span></div>'+(profile.career?.length?'<p>'+profile.career.map(esc).join(' · ')+'</p>':''):'';
+
       q('#interview-chapter').textContent=(isEpilogue?'':n.person+' · ')+(isEpilogue?'에필로그 · 교육에 관한 공통 질문':'제'+n.chapter+'장 · '+chapters.find(c=>c.chapter===n.chapter).label)+' / '+n.label;
       q('#interview-title').textContent=isEpilogue?n.topic:media.title||n.topic||nodes[n.parent].label;
       const screenQuestions={'강인애/Q5':'디지털 제작이 보편화된 오늘날, 손과 재료로 형태를 만들어 온 경험은 어떤 의미를 갖는가?','강인애/Q3':'예술과 산업, 대중문화의 경계가 흐려지며 문화콘텐츠가 확장되는 현상을 어떻게 바라보는가?','최고은/Q4':'물질을 직접 경험한다는 것은 무엇인가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','최고은/Q7':'오늘날 조각은 어떤 언어로 존재하는가?','류성실/Q5':'하나의 세계관을 다양한 매체로 전개하는 이유는 무엇인가?','류성실/Q6':'미술 제도와 대중문화, 온라인 플랫폼을 넘나들며 작업해 온 경험은 어떠했는가?'};
@@ -654,6 +658,13 @@
       q('#interview-stage-next').hidden=false;
       q('#interview-stage-next').title='인터뷰 영상 재생';
     }
+    function updateIntroCaption(){
+      const caption=q('#interview-intro-caption');
+      const first=lectureOrder.flatMap(group=>group.people).find(item=>item[0]===currentQuestion?.person)?.[1]?.[0];
+      const show=dialog.open&&interviewMode!=='epilogue'&&currentQuestion?.label===first&&!!video.getAttribute('src')&&videoStarted&&video.currentTime<7&&!video.ended&&!dialog.classList.contains('question-intro');
+      caption.hidden=!show;
+    }
+    for(const event of ['playing','timeupdate','seeked','pause','ended','loadedmetadata'])video.addEventListener(event,updateIntroCaption);
     function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue')return;const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
     q('#question-prev').addEventListener('click',()=>changeQuestion(-1));q('#question-next').addEventListener('click',()=>changeQuestion(1));
     function closeInterview(){recordStep(()=>{if(dialog.open)interviewClosedAt=performance.now();stopVideo();dialog.close()})}

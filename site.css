@@ -316,3 +316,12 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 /* Give the cover subtitle a little more weight. */
 #forum-source-network .intro-title-composition .intro-description{font-weight:550}
+
+/* Identity captions accompany the opening self-introduction in each first clip. */
+#interview-dialog .interview-intro-caption{position:absolute;left:6%;bottom:13%;z-index:5;max-width:84%;pointer-events:none;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;text-shadow:0 1px 5px #000,0 0 14px #000b;line-height:1.45}
+#interview-dialog .interview-intro-caption[hidden]{display:none!important}
+#interview-dialog .intro-caption-heading{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+#interview-dialog .intro-caption-heading strong{font-size:clamp(22px,2.3vw,34px);font-weight:700;letter-spacing:-.025em}
+#interview-dialog .intro-caption-heading span{font-size:clamp(14px,1.4vw,21px);font-weight:500}
+#interview-dialog .interview-intro-caption p{margin:7px 0 0;font-size:clamp(12px,1.1vw,17px);font-weight:450}
+#interview-dialog.question-intro .interview-intro-caption{display:none!important}
