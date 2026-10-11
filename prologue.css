@@ -178,3 +178,11 @@
 /* Lower only the chronology endpoint by two text lines. */
 #forum-source-network .prologue-decade-range{height:237px}
 @media(max-width:700px){#forum-source-network .prologue-decade-range{height:205px}}
+
+/* Place the two open questions beneath their corresponding theme columns. */
+#forum-source-network .prologue-footer.prologue-paired-questions{display:grid;grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);column-gap:20px;align-items:start}
+#forum-source-network .prologue-paired-questions .prologue-bridge{font-size:12px;line-height:1.75;white-space:pre-line;margin:0;word-break:keep-all}
+#forum-source-network .prologue-paired-questions .prologue-bridge:first-child{grid-column:1;transform:translateX(-45px)}
+#forum-source-network .prologue-paired-questions .prologue-bridge:last-child{grid-column:3;transform:translateX(45px)}
+#forum-source-network .prologue-decade-range{height:251px}
+@media(max-width:700px){#forum-source-network .prologue-footer.prologue-paired-questions{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr);column-gap:5px}#forum-source-network .prologue-paired-questions .prologue-bridge{font-size:10px;line-height:1.7}#forum-source-network .prologue-paired-questions .prologue-bridge:first-child{transform:translateX(-12px)}#forum-source-network .prologue-paired-questions .prologue-bridge:last-child{transform:translateX(12px)}#forum-source-network .prologue-decade-range{height:217px}}
