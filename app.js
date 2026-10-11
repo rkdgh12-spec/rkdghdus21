@@ -119,7 +119,7 @@
     let stepHistory=[],stepIndex=-1,stepDepth=0,restoringStep=false;
     const epilogueFilm={id:'epilogue-film',kind:'epilogue',person:'열 명의 목소리',label:'통합 영상',topic:'조소과 교육의 앞으로',question:'조소과 교육에서 계속 지켜야 할 것과 새롭게 시도할 것은 무엇일까요?'};
     const lectureOrder=[
-      {chapter:1,people:[['최고은',['Q4','Q5']]]},
+      {chapter:1,people:[['최고은',['Q4','Q7']]]},
       {chapter:2,people:[['류성실',['Q5','Q6']],['강인애',['Q3','Q5']]]},
       {chapter:3,people:[['박재영',['Q2','Q4']],['민지희',['Q5','Q3 후속질문']],['안정환',['Q4','Q5']]]},
       {chapter:4,people:[['최지혜',['Q3','Q4','Q5']],['서해영',['Q2','Q7','Q6']]]},
@@ -620,7 +620,7 @@
       q('#interview-profile').innerHTML=isEpilogue?'':profileHTML(n.person);
       q('#interview-chapter').textContent=(isEpilogue?'':n.person+' · ')+(isEpilogue?'에필로그 · 교육에 관한 공통 질문':'제'+n.chapter+'장 · '+chapters.find(c=>c.chapter===n.chapter).label)+' / '+n.label;
       q('#interview-title').textContent=isEpilogue?n.topic:media.title||n.topic||nodes[n.parent].label;
-      const screenQuestions={'최고은/Q4':'사물을 직접 다루는 경험은 작업을 어떻게 바꾸는가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','류성실/Q5':'말하고 싶은 이야기는 어떻게 매체의 선택으로 이어지는가?','류성실/Q6':'서로 다른 플랫폼의 규칙을 어떻게 넘나드는가?'};
+      const screenQuestions={'최고은/Q4':'물질을 직접 경험한다는 것은 무엇인가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','최고은/Q7':'오늘날 조각은 어떤 언어로 존재하는가?','류성실/Q5':'말하고 싶은 이야기는 어떻게 매체의 선택으로 이어지는가?','류성실/Q6':'서로 다른 플랫폼의 규칙을 어떻게 넘나드는가?'};
       q('#interview-question').textContent=screenQuestions[n.person+'/'+n.label]||n.question;
       q('#interview-concepts').replaceChildren();
       for(const id of (isEpilogue?[]:n.kind==='introduction'?children(n.parent).map(x=>x.id):ancestors(n.id)).filter(id=>['concept','subconcept'].includes(nodes[id].kind))){const t=document.createElement('span');t.textContent=nodes[id].label;q('#interview-concepts').append(t)}
