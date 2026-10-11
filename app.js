@@ -316,7 +316,7 @@
         const arrivalMotion=cameraMotion;
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
-      followConnectionToLabel(previous,id,()=>{cameraArrived=true;if(!guided)markStepArrival(id);revealQuestion()});
+      followConnectionToLabel(previous,id,()=>{cameraArrived=true;if(!guided||nodes[id].kind==='chapter')markStepArrival(id,true);revealQuestion()});
       if(guided){
         const chapterTransfer=nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;

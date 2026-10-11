@@ -217,3 +217,5 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .sequence-controls>div{padding-right:0}
 #forum-source-network .intro .intro-sequence{position:absolute;bottom:0;left:24px;right:24px;min-height:38px;padding:2px 0;border-top:1px solid var(--faint);justify-content:flex-end;background:transparent}
 @media(max-width:640px){#forum-source-network .intro .intro-sequence{left:10px;right:10px}}
+
+#forum-source-network .area-heading.step-arrived>span,#forum-source-network .area-heading.step-arrived>strong,#forum-source-network .area-heading.step-arrived>small{transition-duration:60ms}
