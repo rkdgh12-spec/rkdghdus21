@@ -309,3 +309,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 /* Deep blue accent across map, route animation and core volume. */
 #forum-source-network{--accent:light-dark(#4b60ab,#9aa8d9)}
+
+/* Carry the map accent into just the shared theme and prologue axis headings. */
+#forum-source-network .intro-title-composition .intro-forum-title{color:var(--accent)}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis-label strong{color:var(--accent)}
