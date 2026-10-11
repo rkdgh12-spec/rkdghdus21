@@ -165,3 +165,6 @@
 #forum-source-network .prologue-axis:nth-child(2){transform:translateX(-45px)}
 #forum-source-network .prologue-axis:nth-child(3){transform:translateX(45px)}
 @media(max-width:700px){#forum-source-network .prologue-axis:nth-child(2){transform:translateX(-12px)}#forum-source-network .prologue-axis:nth-child(3){transform:translateX(12px)}}
+
+/* Remove parent dots without shifting either theme heading. */
+#forum-source-network .prologue-axis-label::before{visibility:hidden;background:transparent}
