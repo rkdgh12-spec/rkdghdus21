@@ -571,7 +571,7 @@
           const d=path.getAttribute('d');if(!d)continue;
           const index=Number(path.dataset.edgeIndex),edge=edges[index],length=path.getTotalLength();if(!edge||!length)continue;
           const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
-          echo.style.setProperty('animation','none','important');echo.style.setProperty('stroke','#006b78','important');echo.style.setProperty('opacity','0','important');
+          echo.style.setProperty('animation','none','important');echo.style.setProperty('stroke','var(--accent)','important');echo.style.setProperty('opacity','0','important');
           epilogueEchoes.set(index,echo);
           const child=route.parentEdge[edge.source]===index?edge.source:route.parentEdge[edge.target]===index?edge.target:-1;
           const parent=child>=0?route.parentNode[child]:route.arrival[edge.source]<=route.arrival[edge.target]?edge.source:edge.target;
