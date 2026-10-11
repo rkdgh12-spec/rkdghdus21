@@ -228,3 +228,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-description{font-size:18px;line-height:1.6;letter-spacing:-.015em}
 #forum-source-network .intro-forum-title{font-size:14px;line-height:1.5;font-weight:500;letter-spacing:normal;margin:0 0 22px}
 @media(max-width:700px){#forum-source-network .intro h1{font-size:30px}#forum-source-network .intro-description{font-size:16px}#forum-source-network .intro-forum-title{font-size:12px}}
+
+#forum-source-network .intro-top{justify-content:flex-start}
+#forum-source-network .intro-top span{white-space:nowrap}
+@media(max-width:700px){#forum-source-network .intro-top{font-size:10px}}
