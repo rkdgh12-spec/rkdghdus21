@@ -211,3 +211,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network:fullscreen .map-shell{height:100%;min-height:0}
 #forum-source-network:fullscreen .intro{inset:0;width:auto;height:auto;box-sizing:border-box}
 @media(max-width:640px){#forum-source-network #intro-next,#forum-source-network #sequence-next{right:10px;bottom:7px}#forum-source-network #intro-fullscreen,#forum-source-network #forum-fullscreen{right:10px;top:16px}}
+
+/* Let next-step controls sit naturally below the footer rule. */
+#forum-source-network #intro-next,#forum-source-network #sequence-next{position:static;right:auto;bottom:auto;z-index:auto;margin:0;padding:7px 10px;font-size:12px;line-height:1.4;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--line);box-shadow:none}
+#forum-source-network .sequence-controls>div{padding-right:0}
+#forum-source-network .intro .intro-sequence{position:absolute;bottom:0;left:24px;right:24px;min-height:38px;padding:2px 0;border-top:1px solid var(--faint);justify-content:flex-end;background:transparent}
+@media(max-width:640px){#forum-source-network .intro .intro-sequence{left:10px;right:10px}}
