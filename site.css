@@ -268,3 +268,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-top{font-size:14px}
 #forum-source-network .intro-title-composition .intro-description{font-size:20px}
 @media(max-width:700px){#forum-source-network .intro-top{font-size:12px}#forum-source-network .intro-title-composition .intro-description{font-size:18px}}
+
+/* Bring the symposium theme closer to the presentation title. */
+#forum-source-network .intro-symposium-theme{padding-left:26px}
+#forum-source-network .intro-title-composition .intro-forum-title{font-size:22px}
+#forum-source-network .intro-top{font-size:16px}
+@media(max-width:700px){#forum-source-network .intro-symposium-theme{padding-left:0}#forum-source-network .intro-title-composition .intro-forum-title{font-size:19px}#forum-source-network .intro-top{font-size:13px}}
