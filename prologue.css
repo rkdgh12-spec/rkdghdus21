@@ -150,3 +150,7 @@
 #forum-source-network .prologue-screen #prologue-title,
 #forum-source-network .stage .map-caption{position:absolute;top:18px;left:20px;right:auto;bottom:auto;z-index:28;width:auto;margin:0;padding:0;transform:none;font-size:14px;line-height:1.4;font-weight:600;letter-spacing:normal;color:var(--secondary);text-align:left;pointer-events:none}
 @media(max-width:700px){#forum-source-network .prologue-screen #prologue-title,#forum-source-network .stage .map-caption{top:12px;left:12px;font-size:12px}}
+
+/* Lower the production sequence as one group while preserving its internal spacing. */
+#forum-source-network .prologue-axis:nth-child(2) .prologue-axis-label{margin-bottom:116px}
+@media(max-width:700px){#forum-source-network .prologue-axis:nth-child(2) .prologue-axis-label{margin-bottom:66px}}
