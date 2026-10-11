@@ -168,3 +168,5 @@
 
 /* Remove parent dots without shifting either theme heading. */
 #forum-source-network .prologue-axis-label::before{visibility:hidden;background:transparent}
+
+#forum-source-network .prologue-axis-label strong{font-weight:800}
