@@ -303,3 +303,6 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 /* Move only the symposium theme one character width to the right. */
 #forum-source-network .intro-symposium-theme{transform:translateX(-6px)}
 @media(max-width:700px){#forum-source-network .intro-symposium-theme{transform:none}}
+
+/* Equal 58px spacing on either side of the cover divider. */
+#forum-source-network .intro-symposium-theme{transform:none}
