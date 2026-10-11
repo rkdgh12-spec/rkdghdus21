@@ -213,3 +213,6 @@
 /* Lower the decade diagram as a whole without moving its stage title. */
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(65px)}
 @media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(39px)}}
+
+#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{top:28px}
+@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{top:20px}}
