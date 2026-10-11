@@ -151,5 +151,15 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #interview-stage-next:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 #question-next[hidden]{display:none!important}
 
-#forum-source-network .detail{padding:8px 14px 13px}#forum-source-network .detail-title{font-size:16px;margin-bottom:6px}#forum-source-network .detail-toolbar{padding:4px 8px 0}#forum-source-network .detail-toolbar .history-controls button{padding:5px;font-size:11px}#forum-source-network .detail-close{padding:5px}#forum-source-network .detail .small-label{font-size:10px;margin-bottom:2px}#forum-source-network .detail .question-text{font-size:12px;line-height:1.45;margin:4px 0 8px}#forum-source-network .detail .route-list{margin:5px 0;gap:0}#forum-source-network .detail .route-button{font-size:12px;padding:5px 0;line-height:1.35}#forum-source-network .detail .person-role{font-size:11px;margin:2px 0 5px}#forum-source-network .detail .person-video-button{font-size:11px;padding:5px 0}#forum-source-network .detail .compact-career{font-size:11px;color:var(--secondary);margin:3px 0 7px}#forum-source-network .detail .compact-career ul{padding-left:17px;margin:5px 0}
+#forum-source-network .detail-panel{width:min(158px,calc(100vw - 24px));max-height:none;overflow:visible;box-shadow:0 3px 12px #00000008}
+#forum-source-network .detail-toolbar{position:absolute;top:2px;right:2px;padding:0}
+#forum-source-network .detail-toolbar .history-controls{display:none}
+#forum-source-network .detail-close{margin:0;padding:4px 6px;font-size:10px;line-height:1.4}
+#forum-source-network .detail{padding:9px 10px;line-height:1.35}
+#forum-source-network .detail-title{padding-right:27px;font-size:12px;line-height:1.4;margin:0;font-weight:650;word-break:keep-all;overflow-wrap:anywhere}
+#forum-source-network .detail .person-role{font-size:10px;line-height:1.4;margin:3px 0 0;color:var(--secondary)}
+@media(max-width:700px){#forum-source-network .detail-panel{width:min(150px,calc(100vw - 16px))}}
 
+
+#forum-source-network .detail .detail-career{font-size:9px;line-height:1.4;margin:4px 0 0;color:var(--secondary)}
+#forum-source-network .detail .detail-coordinates{font-size:8px;line-height:1.35;margin:6px 0 0;color:var(--secondary);font-variant-numeric:tabular-nums;white-space:nowrap}

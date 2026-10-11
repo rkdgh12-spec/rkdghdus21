@@ -92,6 +92,7 @@
       depthButton.textContent=enabled?'2D 보기':'3D 보기';
       q('.depth-hint').hidden=!enabled;
       render();save();
+      if(selected!==null&&!panel.hidden)showDetail(nodes[selected],false);
     }
     const ancestors=id=>{const arr=[];while(id!==null){arr.unshift(id);id=nodes[id].parent;}return arr};
     const descendants=id=>{const set=new Set([id]);for(const n of nodes)if(n.parent!==null&&set.has(n.parent))set.add(n.id);return set};
@@ -478,21 +479,15 @@
       if(!n){panel.hidden=true;detail.hidden=true;detail.innerHTML='';return}
       if(n.kind==='question'&&openQuestion){panel.hidden=true;openInterview(n);return}
       panel.hidden=false;detail.hidden=false;
-      let out='<div class="small-label">'+kindNames[n.kind]+'</div><div class="detail-title">'+esc(n.kind==='question'?n.person+' · '+n.label:displayLabel(n))+'</div>';
+      let out='<div class="detail-title">'+esc(n.kind==='question'?n.person+' · '+n.label:displayLabel(n))+'</div>';
       if(n.kind==='person'){
         const profile=(window.FORUM_PROFILES||{})[n.label];
         if(profile?.role)out+='<p class="person-role">'+esc(profile.role)+'</p>';
-        if(profile?.career?.length)out+='<details class="compact-career"><summary>주요 이력</summary><ul>'+profile.career.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul></details>';
-        out+='<button type="button" class="person-video-button" data-introduction="'+n.id+'">▷ 자기소개 영상</button>';
+        if(profile?.career?.length)out+='<p class="detail-career">'+profile.career.map(esc).join('<br>')+'</p>';
       }
-      if(n.subtitle)out+='<p class="question-text">'+esc(n.subtitle)+'</p>';
-      const next=children(n.id).filter(x=>visible.has(x.id));
-      if(next.length)out+='<div class="route-list">'+next.map(x=>'<button type="button" class="route-button" data-pick="'+x.id+'">'+esc(x.kind==='question'?x.label+' · '+x.topic:x.label)+'</button>').join('')+'</div>';
-      if(n.kind==='question')out+='<button type="button" class="route-button" data-pick="'+n.id+'">인터뷰 보기</button>';
+      const coords='X '+Math.round(n.x)+' · Y '+Math.round(n.y)+(depthEnabled?' · Z '+Math.round(threeHeight(n)):'');
+      out+='<p class="detail-coordinates" aria-label="노드 좌표">'+coords+'</p>';
       detail.innerHTML=out;
-      detail.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',()=>select(Number(b.dataset.pick))));
-      const introButton=detail.querySelector('[data-introduction]');
-      if(introButton)introButton.addEventListener('click',()=>openInterview(introduction(nodes[Number(introButton.dataset.introduction)])));
     }
     function profileHTML(name){const p=(window.FORUM_PROFILES||{})[name];if(!p)return '';return '<p class="person-role">'+esc(p.role)+'</p>'+(p.career?.length?'<ul class="person-career">'+p.career.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'')}
     function introduction(person){return {id:'intro-'+person.id,kind:'introduction',parent:person.id,person:person.label,chapter:person.chapter,label:'Q1',topic:'자기소개',question:'Q1. 현재 어떤 일을 하고 계신지, 본인의 활동을 중심으로 소개해 주세요.'}}
