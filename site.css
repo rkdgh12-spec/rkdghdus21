@@ -325,3 +325,8 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #interview-dialog .intro-caption-heading span{font-size:clamp(14px,1.4vw,21px);font-weight:500}
 #interview-dialog .interview-intro-caption p{margin:7px 0 0;font-size:clamp(12px,1.1vw,17px);font-weight:450}
 #interview-dialog.question-intro .interview-intro-caption{display:none!important}
+
+/* Question screens use the same quiet caption position as the prologue. */
+#interview-dialog.question-cinema #interview-chapter{display:none!important}
+#interview-dialog.question-cinema.epilogue-mode #interview-chapter{display:block!important;position:absolute;top:var(--epilogue-title-top,18px);left:var(--epilogue-title-left,20px);right:auto;bottom:auto;width:auto;margin:0;padding:0;font-family:inherit;font-size:14px;line-height:1.4;font-weight:600;letter-spacing:normal;color:var(--secondary);text-align:left;pointer-events:none}
+@media(max-width:700px){#interview-dialog.question-cinema.epilogue-mode #interview-chapter{font-size:12px}}

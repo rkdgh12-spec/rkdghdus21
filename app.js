@@ -609,6 +609,13 @@
       if(reducedMotion&&motion===cameraMotion)openEpilogue();
     }
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
+    function positionEpilogueTitle(){
+      const rect=stage.getBoundingClientRect(),inset=window.innerWidth<=700?12:18,leftInset=window.innerWidth<=700?12:20;
+      dialog.style.setProperty('--epilogue-title-top',(rect.top+inset)+'px');
+      dialog.style.setProperty('--epilogue-title-left',(rect.left+leftInset)+'px');
+    }
+    window.addEventListener('resize',positionEpilogueTitle);
+    document.addEventListener('fullscreenchange',()=>requestAnimationFrame(positionEpilogueTitle));
     function openInterviewStep(n,mode='person'){
       currentQuestion=n;stopVideo();videoStarted=false;
       dialog.classList.add('question-cinema');
@@ -622,7 +629,8 @@
       caption.hidden=true;
       caption.innerHTML=!isEpilogue&&profile?'<div class="intro-caption-heading"><strong>'+esc(n.person)+'</strong><span>'+esc(profile.role)+'</span></div>'+(profile.career?.length?'<p>'+profile.career.map(esc).join(' · ')+'</p>':''):'';
 
-      q('#interview-chapter').textContent=(isEpilogue?'':n.person+' · ')+(isEpilogue?'에필로그 · 교육에 관한 공통 질문':'제'+n.chapter+'장 · '+chapters.find(c=>c.chapter===n.chapter).label)+' / '+n.label;
+      q('#interview-chapter').textContent=isEpilogue?'에필로그':'';
+      positionEpilogueTitle();
       q('#interview-title').textContent=isEpilogue?n.topic:media.title||n.topic||nodes[n.parent].label;
       const screenQuestions={'채길원/Q4':'김종영의 삶과 철학은 오늘날 창작과 조각교육에 어떤 의미를 갖는가?','채길원/Q5':'물질을 직접 다루는 경험은 세계를 이해하는 데 어떠한 영향을 미치는가?','권현빈/Q6':'무엇이 계속 작업하게 하는가?','권현빈/Q5':'직접 만드는 과정은 무엇을 새로 깨닫게 하는가?','권현빈/Q4':'창작 과정에서 물질 고유의 성질을 어떻게 대하는가?','서해영/Q6':'함께하는 창작과 작가 개인의 조각적 탐구는 어떻게 균형을 이루는가?','서해영/Q5':'함께 만드는 과정에서 참여자는 어떻게 창작의 주체가 되는가?','서해영/Q2':'개인의 창작에서 함께하는 창작으로 나아가게 된 계기는 무엇인가?','최지혜/Q5':'대중성과 예술적 실험 사이의 균형은 어떻게 이루어질 수 있는가?','최지혜/Q3':'공적 지원은 창작에 어떤 가능성과 한계를 만드는가?','최지혜/Q4':'개인의 창작은 사회와 만나며 어떻게 공공성을 갖게 되는가?','안정환/Q5':'서로 다른 주체가 함께하는 프로젝트에서 기획자는 어떤 역할을 하는가?','안정환/Q4':'작가와 기업 등 다양한 주체의 협업은 어떻게 이루어지는가?','민지희/Q3 후속질문':'직접 만들어본 경험은 건축 현장에서 판단을 내리는 데 어떤 영향을 미치는가?','민지희/Q5':'건축 설계에서 리서치는 어떻게 창작으로 이어지는가?','박재영/Q4':'창작자가 직접 만드는 플랫폼은 어떤 모습이며, 이를 모색하는 이유는 무엇인가?','박재영/Q2':'창작자의 활동은 어디까지 확장될 수 있는가?','강인애/Q5':'디지털 제작이 보편화된 오늘날, 손과 재료로 형태를 만들어 온 경험은 어떤 의미를 갖는가?','강인애/Q3':'예술과 산업, 대중문화의 경계가 흐려지며 문화콘텐츠가 확장되는 현상을 어떻게 바라보는가?','최고은/Q4':'물질을 직접 경험한다는 것은 무엇인가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','최고은/Q7':'오늘날 조각은 어떤 언어로 존재하는가?','류성실/Q5':'하나의 세계관을 다양한 매체로 전개하는 이유는 무엇인가?','류성실/Q6':'미술 제도와 대중문화, 온라인 플랫폼을 넘나들며 작업해 온 경험은 어떠했는가?'};
       q('#interview-question').textContent=screenQuestions[n.person+'/'+n.label]||n.question;
