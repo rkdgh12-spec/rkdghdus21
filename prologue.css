@@ -132,3 +132,6 @@
 #forum-source-network .prologue-screen h2{margin-top:clamp(12px,2vh,28px)}
 #forum-source-network .prologue-footer{padding-top:clamp(24px,4vh,50px)}
 @media(max-width:700px){#forum-source-network .prologue-content{padding-bottom:15px}#forum-source-network .prologue-screen h2{margin-top:8px}#forum-source-network .prologue-footer{padding-top:14px}}
+
+/* Separate each theme title from its first child without a connecting stroke. */
+#forum-source-network .prologue-axis-label::after{background:none}
