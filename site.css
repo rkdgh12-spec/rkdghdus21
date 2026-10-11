@@ -280,3 +280,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-symposium-theme{width:max-content;padding-left:0;transform:translateX(100%)}
 #forum-source-network .intro-presentation-title{padding-left:40px}
 @media(max-width:700px){#forum-source-network .intro-title-composition{grid-template-columns:1fr;gap:28px}#forum-source-network .intro-symposium-theme{width:auto;transform:none}#forum-source-network .intro-presentation-title{padding-left:0}}
+
+/* Move the shared theme one additional line-width to the right. */
+@media(min-width:1001px){
+#forum-source-network .intro-symposium-theme{transform:translateX(200%)}
+#forum-source-network .intro-presentation-title{transform:translateX(140px)}
+}
