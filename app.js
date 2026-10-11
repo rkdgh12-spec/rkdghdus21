@@ -650,15 +650,9 @@
         if(!reducedMotion)dialog.animate([{opacity:0},{opacity:1}],{duration:240,easing:'ease-out'});
       }
       dialog.scrollTop=0;
-      {
-        dialog.classList.add('question-intro');
-        const token=questionScreenToken;
-        questionScreenTimer=setTimeout(()=>{
-          if(token!==questionScreenToken||!dialog.open)return;
-          questionScreenTimer=null;dialog.classList.remove('question-intro');dialog.classList.add('question-playing');
-          if(src)video.play().catch(()=>{if(token===questionScreenToken&&dialog.open){dialog.classList.add('play-blocked');q('#interview-play').hidden=false}});
-        },3000);
-      }
+      dialog.classList.add('question-intro');
+      q('#interview-stage-next').hidden=false;
+      q('#interview-stage-next').title='인터뷰 영상 재생';
     }
     function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue')return;const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
     q('#question-prev').addEventListener('click',()=>changeQuestion(-1));q('#question-next').addEventListener('click',()=>changeQuestion(1));
@@ -685,7 +679,7 @@
     });
     video.addEventListener('ended',()=>{if(dialog.classList.contains('question-cinema')){closeInterview();return}exitVideoFullscreen();q('#interview-play').hidden=false});
     q('.detail-close').addEventListener('click',()=>recordStep(()=>{panel.hidden=true}));
-    function updateCue(){const start=prologueSlides.length+1;q('#sequence-count').textContent=prologueOpen?'프롤로그':cues[cueIndex]?.overview?'지형도':Math.max(0,cueIndex-start+1)+' / '+(cues.length-start);q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!presentationMode||prologueOpen||cueIndex>=cues.length-1;q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
+    function updateCue(){const start=prologueSlides.length+1;q('#sequence-count').textContent=prologueOpen?'프롤로그':cues[cueIndex]?.overview?'지형도':Math.max(0,cueIndex-start+1)+' / '+(cues.length-start);q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!(dialog.open&&dialog.classList.contains('question-intro'))&&(!presentationMode||prologueOpen||cueIndex>=cues.length-1);q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
       if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}
@@ -734,8 +728,13 @@
       updateCue();
     }
     q('#interview-stage-next').addEventListener('click',()=>{
+      if(dialog.open&&dialog.classList.contains('question-intro')){
+        dialog.classList.remove('question-intro','play-blocked');dialog.classList.add('question-playing');
+        q('#interview-stage-next').hidden=interviewMode==='epilogue'||!presentationMode||cueIndex>=cues.length-1;
+        if(video.getAttribute('src'))video.play().catch(()=>{dialog.classList.add('play-blocked');q('#interview-play').hidden=false});
+        return;
+      }
       if(!presentationMode||cueIndex>=cues.length-1)return;
-      if(dialog.open&&dialog.classList.contains('question-intro'))return;
       if(dialog.open&&video.getAttribute('src')&&!videoStarted){
         if(dialog.classList.contains('question-cinema')){dialog.classList.add('question-playing');dialog.classList.remove('play-blocked');video.play().catch(()=>{dialog.classList.add('play-blocked');q('#interview-play').hidden=false});return}
         try{

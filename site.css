@@ -181,7 +181,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #interview-dialog.question-cinema #video-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 #interview-dialog.question-cinema #video-empty[hidden]{display:none}
 #interview-dialog.question-cinema #interview-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;padding:12px 20px;background:#fffffff0;color:#17272e;border:1px solid #cdd5d8}
-#interview-dialog.question-cinema.question-intro #interview-play,#interview-dialog.question-cinema.question-intro #interview-stage-next{visibility:hidden}
+#interview-dialog.question-cinema.question-intro #interview-play{visibility:hidden}
 
 #forum-source-network .map-caption{position:absolute;top:18px;left:20px;z-index:28;margin:0;font-size:14px;line-height:1.4;font-weight:600;color:var(--secondary);pointer-events:none}
 #forum-source-network .stage.prologue-mode .map-caption,#forum-source-network .prologue-eyebrow{display:none}
