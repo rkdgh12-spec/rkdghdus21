@@ -194,3 +194,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .area-heading.step-arrived>small{transform:scale(1.24);-webkit-text-stroke:.24px currentColor}
 #forum-source-network .stage.all-connected .area-heading.core.step-arrived strong,
 #forum-source-network .stage.all-connected .area-heading.core.step-arrived small{-webkit-text-stroke:.3px currentColor}
+
+#forum-source-network .intro .intro-sequence{position:fixed;bottom:0;left:24px;right:24px;z-index:32;background:var(--paper)}
+#forum-source-network .intro-fullscreen{position:fixed;top:22px;right:24px;z-index:32;font-size:12px;padding:7px 10px;background:transparent;color:var(--ink);border:0}
+#forum-source-network .intro-top{padding-right:100px}
+#forum-source-network .intro-bottom{margin-bottom:30px}
+@media(max-width:640px){#forum-source-network .intro .intro-sequence{left:10px;right:10px}#forum-source-network .intro-fullscreen{top:16px;right:10px}}
