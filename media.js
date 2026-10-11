@@ -1,4 +1,4 @@
-// Add published video URLs by person/question key. Q1 is the self-introduction.
+// Published interview videos by person/question key.
 window.FORUM_MEDIA = {
   "epilogue/film": {
     "title": "조소과 교육의 앞으로",
@@ -50,15 +50,15 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "류성실/Q5": {
-    "title": "",
-    "src": "",
+    "title": "류성실 인터뷰 Q5 · 자기소개 포함",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-q5-q6-20261011/ryu-sungsil-q5-intro.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
   },
   "류성실/Q6": {
-    "title": "",
-    "src": "",
+    "title": "류성실 인터뷰 Q6",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-q5-q6-20261011/ryu-sungsil-q6.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -505,5 +505,3 @@ window.FORUM_MEDIA = {
     "transcript": ""
   }
 };
-
-
