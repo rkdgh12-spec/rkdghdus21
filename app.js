@@ -117,7 +117,7 @@
     const dialog=q('#interview-dialog'),video=q('#interview-video'),panel=q('.detail-panel');
     let interviewMode='person',videoStarted=false;
     let stepHistory=[],stepIndex=-1,stepDepth=0,restoringStep=false;
-    const epilogueFilm={id:'epilogue-film',kind:'epilogue',person:'열 명의 목소리',label:'통합 영상',topic:'조소과 교육의 앞으로',question:'조소과 교육에서 계속 지켜야 할 것과 새롭게 시도할 것은 무엇일까요?'};
+    const epilogueFilm={id:'epilogue-film',kind:'epilogue',person:'열 명의 목소리',label:'통합 영상',topic:'조소과 교육의 앞으로',question:'확장된 창작의 지형에서 조각교육은 무엇을 이어가고 어떠한 변화를 모색해야 하는가?'};
     const lectureOrder=[
       {chapter:1,people:[['최고은',['Q4','Q7']]]},
       {chapter:2,people:[['류성실',['Q5','Q6']],['강인애',['Q3','Q5']]]},
