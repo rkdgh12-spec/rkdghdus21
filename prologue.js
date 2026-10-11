@@ -15,9 +15,9 @@ window.FORUM_PROLOGUE = {
     questionOnly: true,
     bridge: '창작의 방식과 활동영역이 변화하는 가운데, 조각을 배우고 만든 경험은 오늘날 어떤 의미와 가능성을 갖는가?'
   }, {
-    title: '각자의 현장에서 - 연결짓기 - 새로운 지형',
+    title: '각자의 현장에서 — 연결짓기 — 새로운 지형',
     eyebrow: '',
     questionOnly: true,
-    bridge: '각자의 현장에서 - 연결짓기 - 새로운 지형'
+    bridge: '각자의 현장에서 — 연결짓기 — 새로운 지형'
   }]
 };
