@@ -113,7 +113,27 @@
       {chapter:4,people:[['최지혜',['Q3','Q4','Q5']],['서해영',['Q2','Q7','Q6']]]},
       {chapter:5,people:[['권현빈',['Q4','Q5','Q6']],['채길원',['Q5','Q7','Q4']]]}
     ];
-    const cues=[];let applyingCue=false,interviewClosedAt=0,pendingCueTimer=null;
+    const prologueData=window.FORUM_PROLOGUE||{slides:[]},prologueSlides=prologueData.slides;
+    let prologueOpen=false,prologueIndex=0;
+    const prologueScreen=document.createElement('section');prologueScreen.className='prologue-screen';prologueScreen.hidden=true;prologueScreen.setAttribute('aria-label','프롤로그');prologueScreen.setAttribute('aria-labelledby','prologue-title');stage.append(prologueScreen);
+    const prologueNav=document.createElement('button');prologueNav.type='button';prologueNav.className='control prologue-nav';prologueNav.textContent='프롤로그 · 지난 10년';prologueNav.setAttribute('aria-controls','prologue-content');
+    if(prologueSlides.length)q('.tools').insertBefore(prologueNav,q('#forum-fit'));
+    const cues=prologueSlides.map((slide,index)=>({prologue:index,label:'프롤로그 · '+slide.title}));let applyingCue=false,interviewClosedAt=0,pendingCueTimer=null;
+    function setPrologueView(index,animate=false){
+      prologueOpen=Number.isInteger(index)&&!!prologueSlides[index];
+      prologueScreen.hidden=!prologueOpen;stage.classList.toggle('prologue-mode',prologueOpen);flatPlane.inert=prologueOpen;threeScene.inert=prologueOpen;
+      if(!prologueOpen){prologueNav.removeAttribute('aria-current');return}
+      prologueIndex=index;panel.hidden=true;prologueNav.setAttribute('aria-current','step');
+      const slide=prologueSlides[index];
+      const pager=prologueSlides.map((item,i)=>`<button type="button" data-prologue-page="${i}" aria-label="프롤로그 ${i+1}: ${esc(item.title)}" ${i===index?'aria-current="step"':''}>${String(i+1).padStart(2,'0')}</button>`).join('');
+      const records=slide.records?'<ol class="prologue-records">'+slide.records.map(item=>`<li><span class="prologue-record-year">${esc(item.year)}</span><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></li>`).join('')+'</ol>':'';
+      const thread=slide.thread?'<ol class="prologue-thread">'+slide.thread.map(item=>`<li><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></li>`).join('')+'</ol>':'';
+      prologueScreen.innerHTML=`<div class="prologue-content" id="prologue-content"><div class="prologue-topline"><p class="prologue-eyebrow">${esc(slide.eyebrow)}</p><nav class="prologue-pages" aria-label="프롤로그 화면">${pager}</nav></div><h2 id="prologue-title">${esc(slide.title)}</h2><p class="prologue-lead">${esc(slide.lead)}</p>${records}${thread}<div class="prologue-footer"><p class="prologue-bridge">${esc(slide.bridge)}</p></div>${slide.records?'<p class="prologue-source">'+esc(prologueData.source||'')+'</p>':''}</div>`;
+      prologueScreen.scrollTop=0;
+      if(animate&&!reducedMotion)prologueScreen.firstElementChild.animate([{opacity:0},{opacity:1}],{duration:220,easing:'ease-out'});
+    }
+    prologueScreen.addEventListener('click',e=>{const button=e.target.closest('[data-prologue-page]');if(button)runCue(Number(button.dataset.prologuePage))});
+    prologueNav.addEventListener('click',()=>recordStep(()=>{presentationMode=true;q('.sequence-controls').hidden=false;q('.map-shell').classList.remove('explore');interviewClosedAt=0;if(dialog.open){stopVideo();dialog.close()}runCue(0)}));
     for(const c of [...chapters].sort((a,b)=>a.chapter-b.chapter)){
       const nav=document.createElement('button');nav.type='button';nav.dataset.chapter=c.id;nav.innerHTML='<span class="nav-number">0'+c.chapter+'</span>'+esc(c.label);nav.addEventListener('click',()=>select(c.id));q('.chapter-nav').append(nav);
       cues.push({id:c.id,label:displayLabel(c)});
@@ -134,7 +154,7 @@
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
-    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:6800)});q('.tools').insertBefore(epilogueNav,depthButton);
+    const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그 · 교육';epilogueNav.addEventListener('click',()=>{if(!prologueOpen&&points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:6800)});q('.tools').insertBefore(epilogueNav,depthButton);
     const quickStep=document.createElement('button');quickStep.type='button';quickStep.className='control quick-step';quickStep.textContent='전체 연결 직전 · 임시';quickStep.title='마지막 인터뷰 단계로 바로 이동';quickStep.addEventListener('click',()=>runCue(cues.findIndex(c=>c.all)-1));q('.tools').insertBefore(quickStep,epilogueNav);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
@@ -239,6 +259,7 @@
     }
     function select(id){return recordStep(()=>selectStep(id))}
     function selectStep(id){
+      setPrologueView(null);
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
       const previous=selected,before=new Set(visible);selected=id;
@@ -607,7 +628,7 @@
     });
     video.addEventListener('ended',()=>{exitVideoFullscreen();q('#interview-play').hidden=false});
     q('.detail-close').addEventListener('click',()=>recordStep(()=>{panel.hidden=true}));
-    function updateCue(){q('#sequence-count').textContent=(cueIndex+1)+' / '+cues.length;q('#sequence-label').textContent=cueIndex<0?'제1장부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0;q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!presentationMode||cueIndex>=cues.length-1;q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
+    function updateCue(){q('#sequence-count').textContent=(cueIndex+1)+' / '+cues.length;q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!presentationMode||prologueOpen||cueIndex>=cues.length-1;q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
       if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}
@@ -625,6 +646,13 @@
       }
       cueIndex=nextIndex;
       const cue=cues[cueIndex];
+      if(cue&&Number.isInteger(cue.prologue)){
+        cameraMotion++;fullReveal=null;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;interviewClosedAt=0;selected=null;
+        setPrologueView(cue.prologue,true);updateCue();save();q('#map-status').textContent=cue.label;return;
+      }
+      const leavingPrologue=prologueOpen;
+      setPrologueView(null);
+      if(leavingPrologue){selected=null;expanded.clear();updateVisible();autoCentered3D=depthEnabled;threePanX=0;threePanY=0;threeZoom=1;idleYaw=0;idleElevation=0;fit()}
       if(!cue){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);fit();updateCue();save();return}
       if(cue.epilogue&&points.every(n=>visible.has(n.id))){
         stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;
@@ -639,7 +667,7 @@
       expanded.clear();
       for(let i=0;i<=cueIndex;i++){
         const prior=cues[i];
-        if(prior.all||prior.epilogue)continue;
+        if(prior.all||prior.epilogue||Number.isInteger(prior.prologue))continue;
         for(const id of ancestors(prior.id))if(children(id).length)expanded.add(id);
       }
       applyingCue=true;
@@ -659,16 +687,16 @@
       runCue(cueIndex+1);
     });
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
-    function showAll(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?createFullReveal(before,anchorPerson):null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
-    function reset(){return recordStep(()=>{cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);updateCue();save()})}
-    function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset();threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
+    function showAll(){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?createFullReveal(before,anchorPerson):null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
+    function reset(startAtPrologue=true){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);if(startAtPrologue!==false&&presentationMode&&prologueSlides.length&&q('.intro').hidden)runCue(0);updateCue();save()})}
+    function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset(false);threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(mode==='presentation'&&prologueSlides.length)runCue(0);else if(mode==='resume'){setPrologueView(cues[cueIndex]?.prologue);updateCue()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
     q('#enter-presentation').addEventListener('click',()=>enter('presentation'));q('#enter-explore').addEventListener('click',()=>enter('explore'));q('#enter-resume').addEventListener('click',()=>enter('resume'));
-    q('#forum-home').addEventListener('click',()=>recordStep(()=>{q('.intro').hidden=false;q('.intro').inert=false;q('.map-shell').inert=true;q('#enter-resume').hidden=expanded.size===0;q('#enter-presentation').focus()}));
+    q('#forum-home').addEventListener('click',()=>recordStep(()=>{cameraMotion++;if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}q('.intro').hidden=false;q('.intro').inert=false;q('.map-shell').inert=true;q('#enter-resume').hidden=expanded.size===0&&cueIndex<0;q('#enter-presentation').focus()}));
     q('#forum-fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await root.requestFullscreen()}catch{q('#map-status').textContent='이 브라우저에서는 전체 화면을 사용할 수 없습니다.'}});
     document.addEventListener('fullscreenchange',()=>{q('#forum-fullscreen').textContent=document.fullscreenElement?'전체 화면 닫기':'전체 화면'});
     document.addEventListener('keydown',e=>{if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,select,video,[contenteditable=true],[role=tab]'))return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();moveStep(e.key==='ArrowRight'?1:-1)}else if(presentationMode&&!dialog.open&&q('.intro').hidden&&(e.key==='PageDown'||e.key==='PageUp')){e.preventDefault();runCue(cueIndex+(e.key==='PageDown'?1:-1))}else if(e.key==='Escape'&&!dialog.open)recordStep(()=>{panel.hidden=true})});
     function snapshotStep(){
-      return {selected,expanded:[...expanded].sort((a,b)=>a-b),cueIndex,presentationMode,introOpen:!q('.intro').hidden,panelOpen:!panel.hidden,personTab:!panel.hidden&&nodes[selected]?.kind==='person'?(detail.querySelector('[data-person-tab][aria-selected=true]')?.dataset.personTab||'intro'):'intro',interview:dialog.open&&currentQuestion?{id:currentQuestion.id,kind:currentQuestion.kind,person:currentQuestion.person,mode:interviewMode}:null,camera:{k,x:(width/2-ox)/k,y:(height/2-oy)/k},panelScroll:panel.scrollTop,dialogScroll:dialog.scrollTop};
+      return {selected,expanded:[...expanded].sort((a,b)=>a-b),cueIndex,presentationMode,prologue:prologueOpen?prologueIndex:null,introOpen:!q('.intro').hidden,panelOpen:!panel.hidden,personTab:!panel.hidden&&nodes[selected]?.kind==='person'?(detail.querySelector('[data-person-tab][aria-selected=true]')?.dataset.personTab||'intro'):'intro',interview:dialog.open&&currentQuestion?{id:currentQuestion.id,kind:currentQuestion.kind,person:currentQuestion.person,mode:interviewMode}:null,camera:{k,x:(width/2-ox)/k,y:(height/2-oy)/k},panelScroll:panel.scrollTop,dialogScroll:dialog.scrollTop};
     }
     function stepSignature(s){const {panelScroll,dialogScroll,...navigation}=s;return JSON.stringify(navigation)}
     function recordStep(action){
@@ -677,22 +705,22 @@
       stepDepth++;try{return action()}finally{stepDepth--;const after=snapshotStep();if(stepSignature(after)!==before){stepHistory=stepHistory.slice(0,stepIndex+1);stepHistory.push(after);stepIndex++}updateStepControls()}
     }
     function resetStepHistory(){stepHistory=[snapshotStep()];stepIndex=0;updateStepControls()}
-    function stepLabel(s){if(s.introOpen)return '시작 화면';if(s.interview)return (s.interview.mode==='epilogue'?'에필로그 · ':'')+s.interview.person+' · '+(s.interview.kind==='introduction'?'자기소개 영상':s.interview.mode==='epilogue'?'교육 인터뷰':nodes[s.interview.id]?.label+' 인터뷰');if(s.selected!==null)return (nodes[s.selected].kind==='person'?nodes[s.selected].label+' · '+(s.personTab==='concepts'?'주요 개념':'인물 소개'):displayLabel(nodes[s.selected]));return s.cueIndex>=0?cues[s.cueIndex].label:'주제 선택'}
+    function stepLabel(s){if(s.introOpen)return '시작 화면';if(Number.isInteger(s.prologue))return '프롤로그 · '+prologueSlides[s.prologue].title;if(s.interview)return (s.interview.mode==='epilogue'?'에필로그 · ':'')+s.interview.person+' · '+(s.interview.kind==='introduction'?'자기소개 영상':s.interview.mode==='epilogue'?'교육 인터뷰':nodes[s.interview.id]?.label+' 인터뷰');if(s.selected!==null)return (nodes[s.selected].kind==='person'?nodes[s.selected].label+' · '+(s.personTab==='concepts'?'주요 개념':'인물 소개'):displayLabel(nodes[s.selected]));return s.cueIndex>=0?cues[s.cueIndex].label:'주제 선택'}
     function updateStepControls(){
       root.querySelectorAll('[data-history]').forEach(button=>{const delta=Number(button.dataset.history),target=stepIndex+delta;button.disabled=target<0||target>=stepHistory.length;button.title=button.disabled?(delta<0?'이전 단계가 없습니다':'다음 방문 단계가 없습니다'):(delta<0?'뒤로가기: ':'앞으로가기: ')+stepLabel(stepHistory[target])});
       root.querySelectorAll('[data-history-count]').forEach(label=>{label.textContent=stepIndex>0||stepHistory.length>1?stepIndex+' / '+(stepHistory.length-1):''});
       q('#cue-label').textContent=stepHistory[stepIndex]?stepLabel(stepHistory[stepIndex]):'주제 선택';q('#cue-count').textContent=stepIndex+' / '+Math.max(0,stepHistory.length-1);
     }
     function moveStep(delta){
-      const target=stepIndex+delta;if(target<0||target>=stepHistory.length)return;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;
+      const target=stepIndex+delta;if(target<0||target>=stepHistory.length)return;if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;
       stepHistory[stepIndex]=snapshotStep();stepIndex=target;const s=stepHistory[stepIndex],before=new Set(visible);restoringStep=true;
       try{
         if(dialog.open)closeInterview();
-        selected=s.selected;expanded=new Set(s.expanded);cueIndex=s.cueIndex;presentationMode=s.presentationMode;updateVisible();q('.intro').hidden=!s.introOpen;q('.intro').inert=!s.introOpen;q('.map-shell').inert=s.introOpen;q('#enter-resume').hidden=expanded.size===0;
+        selected=s.selected;expanded=new Set(s.expanded);cueIndex=s.cueIndex;presentationMode=s.presentationMode;updateVisible();q('.intro').hidden=!s.introOpen;q('.intro').inert=!s.introOpen;q('.map-shell').inert=s.introOpen;q('#enter-resume').hidden=expanded.size===0&&cueIndex<0;
         k=s.camera.k;ox=width/2-s.camera.x*k;oy=height/2-s.camera.y*k;
         showDetail(s.panelOpen&&selected!==null?nodes[selected]:null,false);
         if(s.panelOpen&&nodes[selected]?.kind==='person')detail.querySelector('[data-person-tab="'+s.personTab+'"]')?.click();
-        q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);if(depthEnabled)autoCentered3D=true;render();updateCue();animateNodes(before);panel.scrollTop=s.panelScroll;
+        q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);if(depthEnabled)autoCentered3D=true;render();setPrologueView(s.prologue);updateCue();animateNodes(before);panel.scrollTop=s.panelScroll;
         if(s.interview){const item=s.interview.kind==='epilogue'?epilogueFilm:s.interview.kind==='introduction'?introduction(points.find(n=>n.kind==='person'&&n.label===s.interview.person)):nodes[s.interview.id];if(item){openInterview(item,s.interview.mode);dialog.scrollTop=s.dialogScroll}}
         save();
       }finally{restoringStep=false;updateStepControls()}
@@ -1073,20 +1101,20 @@
     q('#forum-fit').addEventListener('click',showAll);
     depthButton.addEventListener('click',()=>setDepthEnabled(!depthEnabled));
     q('#forum-reset').addEventListener('click',reset);
-    stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0014),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+    stage.addEventListener('wheel',e=>{if(prologueOpen)return;e.preventDefault();const r=stage.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0014),e.clientX-r.left,e.clientY-r.top)},{passive:false});
     const pointers=new Map();let pinch=null,framePending=false;
     function scheduleRender(){if(framePending)return;framePending=true;requestAnimationFrame(()=>{framePending=false;render()})}
-    stage.addEventListener('wheel',()=>{cameraMotion++;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
-    stage.addEventListener('pointerdown',()=>{cameraMotion++;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},true);
+    stage.addEventListener('wheel',()=>{if(prologueOpen)return;cameraMotion++;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
+    stage.addEventListener('pointerdown',()=>{if(prologueOpen)return;cameraMotion++;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},true);
     stage.addEventListener('pointermove',()=>{if(depthEnabled&&pointers.size)lastManual3D=performance.now()},true);
-    stage.addEventListener('pointerdown',e=>{if(e.button!==0&&!(depthEnabled&&e.button===1))return;if(depthEnabled)e.preventDefault();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});stage.setPointerCapture(e.pointerId);if(pointers.size===1)drag={x:e.clientX,y:e.clientY,ox,oy,panX:threePanX,panY:threePanY,rotate:depthEnabled&&e.button===1};else if(pointers.size===2){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;pinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),k:depthEnabled?threeZoom:k,wx:(cx-ox)/k,wy:(cy-oy)/k,cx,cy,panX:threePanX,panY:threePanY};drag=null}});
+    stage.addEventListener('pointerdown',e=>{if(prologueOpen)return;if(e.button!==0&&!(depthEnabled&&e.button===1))return;if(depthEnabled)e.preventDefault();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});stage.setPointerCapture(e.pointerId);if(pointers.size===1)drag={x:e.clientX,y:e.clientY,ox,oy,panX:threePanX,panY:threePanY,rotate:depthEnabled&&e.button===1};else if(pointers.size===2){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;pinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),k:depthEnabled?threeZoom:k,wx:(cx-ox)/k,wy:(cy-oy)/k,cx,cy,panX:threePanX,panY:threePanY};drag=null}});
     stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const previous=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(depthEnabled){if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;threeZoom=Math.max(.45,Math.min(maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));const ratio=threeZoom/pinch.k;threePanX=pinch.panX+cx-pinch.cx-(pinch.cx-width/2)* (ratio-1)+pinch.panX*(ratio-1);threePanY=pinch.panY+cy-pinch.cy-(pinch.cy-height/2)*(ratio-1)+pinch.panY*(ratio-1);scheduleRender()}else if(drag?.rotate){threeYaw+=(e.clientX-previous.x)*.006;threeElevation=Math.max(.28,Math.min(1.45,threeElevation-(e.clientY-previous.y)*.005));scheduleRender()}else if(drag){threePanX=drag.panX+e.clientX-drag.x;threePanY=drag.panY+e.clientY-drag.y;scheduleRender()}return}if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect();k=Math.max(fitK*.45,Math.min(fitK*maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));ox=(a.x+b.x)/2-r.left-pinch.wx*k;oy=(a.y+b.y)/2-r.top-pinch.wy*k;scheduleRender()}else if(drag){ox=drag.ox+e.clientX-drag.x;oy=drag.oy+e.clientY-drag.y;scheduleRender()}});
     function endPointer(e){pointers.delete(e.pointerId);pinch=null;drag=null;if(pointers.size===1){const p=[...pointers.values()][0];drag={x:p.x,y:p.y,ox,oy,panX:threePanX,panY:threePanY,rotate:false}}}
     stage.addEventListener('pointerup',endPointer);stage.addEventListener('pointercancel',endPointer);
     stage.addEventListener('auxclick',e=>{if(depthEnabled&&e.button===1)e.preventDefault()});
     function idleMotionTick(now){
       setTimeout(()=>requestAnimationFrame(idleMotionTick),70);
-      if(!depthEnabled||document.hidden||reducedMotion||!q('.intro').hidden)return;
+      if(!depthEnabled||prologueOpen||document.hidden||reducedMotion||!q('.intro').hidden)return;
       if(now-lastIdleFrame<70)return;lastIdleFrame=now;
       const target=now-lastManual3D>1800&&pointers.size===0?1:0;
       idleStrength+=(target-idleStrength)*.14;
@@ -1094,10 +1122,11 @@
       if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.00015)return;
       idleYaw=yaw;idleElevation=elevation;render3D();
     }
-    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,presentationMode,depthEnabled}))}catch{}}
-    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
+    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:2,presentationMode,depthEnabled}))}catch{}}
+    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;const cueOffset=s.cueVersion===2||s.cueIndex<0?0:prologueSlides.length;cueIndex=Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex+cueOffset)):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
     new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
-    fit();showDetail(null);restore();updateCue();q('#enter-resume').hidden=expanded.size===0;resetStepHistory();requestAnimationFrame(idleMotionTick);
+    fit();showDetail(null);restore();updateCue();q('#enter-resume').hidden=expanded.size===0&&cueIndex<0;resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
+
 
 
