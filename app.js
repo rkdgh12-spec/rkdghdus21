@@ -264,9 +264,9 @@
       for(const n of points)if(n.kind!=='person'&&visible.has(n.parent)&&expanded.has(n.parent))visible.add(n.id);
     }
     function select(id){return recordStep(()=>selectStep(id))}
-    function markStepArrival(id){
-      for(const el of root.querySelectorAll('.step-arrived'))el.classList.remove('step-arrived');
-      if(id===null||selected!==id)return;
+    function markStepArrival(id,append=false){
+      if(!append)for(const el of root.querySelectorAll('.step-arrived'))el.classList.remove('step-arrived');
+      if(id===null||(!append&&selected!==id))return;
       const n=nodes[id];
       (n.kind==='chapter'?areas.get(id)?.heading:elems.get(id)?.b)?.classList.add('step-arrived');
       threeNodes.get(id)?.classList.add('step-arrived');
@@ -302,8 +302,8 @@
         const chapterTransfer=nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
         const personTransfer=nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
         if(chapterTransfer||personTransfer){
-          traceRoute(previous,id,()=>{routeArrived=true;markStepArrival(id);revealQuestion()},NODE_TRAVEL_MS,true);
-        }else traceRoute(previous,id,()=>{routeArrived=true;markStepArrival(id);revealQuestion()},NODE_TRAVEL_MS);
+          traceRoute(previous,id,()=>{routeArrived=true;markStepArrival(id,true);revealQuestion()},NODE_TRAVEL_MS,true);
+        }else traceRoute(previous,id,()=>{routeArrived=true;markStepArrival(id,true);revealQuestion()},NODE_TRAVEL_MS);
       }
       save();
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
@@ -328,17 +328,18 @@
       if(!route.length&&from===to)return;
       const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','lecture-route');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
       const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
-      const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110);let start=null;
+      const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110);let start=null;const reached=new Set();
       function draw(progress){
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
-        const samples=[];
+        const samples=[],arrivals=[];let routeLength=0;
         for(const step of route){const path=depthEnabled?threeSvg.querySelector(`[data-edge-index="${step.index}"]`):paths[step.index];
-          if(!path)continue;const length=path.getTotalLength(),count=Math.max(8,Math.min(36,Math.ceil(length/28)));
+          if(!path)continue;const length=path.getTotalLength();routeLength+=length;arrivals.push({id:step.to,distance:routeLength});const count=Math.max(8,Math.min(36,Math.ceil(length/28)));
           for(let j=0;j<=count;j++){if(samples.length&&j===0)continue;const p=path.getPointAtLength(length*(step.forward?j/count:1-j/count));samples.push([p.x,p.y])}}
         if(!samples.length){const a=depthEnabled?threeProjected[from]:{x:nodes[from].x*k+ox,y:nodes[from].y*k+oy},b=depthEnabled?threeProjected[to]:{x:nodes[to].x*k+ox,y:nodes[to].y*k+oy};if(!a||!b)return;samples.push([a.x,a.y],[b.x,b.y])}
         line.setAttribute('d',samples.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(''));
         const length=line.getTotalLength();line.style.strokeDasharray=`${length} ${length}`;line.style.strokeDashoffset=String(length*(1-progress));
         const p=line.getPointAtLength(length*progress);head.setAttribute('cx',p.x);head.setAttribute('cy',p.y);
+        for(const arrival of arrivals)if(routeLength>0&&progress>=arrival.distance/routeLength&&!reached.has(arrival.id)){reached.add(arrival.id);markStepArrival(arrival.id,true)}
       }
       function tick(now){if(token!==cameraMotion){overlay.remove();if(activeRoute===overlay)activeRoute=null;return}if(start===null)start=now;
         const t=Math.min(1,(now-start)/duration);draw(t*t*(3-2*t));
