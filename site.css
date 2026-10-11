@@ -186,3 +186,11 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .map-caption{position:absolute;top:18px;left:20px;z-index:28;margin:0;font-size:14px;line-height:1.4;font-weight:600;color:var(--secondary);pointer-events:none}
 #forum-source-network .stage.prologue-mode .map-caption,#forum-source-network .prologue-eyebrow{display:none}
 @media(max-width:700px){#forum-source-network .map-caption{top:12px;left:12px;font-size:12px}}
+
+/* Keep the active step text emphasized exactly like pointer hover. */
+#forum-source-network .dot.selected .node-label-text,
+#forum-source-network .area-heading.selected>span,
+#forum-source-network .area-heading.selected>strong,
+#forum-source-network .area-heading.selected>small{transform:scale(1.24);-webkit-text-stroke:.24px currentColor}
+#forum-source-network .stage.all-connected .area-heading.core.selected strong,
+#forum-source-network .stage.all-connected .area-heading.core.selected small{-webkit-text-stroke:.3px currentColor}
