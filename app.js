@@ -497,7 +497,8 @@
       if(document.fullscreenElement===video)document.exitFullscreen().catch(()=>{});
       else if(video.webkitDisplayingFullscreen&&typeof video.webkitExitFullscreen==='function')video.webkitExitFullscreen();
     }
-    function stopVideo(){exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
+    let questionScreenTimer=null,questionScreenToken=0;
+    function stopVideo(){clearTimeout(questionScreenTimer);questionScreenTimer=null;questionScreenToken++;dialog.classList.remove('question-intro','question-playing','play-blocked');exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
     function openEpilogue(){openInterview(epilogueFilm,'epilogue')}
     let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null,epilogueContours=null,epilogueOrigin=null;
     function syncEpilogueOverlay(){
@@ -567,15 +568,17 @@
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
     function openInterviewStep(n,mode='person'){
       currentQuestion=n;stopVideo();videoStarted=false;
+      dialog.classList.toggle('question-cinema',mode!=='epilogue');
       interviewMode=mode;const isEpilogue=mode==='epilogue';q('#epilogue-collection').hidden=!isEpilogue;dialog.classList.toggle('epilogue-mode',isEpilogue);
       const content=q('#interview-content');
       content.removeAttribute('role');content.removeAttribute('aria-labelledby');content.removeAttribute('tabindex');
       const media=(window.FORUM_MEDIA||{})[isEpilogue?'epilogue/film':n.person+'/'+n.label]||{};
       q('#interview-person').textContent=n.person;
       q('#interview-profile').innerHTML=isEpilogue?'':profileHTML(n.person);
-      q('#interview-chapter').textContent=(isEpilogue?'에필로그 · 교육에 관한 공통 질문':'제'+n.chapter+'장 · '+chapters.find(c=>c.chapter===n.chapter).label)+' / '+n.label;
+      q('#interview-chapter').textContent=(isEpilogue?'':n.person+' · ')+(isEpilogue?'에필로그 · 교육에 관한 공통 질문':'제'+n.chapter+'장 · '+chapters.find(c=>c.chapter===n.chapter).label)+' / '+n.label;
       q('#interview-title').textContent=isEpilogue?n.topic:media.title||n.topic||nodes[n.parent].label;
-      q('#interview-question').textContent=n.question;
+      const screenQuestions={'최고은/Q4':'사물을 직접 다루는 경험은 작업을 어떻게 바꾸는가?','최고은/Q5':'조각은 왜 나의 ‘모국어’인가?','류성실/Q5':'말하고 싶은 이야기는 어떻게 매체의 선택으로 이어지는가?','류성실/Q6':'서로 다른 플랫폼의 규칙을 어떻게 넘나드는가?'};
+      q('#interview-question').textContent=screenQuestions[n.person+'/'+n.label]||n.question;
       q('#interview-concepts').replaceChildren();
       for(const id of (isEpilogue?[]:n.kind==='introduction'?children(n.parent).map(x=>x.id):ancestors(n.id)).filter(id=>['concept','subconcept'].includes(nodes[id].kind))){const t=document.createElement('span');t.textContent=nodes[id].label;q('#interview-concepts').append(t)}
       const src=assetURL(media.src);video.hidden=!src;q('#interview-play').hidden=!src;q('#video-empty').hidden=!!src;q('#video-error').hidden=true;
@@ -604,6 +607,15 @@
         if(!reducedMotion)dialog.animate([{opacity:0},{opacity:1}],{duration:240,easing:'ease-out'});
       }
       dialog.scrollTop=0;
+      if(!isEpilogue){
+        dialog.classList.add('question-intro');
+        const token=questionScreenToken;
+        questionScreenTimer=setTimeout(()=>{
+          if(token!==questionScreenToken||!dialog.open)return;
+          questionScreenTimer=null;dialog.classList.remove('question-intro');dialog.classList.add('question-playing');
+          if(src)video.play().catch(()=>{if(token===questionScreenToken&&dialog.open){dialog.classList.add('play-blocked');q('#interview-play').hidden=false}});
+        },3000);
+      }
     }
     function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue')return;const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
     q('#question-prev').addEventListener('click',()=>changeQuestion(-1));q('#question-next').addEventListener('click',()=>changeQuestion(1));
@@ -612,12 +624,14 @@
     video.addEventListener('error',()=>{if(video.getAttribute('src'))q('#video-error').hidden=false});
     q('#interview-play').addEventListener('click',()=>{
       if(!video.getAttribute('src'))return;
-      if(typeof video.requestFullscreen==='function')video.requestFullscreen().catch(()=>{});
+      if(dialog.classList.contains('question-cinema')){dialog.classList.remove('question-intro','play-blocked');dialog.classList.add('question-playing');clearTimeout(questionScreenTimer)}
+      else if(typeof video.requestFullscreen==='function')video.requestFullscreen().catch(()=>{});
       else if(typeof video.webkitEnterFullscreen==='function')video.webkitEnterFullscreen();
       video.play().catch(()=>{});
     });
     video.addEventListener('play',async()=>{
       videoStarted=true;q('#interview-play').hidden=true;
+      if(dialog.classList.contains('question-cinema')){dialog.classList.remove('question-intro','play-blocked');dialog.classList.add('question-playing');return}
       if(!video.getAttribute('src')||document.fullscreenElement===video||video.webkitDisplayingFullscreen)return;
       try{
         if(typeof video.requestFullscreen==='function')await video.requestFullscreen();
@@ -626,7 +640,7 @@
         try{if(typeof video.webkitEnterFullscreen==='function')video.webkitEnterFullscreen()}catch{}
       }
     });
-    video.addEventListener('ended',()=>{exitVideoFullscreen();q('#interview-play').hidden=false});
+    video.addEventListener('ended',()=>{if(dialog.classList.contains('question-cinema')){closeInterview();return}exitVideoFullscreen();q('#interview-play').hidden=false});
     q('.detail-close').addEventListener('click',()=>recordStep(()=>{panel.hidden=true}));
     function updateCue(){const start=prologueSlides.length+1;q('#sequence-count').textContent=prologueOpen?'프롤로그':cues[cueIndex]?.overview?'지형도':Math.max(0,cueIndex-start+1)+' / '+(cues.length-start);q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!presentationMode||prologueOpen||cueIndex>=cues.length-1;q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
@@ -678,7 +692,9 @@
     }
     q('#interview-stage-next').addEventListener('click',()=>{
       if(!presentationMode||cueIndex>=cues.length-1)return;
+      if(dialog.open&&dialog.classList.contains('question-intro'))return;
       if(dialog.open&&video.getAttribute('src')&&!videoStarted){
+        if(dialog.classList.contains('question-cinema')){dialog.classList.add('question-playing');dialog.classList.remove('play-blocked');video.play().catch(()=>{dialog.classList.add('play-blocked');q('#interview-play').hidden=false});return}
         try{
           if(typeof video.requestFullscreen==='function')video.requestFullscreen().catch(()=>{});
           else if(typeof video.webkitEnterFullscreen==='function')video.webkitEnterFullscreen();

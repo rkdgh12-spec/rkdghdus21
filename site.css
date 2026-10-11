@@ -165,3 +165,20 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .detail-path{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 4px;font-size:9px;line-height:1.5;margin:7px 0 0;color:var(--secondary);word-break:keep-all}
 #forum-source-network .detail-path .path-divider{opacity:.6}
 #forum-source-network .detail-path [aria-current]{color:var(--ink);font-weight:600}
+
+/* Question and film share one full-screen stage. */
+#interview-dialog.question-cinema{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#fff;overflow:hidden;box-sizing:border-box}
+#interview-dialog.question-cinema .interview-history,#interview-dialog.question-cinema #interview-profile,#interview-dialog.question-cinema .interview-footer,#interview-dialog.question-cinema #interview-title,#interview-dialog.question-cinema #interview-concepts,#interview-dialog.question-cinema #transcript-section{display:none!important}
+#interview-dialog.question-cinema #interview-content,#interview-dialog.question-cinema .interview-layout,#interview-dialog.question-cinema .interview-media{position:absolute;inset:0;margin:0;padding:0;width:100%;height:100%;max-width:none;max-height:none;display:block}
+#interview-dialog.question-cinema .interview-header{position:absolute;inset:0;z-index:5;pointer-events:none;margin:0;border:0;padding:0}
+#interview-dialog.question-cinema #interview-person{display:none}
+#interview-dialog.question-cinema #interview-close{position:absolute;top:20px;right:24px;pointer-events:auto;font-size:12px;background:#ffffffdc;color:#33434a;border:0;padding:7px 10px}
+#interview-dialog.question-cinema .interview-copy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 9vw;box-sizing:border-box;background:#fff;z-index:3;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility .45s ease}
+#interview-dialog.question-cinema.question-intro .interview-copy{opacity:1;visibility:visible}
+#interview-dialog.question-cinema #interview-chapter{font-size:clamp(12px,1.1vw,17px);font-weight:500;color:#53636b;margin:0 0 24px;letter-spacing:.02em}
+#interview-dialog.question-cinema #interview-question{font-size:clamp(25px,3vw,48px);line-height:1.55;font-weight:600;color:#17272e;text-align:center;max-width:1000px;margin:0;word-break:keep-all;text-wrap:balance}
+#interview-dialog.question-cinema #interview-video{width:100%;height:100%;max-height:none;object-fit:contain;background:#000}
+#interview-dialog.question-cinema #video-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#interview-dialog.question-cinema #video-empty[hidden]{display:none}
+#interview-dialog.question-cinema #interview-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;padding:12px 20px;background:#fffffff0;color:#17272e;border:1px solid #cdd5d8}
+#interview-dialog.question-cinema.question-intro #interview-play,#interview-dialog.question-cinema.question-intro #interview-stage-next{visibility:hidden}
