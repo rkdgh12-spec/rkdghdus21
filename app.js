@@ -322,7 +322,7 @@
       let cameraArrived=false,routeArrived=!guided;
       let interviewQueued=false;
       const revealQuestion=()=>{
-        if(nodes[id].kind!=='question'||!cameraArrived||!routeArrived||interviewQueued)return;
+        if(nodes[id].kind!=='question'||!routeArrived||interviewQueued)return;
         interviewQueued=true;
         const arrivalMotion=cameraMotion;
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
