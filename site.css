@@ -286,3 +286,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-symposium-theme{transform:translateX(200%)}
 #forum-source-network .intro-presentation-title{transform:translateX(140px)}
 }
+
+/* Keep the presentation title at its original position; close only the theme gap. */
+#forum-source-network .intro-title-composition{grid-template-columns:230px minmax(0,1fr);column-gap:58px}
+#forum-source-network .intro-symposium-theme{width:max-content;justify-self:end;padding-left:0;transform:translateX(38px)}
+#forum-source-network .intro-presentation-title{padding-left:58px;transform:none}
+@media(max-width:700px){#forum-source-network .intro-title-composition{grid-template-columns:1fr;gap:28px}#forum-source-network .intro-symposium-theme{width:auto;justify-self:stretch;transform:none}#forum-source-network .intro-presentation-title{padding-left:0}}
