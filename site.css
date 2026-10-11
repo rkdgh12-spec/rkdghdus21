@@ -296,3 +296,6 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 /* Add approximately three Korean characters of space between cover titles. */
 #forum-source-network .intro-symposium-theme{transform:translateX(-28px)}
 @media(max-width:700px){#forum-source-network .intro-symposium-theme{transform:none}}
+
+/* Shorten the cover divider without shifting its text. */
+@media(min-width:701px){#forum-source-network .intro-presentation-title{padding-top:8px;padding-bottom:8px}}
