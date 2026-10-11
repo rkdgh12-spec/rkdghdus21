@@ -37,3 +37,27 @@
 @media(max-width:920px){#forum-source-network .prologue-screen{width:min(345px,40vw)}}
 @media(max-width:700px){#forum-source-network .prologue-screen{top:auto;bottom:12px;left:10px;width:min(365px,calc(100% - 20px));max-height:min(44%,310px);padding:13px 15px 11px}#forum-source-network .prologue-topline{margin-bottom:8px}#forum-source-network .prologue-screen h2{font-size:17px}#forum-source-network .prologue-lead{font-size:11px;margin-bottom:9px}#forum-source-network .prologue-records li{padding:7px 0}}
 @media(max-height:650px) and (min-width:701px){#forum-source-network .prologue-screen{top:12px;max-height:calc(100% - 24px);padding:12px 16px}#forum-source-network .prologue-topline{margin-bottom:8px}#forum-source-network .prologue-lead{margin-bottom:9px}#forum-source-network .prologue-records li{padding:6px 0}}
+
+/* The prologue is one full stage between the cover and the five-chapter map. */
+#forum-source-network .stage.prologue-mode>.map-plane,#forum-source-network .stage.prologue-mode>.three-scene{visibility:hidden!important}
+#forum-source-network .prologue-screen{inset:0;top:0;left:0;width:100%;height:100%;max-height:none;display:flex;align-items:center;justify-content:center;padding:clamp(26px,5vh,62px) clamp(24px,5vw,80px);border:0;box-shadow:none;background:var(--paper)}
+#forum-source-network .prologue-content{width:min(940px,100%);margin:auto}
+#forum-source-network .prologue-topline{margin-bottom:19px}
+#forum-source-network .prologue-eyebrow{font-size:12px;letter-spacing:.06em}
+#forum-source-network .prologue-screen h2{font-size:clamp(24px,2.35vw,33px);line-height:1.28;margin:0 0 20px;font-weight:760}
+#forum-source-network .prologue-decade{display:grid;grid-template-columns:1fr 1fr;gap:0 36px;margin:22px 0 0;padding:20px 0 15px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+#forum-source-network .prologue-decade-range{grid-column:1/-1;margin-bottom:22px;font-size:13px;gap:18px}
+#forum-source-network .prologue-decade-range i{height:2px}
+#forum-source-network .prologue-decade-range i::after{width:7px;height:7px}
+#forum-source-network .prologue-axis{padding:8px 0 10px}
+#forum-source-network .prologue-axis+.prologue-axis{border-top:0;border-left:1px solid var(--faint);padding-left:36px}
+#forum-source-network .prologue-axis-label{font-size:13px;margin-bottom:20px}
+#forum-source-network .prologue-axis-flow{grid-template-columns:max-content minmax(28px,1fr) minmax(0,1.5fr);gap:12px}
+#forum-source-network .prologue-axis-flow span{font-size:15px}
+#forum-source-network .prologue-axis-flow strong{font-size:18px;line-height:1.35}
+#forum-source-network .prologue-axis-flow i{height:2px}
+#forum-source-network .prologue-axis p{font-size:11px;line-height:1.65;margin-top:17px}
+#forum-source-network .prologue-footer{margin-top:22px}
+#forum-source-network .prologue-bridge{font-size:14px;line-height:1.7;max-width:760px}
+#forum-source-network .prologue-source{font-size:10px;margin-top:13px}
+@media(max-width:700px){#forum-source-network .prologue-screen{inset:0;top:0;bottom:0;left:0;width:100%;height:100%;max-height:none;padding:22px 20px}#forum-source-network .prologue-topline{margin-bottom:13px}#forum-source-network .prologue-screen h2{font-size:22px;margin-bottom:14px}#forum-source-network .prologue-decade{grid-template-columns:1fr;gap:0;margin-top:14px;padding:12px 0 4px}#forum-source-network .prologue-decade-range{margin-bottom:10px;font-size:11px}#forum-source-network .prologue-axis{padding:9px 0}#forum-source-network .prologue-axis+.prologue-axis{border-left:0;border-top:1px solid var(--faint);padding-left:0}#forum-source-network .prologue-axis-label{font-size:11px;margin-bottom:8px}#forum-source-network .prologue-axis-flow span{font-size:12px}#forum-source-network .prologue-axis-flow strong{font-size:14px}#forum-source-network .prologue-axis p{font-size:10px;margin-top:7px}#forum-source-network .prologue-footer{margin-top:12px}#forum-source-network .prologue-bridge{font-size:12px}}
