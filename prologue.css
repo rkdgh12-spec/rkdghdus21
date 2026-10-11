@@ -114,3 +114,21 @@
 #forum-source-network .prologue-footer{margin-top:auto;padding-top:clamp(45px,7vh,90px)}
 #forum-source-network .prologue-source{margin-top:12px}
 @media(max-width:700px){#forum-source-network .prologue-screen h2{margin-top:clamp(15px,4vh,38px)}#forum-source-network .prologue-decade{margin-top:clamp(24px,5vh,48px)}#forum-source-network .prologue-footer{padding-top:25px}}
+
+/* A clear parent-to-child gap; the two child nodes remain one vertical progression. */
+#forum-source-network .prologue-axis-label::before{width:10px;height:10px;background:#173d47}
+#forum-source-network .prologue-axis-label strong{font-size:19px;font-weight:800;letter-spacing:-.025em}
+#forum-source-network .prologue-axis-label::after{height:44px;margin-top:14px;background:linear-gradient(180deg,#aec0c2,#d6e0e0)}
+#forum-source-network .prologue-axis-flow .prologue-term{min-height:76px}
+#forum-source-network .prologue-axis-flow .prologue-term::before{width:7px;height:7px;margin-bottom:9px}
+#forum-source-network .prologue-axis-flow .prologue-term-before::before{background:#8b9a9d}
+#forum-source-network .prologue-axis-flow .prologue-term-after::before{background:#4e7b82}
+#forum-source-network .prologue-axis-flow .prologue-term-title{font-size:12px;font-weight:700}
+#forum-source-network .prologue-axis-flow>i{height:44px;margin:0 auto 3px;background:linear-gradient(180deg,#b9cacc,#688d92);opacity:1}
+#forum-source-network .prologue-decade-range{height:300px}
+@media(max-width:700px){#forum-source-network .prologue-axis-label strong{font-size:14px}#forum-source-network .prologue-axis-label::after{height:24px;margin-top:9px}#forum-source-network .prologue-axis-flow .prologue-term{min-height:74px}#forum-source-network .prologue-axis-flow .prologue-term-title{font-size:10px}#forum-source-network .prologue-axis-flow>i{height:29px}#forum-source-network .prologue-decade-range{height:245px}}
+
+#forum-source-network .prologue-content{box-sizing:border-box;padding-bottom:clamp(22px,4vh,48px)}
+#forum-source-network .prologue-screen h2{margin-top:clamp(12px,2vh,28px)}
+#forum-source-network .prologue-footer{padding-top:clamp(24px,4vh,50px)}
+@media(max-width:700px){#forum-source-network .prologue-content{padding-bottom:15px}#forum-source-network .prologue-screen h2{margin-top:8px}#forum-source-network .prologue-footer{padding-top:14px}}
