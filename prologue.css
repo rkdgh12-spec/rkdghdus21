@@ -174,3 +174,7 @@
 /* Start the timeline halfway between the theme heading and first term. */
 #forum-source-network .prologue-decade-range{margin-top:91px;height:209px}
 @media(max-width:700px){#forum-source-network .prologue-decade-range{margin-top:63px;height:182px}}
+
+/* Lower only the chronology endpoint by two text lines. */
+#forum-source-network .prologue-decade-range{height:237px}
+@media(max-width:700px){#forum-source-network .prologue-decade-range{height:205px}}
