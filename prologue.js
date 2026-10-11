@@ -1,6 +1,6 @@
 // The decade is a visual preface; the connected map remains the presentation.
 window.FORUM_PROLOGUE = {
-  source: '80주년사 조소전공 원고(초고) 기반',
+  source: '',
   slides: [{
     title: '지난 10년의 변화',
     eyebrow: '프롤로그 · 10년의 기록',
