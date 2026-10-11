@@ -211,5 +211,5 @@
 #forum-source-network .prologue-question-only .prologue-bridge{margin:0;max-width:900px;text-align:center}
 
 /* Lower the decade diagram as a whole without moving its stage title. */
-#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(40px)}
-@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(24px)}}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(65px)}
+@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(39px)}}
