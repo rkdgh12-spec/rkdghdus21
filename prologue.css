@@ -238,3 +238,6 @@
 /* Slightly reduce the question and terrain bridge slides. */
 #forum-source-network .prologue-question-only .prologue-bridge{font-size:23.5px}
 @media(max-width:700px){#forum-source-network .prologue-question-only .prologue-bridge{font-size:21.6px}}
+
+/* Soften only the weight of the two centered bridge slides. */
+#forum-source-network .prologue-question-only .prologue-bridge{font-weight:700;-webkit-text-stroke:0}
