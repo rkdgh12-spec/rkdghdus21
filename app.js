@@ -264,12 +264,30 @@
       for(const n of points)if(n.kind!=='person'&&visible.has(n.parent)&&expanded.has(n.parent))visible.add(n.id);
     }
     function select(id){return recordStep(()=>selectStep(id))}
+    let personBranchReveal=null;
+    function personBranchState(e){
+      if(!personBranchReveal||selected!==personBranchReveal.id)return null;
+      const person=nodes[personBranchReveal.id],a=nodes[e.source],b=nodes[e.target];
+      const branch=e.kind==='hierarchy'&&a.id===person.id&&b.kind==='concept';
+      const related=[a,b].some(n=>n.person===person.label&&n.kind==='concept');
+      if(!branch&&!related)return null;
+      const elapsed=personBranchReveal.start===null?-1:performance.now()-personBranchReveal.start;
+      const progress=elapsed<0?0:Math.min(1,elapsed/1000);
+      return branch?{opacity:progress>0?1:0,progress,reverse:false,trace:true}:{opacity:elapsed<1000?0:Math.min(1,(elapsed-1000)/350),progress:1,reverse:false,trace:false};
+    }
+    function revealPersonBranches(id){
+      if(!personBranchReveal||personBranchReveal.id!==id||personBranchReveal.start!==null)return;
+      const reveal=personBranchReveal;reveal.start=performance.now();
+      function tick(){if(personBranchReveal!==reveal||selected!==id)return;render();if(performance.now()-reveal.start<1400)requestAnimationFrame(tick)}
+      requestAnimationFrame(tick);
+    }
     function markStepArrival(id,append=false){
       if(!append)for(const el of root.querySelectorAll('.step-arrived'))el.classList.remove('step-arrived');
       if(id===null||(!append&&selected!==id))return;
       const n=nodes[id];
       (n.kind==='chapter'?areas.get(id)?.heading:elems.get(id)?.b)?.classList.add('step-arrived');
       threeNodes.get(id)?.classList.add('step-arrived');
+      if(selected===id&&nodes[id].kind==='person')revealPersonBranches(id);
     }
     function selectStep(id){
       markStepArrival(null);
@@ -277,6 +295,7 @@
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
       const previous=selected,before=new Set(visible);selected=id;
+      personBranchReveal=nodes[id].kind==='person'?{id,start:null}:null;
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
       if(guided)for(const line of paths)for(const animation of line.getAnimations())animation.cancel();
       if(presentationMode&&!applyingCue){
@@ -961,7 +980,7 @@
         const start=nodes[e.source],end=nodes[e.target],a=threeHeight(start),b=threeHeight(end);
         const samples=Array.from({length:13},(_,j)=>{const t=j/12,p=path.getPointAtLength(length*t);return project((p.x-ox)/k,(p.y-oy)/k,a+(b-a)*t)});
         const d=samples.map((p,j)=>(j?'L':'M')+p.x+','+p.y).join('');
-        const revealState=fullRevealEdge(e,i),projectedLength=samples.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p.x-samples[j].x,p.y-samples[j].y),0);
+        const revealState=personBranchState(e)||fullRevealEdge(e,i),projectedLength=samples.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p.x-samples[j].x,p.y-samples[j].y),0);
         const traceStyle=revealState.trace?` style="stroke-dasharray:${projectedLength} ${projectedLength};stroke-dashoffset:${(revealState.reverse?-1:1)*projectedLength*(1-revealState.progress)}"`:'';
         const chapterPersonGuide=start.kind==='chapter'&&e.kind==='hierarchy';
         const markup=`<g opacity="${chapterPersonGuide?0:revealState.opacity}"><path class="${path.getAttribute('class')} three-connection" data-edge-index="${i}" d="${d}"${traceStyle}/></g>`;
@@ -1031,7 +1050,7 @@
         if(shown&&linkedMeaning){if(a.kind==='question')connectedQuestions.add(e.source);if(b.kind==='question')connectedQuestions.add(e.target)}
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
         l.style.display=shown?'':'none';l.setAttribute('d',connectionPath(e));
-        const revealState=fullReveal&&shown?fullRevealEdge(e,i):null;
+        const revealState=shown?(personBranchState(e)||(fullReveal?fullRevealEdge(e,i):null)):null;
         const chapterPersonGuide=a.kind==='chapter'&&e.kind==='hierarchy';
         l.style.filter=chapterPersonGuide?'opacity(0)':revealState?`opacity(${revealState.opacity})`:'';
         if(revealState?.trace){const length=l.getTotalLength();l.style.strokeDasharray=`${length} ${length}`;l.style.strokeDashoffset=String((revealState.reverse?-1:1)*length*(1-revealState.progress))}
