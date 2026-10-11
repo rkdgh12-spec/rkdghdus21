@@ -234,3 +234,7 @@
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis p{font-size:8.8px}
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade-range{font-size:8.8px}
 }
+
+/* Slightly reduce the question and terrain bridge slides. */
+#forum-source-network .prologue-question-only .prologue-bridge{font-size:23.5px}
+@media(max-width:700px){#forum-source-network .prologue-question-only .prologue-bridge{font-size:21.6px}}
