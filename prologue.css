@@ -241,3 +241,19 @@
 
 /* Soften only the weight of the two centered bridge slides. */
 #forum-source-network .prologue-question-only .prologue-bridge{font-weight:700;-webkit-text-stroke:0}
+
+/* Increase first-slide type another eight percent with its hierarchy intact. */
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis-label strong{font-size:20.196px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-term-title{font-size:14.256px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis-flow .prologue-term-value{font-size:11.88px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis p{font-size:10.692px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade-range{font-size:11.88px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{top:18px;left:20px}
+@media(max-width:700px){
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis-label strong{font-size:16.632px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-term-title{font-size:11.88px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis-flow .prologue-term-value{font-size:9.504px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis p{font-size:9.504px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade-range{font-size:9.504px}
+#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{top:12px;left:12px}
+}
