@@ -232,3 +232,10 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-top{justify-content:flex-start}
 #forum-source-network .intro-top span{white-space:nowrap}
 @media(max-width:700px){#forum-source-network .intro-top{font-size:10px}}
+
+/* Four clear levels: event, symposium theme, presentation title, subtitle. */
+#forum-source-network .intro-top{font-size:12px;font-weight:400;line-height:1.6;color:var(--secondary)}
+#forum-source-network .intro-forum-title{font-size:15px;font-weight:600;line-height:1.5;margin:0 0 24px;color:var(--secondary)}
+#forum-source-network .intro h1{font-size:30px;font-weight:750;line-height:1.35;margin:0 0 12px;color:var(--ink)}
+#forum-source-network .intro-description{font-size:18px;font-weight:450;line-height:1.6;color:var(--secondary)}
+@media(max-width:700px){#forum-source-network .intro-top{font-size:10px}#forum-source-network .intro-forum-title{font-size:13px}#forum-source-network .intro h1{font-size:27px}#forum-source-network .intro-description{font-size:16px}}
