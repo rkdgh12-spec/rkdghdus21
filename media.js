@@ -388,17 +388,29 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "권현빈/Q4": {
-    "title": "",
-    "src": "",
+    "title": "권현빈 인터뷰 Q4 · 자기소개 포함",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kwon-volume-matched-20261012/kwon-hyunbin-q4-intro-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/kwon-hyunbin-q4.ko.vtt?v=kwon-videos-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "권현빈/Q5": {
-    "title": "",
-    "src": "",
+    "title": "권현빈 인터뷰 Q5",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kwon-volume-matched-20261012/kwon-hyunbin-q5-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/kwon-hyunbin-q5.ko.vtt?v=kwon-videos-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "권현빈/Q2": {
@@ -409,10 +421,16 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "권현빈/Q6": {
-    "title": "",
-    "src": "",
+    "title": "권현빈 인터뷰 Q6",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kwon-volume-matched-20261012/kwon-hyunbin-q6-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/kwon-hyunbin-q6.ko.vtt?v=kwon-videos-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "채길원/Q5": {
