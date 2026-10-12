@@ -32,14 +32,12 @@
     if(!candidate||!Number.isFinite(candidate.start))return;
     sequence=candidate;
     frames=sequence.images.map(work=>{
-      const figure=document.createElement('figure');figure.hidden=true;
+      const figure=document.createElement('figure');figure.hidden=true;figure.classList.toggle('work-image-restored',!!work.restored);
       const image=document.createElement('img');image.src=work.src;image.alt=work.caption;
       image.decoding='async';image.addEventListener('load',()=>sync());
       figure.append(image);
-      if(!work.captionEmbedded){
-        const caption=document.createElement('figcaption');caption.textContent=work.caption;
-        figure.append(caption);
-      }
+      const caption=document.createElement('figcaption');caption.textContent=work.caption;
+      figure.append(caption);
       overlay.append(figure);return {figure,image};
     });
     overlay.append(speech);

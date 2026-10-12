@@ -351,3 +351,10 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #interview-dialog .work-images-active .interview-intro-caption,#interview-dialog .work-images-intro-finished .interview-intro-caption{display:none!important}
 #interview-dialog .work-image-speech{position:absolute;top:83.4%;left:3%;width:94%;color:#fff;font-family:Pretendard,"Noto Sans KR",sans-serif;font-size:clamp(21.6px,2.52vw,40.8px);font-weight:500;line-height:1.2;text-align:center;white-space:pre-line;text-shadow:-1.6px 0 0 #4b4b4b,1.6px 0 0 #4b4b4b,0 -1.6px 0 #4b4b4b,0 1.6px 0 #4b4b4b,-1.6px -1.6px 0 #4b4b4b,1.6px -1.6px 0 #4b4b4b,-1.6px 1.6px 0 #4b4b4b,1.6px 1.6px 0 #4b4b4b,0 3px 6px rgba(60,60,60,.55)}
 
+
+/* Natural presentation tone for selected restored photographs only. */
+#interview-dialog #interview-work-images figure.work-image-restored{isolation:isolate;background:#000}
+#interview-dialog #interview-work-images figure.work-image-restored img{filter:brightness(.90) contrast(1.05) saturate(.96)}
+#interview-dialog #interview-work-images figure.work-image-restored::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:url('images/interview-works/grain.svg') repeat;opacity:.18;mix-blend-mode:soft-light}
+#interview-dialog #interview-work-images figcaption{z-index:2}
+#interview-dialog .work-image-speech{z-index:3}

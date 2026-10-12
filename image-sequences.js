@@ -4,7 +4,8 @@ window.FORUM_IMAGE_INSERTS = {
     "images": [
       {
         "caption": "오시선 무빙 팻말",
-        "src": "images/interview-works/park-jaeyoung-1.jpg"
+        "src": "images/interview-works/park-jaeyoung-1-restored.jpg",
+        "restored": true
       },
       {
         "caption": "오시선 스튜디오 전경",
@@ -34,12 +35,13 @@ window.FORUM_IMAGE_INSERTS = {
     "images": [
       {
         "caption": "GBC Hyundai Motor Group HQ Public Art Directing, Creative Directing & PM",
-        "src": "images/interview-works/an-junghwan-1.jpg"
+        "src": "images/interview-works/an-junghwan-1-restored.jpg",
+        "restored": true
       },
       {
         "caption": "Incheon Airport Terminal 1 Art Installation Project / Do Ho Suh, Seon-Ghi Bahk, Concept Planning and Artist Recruitment",
-        "captionEmbedded": false,
-        "src": "images/interview-works/an-junghwan-2.jpg"
+        "src": "images/interview-works/an-junghwan-2-restored-clean.jpg",
+        "restored": true
       }
     ]
   },
@@ -52,7 +54,8 @@ window.FORUM_IMAGE_INSERTS = {
       },
       {
         "caption": "2014년 문화역서울 284 기획프로그램3 <최정화_총천연색>展 기획 및 진행, 전시장 운영관리",
-        "src": "images/interview-works/choi-jihye-2.jpg"
+        "src": "images/interview-works/choi-jihye-2-restored.jpg",
+        "restored": true
       }
     ]
   },
@@ -96,4 +99,3 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   }
 };
-
