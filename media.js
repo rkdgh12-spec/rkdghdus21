@@ -226,14 +226,26 @@ window.FORUM_MEDIA = {
     "title": "안정환 인터뷰 Q4 · 자기소개 포함",
     "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-an-volume-matched-20261012/an-junghwan-q4-intro-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/an-junghwan-q4.ko.vtt?v=an-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "안정환/Q5": {
     "title": "안정환 인터뷰 Q5",
     "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-an-volume-matched-20261012/an-junghwan-q5-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/an-junghwan-q5.ko.vtt?v=an-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "안정환/Q6": {
