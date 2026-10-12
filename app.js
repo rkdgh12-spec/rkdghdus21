@@ -320,7 +320,7 @@
       if(selected===id&&nodes[id].kind==='person')revealPersonBranches(id);
     }
     function selectStep(id){
-      cameraReadingNode=null;
+      cameraReadingNode=null;cameraReadingCentered=false;idleYaw=0;idleElevation=0;idleStrength=0;
       markStepArrival(null);
       setPrologueView(null);
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
@@ -404,7 +404,7 @@
     // Keep camera travel and connection tracing synchronized at 1.05x speed.
     const NODE_TRAVEL_MS=2352;
     const NODE_READING_HOLD_MS=1200;
-    let cameraReadingNode=null;
+    let cameraReadingNode=null,cameraReadingCentered=false;
     function travel(points,duration,frame,done){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
@@ -429,12 +429,8 @@
     const NODE_ZOOM_LEVELS={chapter:1,person:2,concept:4,subconcept:8,question:8};
     const nodeZoomLevel=node=>NODE_ZOOM_LEVELS[node.kind]||1;
     function centerReadingText(id){
-      for(let i=0;i<12;i++){
-        const p=selectedTextPoint(id),dx=width/2-p.x,dy=height/2-p.y;
-        if(Math.abs(dx)<.5&&Math.abs(dy)<.5)break;
-        if(depthEnabled){threePanX+=dx;threePanY+=dy;render3D()}
-        else{ox+=dx;oy+=dy;render()}
-      }
+      cameraReadingNode=id;cameraReadingCentered=true;
+      if(depthEnabled)render3D();else render();
     }
     function readableWaypoints(from,to){
       if(from===null||from===to||nodes[from].person!==nodes[to].person||!nodes[to].person)return [to];
@@ -449,7 +445,7 @@
       const movingMs=route.length>1?Math.max(850,Math.round(NODE_TRAVEL_MS/route.length)):NODE_TRAVEL_MS;
       let index=0,previous=from;
       function next(){
-        const target=route[index];cameraReadingNode=target;
+        const target=route[index];cameraReadingNode=target;cameraReadingCentered=false;
         followConnectionToLabel(previous,target,()=>{
           const motion=cameraMotion;markStepArrival(target,true);centerReadingText(target);
           if(index===route.length-1){after();return}
@@ -484,7 +480,6 @@
         }
         const p=threeProjected[focusId];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
-        for(let i=0;i<10;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
         if(conceptGroup.length>=3){
           const xs=conceptGroup.map(nid=>threeProjected[nid].x),ys=conceptGroup.map(nid=>threeProjected[nid].y);
           threePanX+=width/2-(Math.min(...xs)+Math.max(...xs))/2;
@@ -559,7 +554,6 @@
         return;
       }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
-      for(let i=0;i<10;i++){const label=selectedTextPoint(id);ox+=width/2-label.x;oy+=height/2-label.y;render()}
       const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
       const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();centerReadingText(id);after()};
       if(reducedMotion){finish();return}
@@ -1100,6 +1094,7 @@
         for(const gap of [10,18,26,36,50,66]){const diagonal=gap*.71;candidates.push([x+gap,y-lh/2],[x-lw-gap,y-lh/2],[x-lw/2,y+gap],[x-lw/2,y-lh-gap],[x+diagonal,y+diagonal],[x-lw-diagonal,y+diagonal],[x+diagonal,y-lh-diagonal],[x-lw-diagonal,y-lh-diagonal])}
         let choice=null;for(const [lx,ly] of candidates){const box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}}
         if(!choice&&stage.classList.contains('high-zoom-labels'))choice=zoomLabelFallback(x,y,lw,lh);
+        if(cameraReadingCentered&&selected!==null&&cameraReadingNode===n.id)choice={x:width/2-lw/2,y:height/2-lh/2,w:lw,h:lh};
         if(choice){label.style.left=choice.x-x+b.offsetWidth/2+'px';label.style.top=choice.y-y+b.offsetHeight/2+'px';label.style.width=choice.w+'px';boxes.push(choice);reservePersonMetadata(label,b,choice,boxes)}else label.style.display='none';
       }
     }
@@ -1219,6 +1214,7 @@
           if(boxes.every(r=>separated(box,r,8))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}
         }
         if(!choice&&stage.classList.contains('high-zoom-labels'))choice=zoomLabelFallback(x,y,lw,lh);
+        if(cameraReadingCentered&&selected!==null&&cameraReadingNode===n.id)choice={x:width/2-lw/2,y:height/2-lh/2,w:lw,h:lh};
         if(choice){label.style.left=(choice.x-x+b.offsetWidth/2)+'px';label.style.top=(choice.y-y+b.offsetHeight/2)+'px';label.style.width=choice.w+'px';boxes.push(choice);reservePersonMetadata(label,b,choice,boxes)}else label.style.display='none';
       }
       render3D();
@@ -1231,8 +1227,8 @@
     stage.addEventListener('wheel',e=>{if(prologueOpen)return;e.preventDefault();const r=stage.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0014),e.clientX-r.left,e.clientY-r.top)},{passive:false});
     const pointers=new Map();let pinch=null,framePending=false;
     function scheduleRender(){if(framePending)return;framePending=true;requestAnimationFrame(()=>{framePending=false;render()})}
-    stage.addEventListener('wheel',()=>{if(prologueOpen)return;cameraMotion++;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
-    stage.addEventListener('pointerdown',()=>{if(prologueOpen)return;cameraMotion++;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},true);
+    stage.addEventListener('wheel',()=>{if(prologueOpen)return;cameraMotion++;cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
+    stage.addEventListener('pointerdown',()=>{if(prologueOpen)return;cameraMotion++;cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},true);
     stage.addEventListener('pointermove',()=>{if(depthEnabled&&pointers.size)lastManual3D=performance.now()},true);
     stage.addEventListener('pointerdown',e=>{if(prologueOpen)return;if(e.button!==0&&!(depthEnabled&&e.button===1))return;if(depthEnabled)e.preventDefault();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});stage.setPointerCapture(e.pointerId);if(pointers.size===1)drag={x:e.clientX,y:e.clientY,ox,oy,panX:threePanX,panY:threePanY,rotate:depthEnabled&&e.button===1};else if(pointers.size===2){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;pinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),k:depthEnabled?threeZoom:k,wx:(cx-ox)/k,wy:(cy-oy)/k,cx,cy,panX:threePanX,panY:threePanY};drag=null}});
     stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const previous=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(depthEnabled){if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;threeZoom=Math.max(.45,Math.min(maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));const ratio=threeZoom/pinch.k;threePanX=pinch.panX+cx-pinch.cx-(pinch.cx-width/2)* (ratio-1)+pinch.panX*(ratio-1);threePanY=pinch.panY+cy-pinch.cy-(pinch.cy-height/2)*(ratio-1)+pinch.panY*(ratio-1);scheduleRender()}else if(drag?.rotate){threeYaw+=(e.clientX-previous.x)*.006;threeElevation=Math.max(.28,Math.min(1.45,threeElevation-(e.clientY-previous.y)*.005));scheduleRender()}else if(drag){threePanX=drag.panX+e.clientX-drag.x;threePanY=drag.panY+e.clientY-drag.y;scheduleRender()}return}if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect();k=Math.max(fitK*.45,Math.min(fitK*maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));ox=(a.x+b.x)/2-r.left-pinch.wx*k;oy=(a.y+b.y)/2-r.top-pinch.wy*k;scheduleRender()}else if(drag){ox=drag.ox+e.clientX-drag.x;oy=drag.oy+e.clientY-drag.y;scheduleRender()}});
@@ -1243,7 +1239,7 @@
       setTimeout(()=>requestAnimationFrame(idleMotionTick),70);
       if(!depthEnabled||prologueOpen||document.hidden||reducedMotion||!q('.intro').hidden)return;
       if(now-lastIdleFrame<70)return;lastIdleFrame=now;
-      const target=now-lastManual3D>1800&&pointers.size===0?1:0;
+      const target=now-lastManual3D>1800&&pointers.size===0&&!(selected!==null&&cameraReadingNode!==null)?1:0;
       idleStrength+=(target-idleStrength)*.14;
       const yaw=Math.sin(now/4300)*.06*idleStrength,elevation=Math.cos(now/6100)*.03*idleStrength;
       if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.00015)return;
