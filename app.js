@@ -320,6 +320,7 @@
       if(selected===id&&nodes[id].kind==='person')revealPersonBranches(id);
     }
     function selectStep(id){
+      cameraReadingNode=null;
       markStepArrival(null);
       setPrologueView(null);
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
@@ -346,14 +347,9 @@
         const arrivalMotion=cameraMotion;
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
-      followConnectionToLabel(previous,id,()=>{cameraArrived=true;if(!guided)markStepArrival(id,true);revealQuestion()});
-      if(guided){
-        const chapterTransfer=nodes[id].kind==='chapter'&&nodes[previous].chapter!==nodes[id].chapter;
-        const personTransfer=nodes[id].kind==='person'&&nodes[previous].person&&nodes[previous].person!==nodes[id].person;
-        if(chapterTransfer||personTransfer){
-          traceRoute(previous,id,()=>{routeArrived=true;markStepArrival(id,true);revealQuestion()},NODE_TRAVEL_MS,true);
-        }else traceRoute(previous,id,()=>{routeArrived=true;markStepArrival(id,true);revealQuestion()},NODE_TRAVEL_MS);
-      }
+      followReadableRoute(previous,id,guided,()=>{
+        cameraArrived=true;routeArrived=true;markStepArrival(id,true);revealQuestion();
+      });
       save();
       q('#map-status').textContent=displayLabel(nodes[id])+' 선택';
     }
@@ -405,8 +401,10 @@
       const box=element.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
-    // Keep camera travel and connection tracing synchronized at 1.1x speed.
-    const NODE_TRAVEL_MS=2245;
+    // Keep camera travel and connection tracing synchronized at 1.05x speed.
+    const NODE_TRAVEL_MS=2352;
+    const NODE_READING_HOLD_MS=1200;
+    let cameraReadingNode=null;
     function travel(points,duration,frame,done){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
@@ -430,7 +428,38 @@
     // All destinations use the same hierarchy scale, independent of the incoming route.
     const NODE_ZOOM_LEVELS={chapter:1,person:2,concept:4,subconcept:8,question:8};
     const nodeZoomLevel=node=>NODE_ZOOM_LEVELS[node.kind]||1;
-    function followConnectionToLabel(previous,id,after){
+    function centerReadingText(id){
+      for(let i=0;i<12;i++){
+        const p=selectedTextPoint(id),dx=width/2-p.x,dy=height/2-p.y;
+        if(Math.abs(dx)<.5&&Math.abs(dy)<.5)break;
+        if(depthEnabled){threePanX+=dx;threePanY+=dy;render3D()}
+        else{ox+=dx;oy+=dy;render()}
+      }
+    }
+    function readableWaypoints(from,to){
+      if(from===null||from===to||nodes[from].person!==nodes[to].person||!nodes[to].person)return [to];
+      // ancestors() is root-first, so walk the actual parent chain for the return leg.
+      const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
+      const a=chain(from),b=chain(to),join=a.find(nid=>b.includes(nid));
+      if(join===undefined)return [to];
+      return [...a.slice(1,a.indexOf(join)+1),...b.slice(0,b.indexOf(join)).reverse()].filter(nid=>visible.has(nid));
+    }
+    function followReadableRoute(from,to,guided,after){
+      const route=guided?readableWaypoints(from,to):[to];
+      const movingMs=route.length>1?Math.max(850,Math.round(NODE_TRAVEL_MS/route.length)):NODE_TRAVEL_MS;
+      let index=0,previous=from;
+      function next(){
+        const target=route[index];cameraReadingNode=target;
+        followConnectionToLabel(previous,target,()=>{
+          const motion=cameraMotion;markStepArrival(target,true);centerReadingText(target);
+          if(index===route.length-1){after();return}
+          setTimeout(()=>{if(cameraMotion!==motion||selected!==to)return;previous=target;index++;next()},reducedMotion?0:NODE_READING_HOLD_MS);
+        },movingMs);
+        if(guided)traceRoute(previous,target,null,movingMs,true);
+      }
+      next();
+    }
+    function followConnectionToLabel(previous,id,after,movementMs=NODE_TRAVEL_MS){
       cameraMotion++;
       if(depthEnabled){
         lastManual3D=performance.now();
@@ -455,7 +484,7 @@
         }
         const p=threeProjected[focusId];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
-        for(let i=0;i<2;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
+        for(let i=0;i<10;i++){const label=selectedTextPoint(focusId);threePanX+=width/2-label.x;threePanY+=height/2-label.y;render3D()}
         if(conceptGroup.length>=3){
           const xs=conceptGroup.map(nid=>threeProjected[nid].x),ys=conceptGroup.map(nid=>threeProjected[nid].y);
           threePanX+=width/2-(Math.min(...xs)+Math.max(...xs))/2;
@@ -465,7 +494,7 @@
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
         const goalFocus={x:threeProjected[focusId].x,y:threeProjected[focusId].y};
         threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
-        const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();after()};
+        const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();centerReadingText(id);after()};
         if(reducedMotion){finish();return}
         const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
         const zoomSteps=Math.abs(Math.log2(goal.zoom/start.zoom));
@@ -481,7 +510,7 @@
           const from=sourceId!==undefined&&sourceId!==null?threeProjected[sourceId]:null,to=threeProjected[id];
           const midpoint=from&&to?{x:start.x+width/2-(from.x+to.x)/2,y:start.y+height/2-(from.y+to.y)/2}:{x:start.x,y:start.y};
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
-          travel([start,goal],NODE_TRAVEL_MS,(_p,progress)=>{
+          travel([start,goal],movementMs,(_p,progress)=>{
             lastManual3D=performance.now();
             if(progress<.42){
               const t=smooth(progress/.42);
@@ -497,7 +526,7 @@
             render3D();
           },finish);
         }else{
-          travel([start,goal],NODE_TRAVEL_MS,(p,progress)=>{
+          travel([start,goal],movementMs,(p,progress)=>{
             lastManual3D=performance.now();
             threePanX=p.x;threePanY=p.y;
             threeZoom=start.zoom+(goal.zoom-start.zoom)*progress;
@@ -524,18 +553,18 @@
         k=Math.max(fitK*.45,Math.min(k,width*.56/Math.max(1,maxx-minx),height*.50/Math.max(1,maxy-miny)));
         ox=width/2-(minx+maxx)*k/2;oy=height/2-(miny+maxy)*k/2;render();
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
-        const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();after()};
+        const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();centerReadingText(id);after()};
         if(reducedMotion){finish();return}
-        travel([start,goal],NODE_TRAVEL_MS,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish);
+        travel([start,goal],movementMs,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish);
         return;
       }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
-      for(let i=0;i<2;i++){const label=selectedTextPoint(id);ox+=width/2-label.x;oy+=height/2-label.y;render()}
+      for(let i=0;i<10;i++){const label=selectedTextPoint(id);ox+=width/2-label.x;oy+=height/2-label.y;render()}
       const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
-      const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();after()};
+      const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();centerReadingText(id);after()};
       if(reducedMotion){finish();return}
       const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
-      travel([start,goal],NODE_TRAVEL_MS,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish);
+      travel([start,goal],movementMs,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish);
     }
     function showDetail(n,openQuestion=true){
       if(!n){markStepArrival(null);panel.hidden=true;detail.hidden=true;detail.innerHTML='';return}
@@ -810,7 +839,7 @@
       q('#cue-label').textContent=stepHistory[stepIndex]?stepLabel(stepHistory[stepIndex]):'주제 선택';q('#cue-count').textContent=stepIndex+' / '+Math.max(0,stepHistory.length-1);
     }
     function moveStep(delta){
-      const target=stepIndex+delta;if(target<0||target>=stepHistory.length)return;if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;
+      cameraReadingNode=null;const target=stepIndex+delta;if(target<0||target>=stepHistory.length)return;if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;
       stepHistory[stepIndex]=snapshotStep();stepIndex=target;const s=stepHistory[stepIndex],before=new Set(visible);restoringStep=true;
       try{
         if(dialog.open)closeInterview();
@@ -1005,7 +1034,7 @@
       for(const p of coreBoundary)base.push(rawXYZ(p[0],p[1],210));
       if(outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
       const minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
-      const cameraNode=selected!==null?nodes[selected]:threeCenter;
+      const cameraNode=selected!==null?nodes[cameraReadingNode??selected]:threeCenter;
       const centerPoint=rawXYZ(cameraNode.x,cameraNode.y,threeHeight(cameraNode));
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
@@ -1063,7 +1092,7 @@
         b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
       }
       const selectedQuestionParent=selected!==null&&nodes[selected].kind==='question'?nodes[selected].parent:null;
-      const labelPriority=n=>n.id===selected?0:n.id===selectedQuestionParent?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
+      const labelPriority=n=>n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.id===selectedQuestionParent?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
         b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));setRevealOpacity(b,n);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
@@ -1165,7 +1194,7 @@
           outerOutline.setAttribute('d',contourPath(outer));
         }else outerOutline.setAttribute('d',roundEnvelope(envelopePoints));
       }
-      const labelPriority=n=>n.id===selected?0:n.kind==='person'?1:n.kind==='concept'?2:selectedBranch.has(n.id)?3:connectedQuestions.has(n.id)?4:n.kind==='subconcept'?5:6;
+      const labelPriority=n=>n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.kind==='person'?1:n.kind==='concept'?2:selectedBranch.has(n.id)?3:connectedQuestions.has(n.id)?4:n.kind==='subconcept'?5:6;
       const ordered=[...points].sort((a,b)=>labelPriority(a)-labelPriority(b));
       for(const n of ordered){
         const {b,label}=elems.get(n.id),x=n.x*k+ox,y=n.y*k+oy;
