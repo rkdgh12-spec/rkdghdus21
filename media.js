@@ -434,10 +434,16 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "채길원/Q5": {
-    "title": "",
-    "src": "",
+    "title": "채길원 인터뷰 Q5 · 자기소개 포함",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-chae-volume-matched-20261013/chae-gilwon-q5-intro-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/chae-gilwon-q5.ko.vtt?v=chae-videos-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "채길원/Q7": {
@@ -448,10 +454,16 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "채길원/Q4": {
-    "title": "",
-    "src": "",
+    "title": "채길원 인터뷰 Q4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-chae-volume-matched-20261013/chae-gilwon-q4-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/chae-gilwon-q4.ko.vtt?v=chae-videos-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "채길원/Q8": {

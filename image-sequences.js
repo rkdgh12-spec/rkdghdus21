@@ -108,10 +108,10 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   },
   "채길원/Q5": {
-    "start": null,
+    "start": 8.7,
     "images": [
       {
-        "caption": "김종영 미술관 (외부)",
+        "caption": "김종영 미술관 (내부)",
         "src": "images/interview-works/chae-gilwon-1.jpg"
       },
       {
