@@ -38,7 +38,7 @@ window.FORUM_IMAGE_INSERTS = {
       },
       {
         "caption": "Incheon Airport Terminal 1 Art Installation Project / Do Ho Suh, Seon-Ghi Bahk, Concept Planning and Artist Recruitment",
-        "captionEmbedded": true,
+        "captionEmbedded": false,
         "src": "images/interview-works/an-junghwan-2.jpg"
       }
     ]
