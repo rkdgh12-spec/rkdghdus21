@@ -9,7 +9,7 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q4": {
     "title": "최고은 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-volume-matched-20261011/choe-goeun-q4-intro-balanced.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/choe-goeun-q4-intro-dereverb-web.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -23,7 +23,7 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q5": {
     "title": "최고은 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-volume-matched-20261011/choe-goeun-q5-balanced.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/choe-goeun-q5-dereverb-web.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -93,7 +93,7 @@ window.FORUM_MEDIA = {
   },
   "강인애/Q3": {
     "title": "강인애 인터뷰 Q3 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kang-volume-matched-20261012/kang-inae-q3-intro-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/kang-inae-q3-intro-dereverb-web.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -107,7 +107,7 @@ window.FORUM_MEDIA = {
   },
   "강인애/Q5": {
     "title": "강인애 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kang-volume-matched-20261012/kang-inae-q5-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/kang-inae-q5-dereverb-web.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -196,7 +196,7 @@ window.FORUM_MEDIA = {
   },
   "민지희/Q5": {
     "title": "민지희 인터뷰 Q5 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-min-volume-matched-20261012/min-jihee-q5-intro-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/min-jihee-q5-intro-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -209,7 +209,7 @@ window.FORUM_MEDIA = {
   },
   "민지희/Q3 후속질문": {
     "title": "민지희 인터뷰 Q3 후속질문",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-min-volume-matched-20261012/min-jihee-q3-followup-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/min-jihee-q3-followup-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -236,7 +236,7 @@ window.FORUM_MEDIA = {
   },
   "안정환/Q4": {
     "title": "안정환 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-an-volume-matched-20261012/an-junghwan-q4-intro-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/an-junghwan-q4-intro-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -249,7 +249,7 @@ window.FORUM_MEDIA = {
   },
   "안정환/Q5": {
     "title": "안정환 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-an-volume-matched-20261012/an-junghwan-q5-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/an-junghwan-q5-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -290,7 +290,7 @@ window.FORUM_MEDIA = {
   },
   "최지혜/Q3": {
     "title": "최지혜 인터뷰 Q3",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choij-volume-matched-20261012/choi-jihye-q3-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/choi-jihye-q3-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -303,7 +303,7 @@ window.FORUM_MEDIA = {
   },
   "최지혜/Q4": {
     "title": "최지혜 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choij-volume-matched-20261012/choi-jihye-q4-intro-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/choi-jihye-q4-intro-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -316,7 +316,7 @@ window.FORUM_MEDIA = {
   },
   "최지혜/Q5": {
     "title": "최지혜 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choij-volume-matched-20261012/choi-jihye-q5-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/choi-jihye-q5-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -329,7 +329,7 @@ window.FORUM_MEDIA = {
   },
   "서해영/Q2": {
     "title": "서해영 인터뷰 Q2 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-seo-volume-matched-20261012/seo-haeyoung-q2-intro-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/seo-haeyoung-q2-intro-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -349,7 +349,7 @@ window.FORUM_MEDIA = {
   },
   "서해영/Q5": {
     "title": "서해영 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-seo-volume-matched-20261012/seo-haeyoung-q5-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/seo-haeyoung-q5-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -362,7 +362,7 @@ window.FORUM_MEDIA = {
   },
   "서해영/Q6": {
     "title": "서해영 인터뷰 Q6",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-seo-volume-matched-20261012/seo-haeyoung-q6-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/seo-haeyoung-q6-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -435,7 +435,7 @@ window.FORUM_MEDIA = {
   },
   "채길원/Q5": {
     "title": "채길원 인터뷰 Q5 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-chae-volume-matched-20261013/chae-gilwon-q5-intro-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/chae-gilwon-q5-intro-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
@@ -455,7 +455,7 @@ window.FORUM_MEDIA = {
   },
   "채길원/Q4": {
     "title": "채길원 인터뷰 Q4",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-chae-volume-matched-20261013/chae-gilwon-q4-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-dereverb-20261013/chae-gilwon-q4-dereverb-web.mp4",
     "poster": "",
     "captions": [
       {
