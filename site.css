@@ -358,3 +358,5 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #interview-dialog #interview-work-images figure.work-image-restored::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:url('images/interview-works/grain.svg') repeat;opacity:.18;mix-blend-mode:soft-light}
 #interview-dialog #interview-work-images figcaption{z-index:2}
 #interview-dialog .work-image-speech{z-index:3}
+
+#interview-dialog #interview-work-images .work-image-original-text{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;filter:brightness(.90) contrast(1.05) saturate(.96)}

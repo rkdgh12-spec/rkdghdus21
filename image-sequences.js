@@ -50,7 +50,19 @@ window.FORUM_IMAGE_INSERTS = {
     "images": [
       {
         "caption": "2014년 문화역서울 284 기획프로그램3 <최정화_총천연색>展 기획 및 진행, 전시장 운영관리",
-        "src": "images/interview-works/choi-jihye-1.jpg"
+        "src": "images/interview-works/choi-jihye-1-restored-text-safe.jpg",
+        "restored": true,
+        "originalText": {
+          "src": "images/interview-works/choi-jihye-1.jpg",
+          "width": 1329,
+          "height": 879,
+          "paths": [
+            "M750 288L816 300L818 540L746 527Z",
+            "M12 482H103V539H12Z",
+            "M946 623H1074V716H946Z",
+            "M1304 284H1329V345H1304Z"
+          ]
+        }
       },
       {
         "caption": "2014년 문화역서울 284 기획프로그램3 <최정화_총천연색>展 기획 및 진행, 전시장 운영관리",

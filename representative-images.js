@@ -36,6 +36,20 @@
       const image=document.createElement('img');image.src=work.src;image.alt=work.caption;
       image.decoding='async';image.addEventListener('load',()=>sync());
       figure.append(image);
+      if(work.originalText){
+        const ns='http://www.w3.org/2000/svg',sourceText=work.originalText;
+        const svg=document.createElementNS(ns,'svg');svg.classList.add('work-image-original-text');
+        svg.setAttribute('viewBox','0 0 '+sourceText.width+' '+sourceText.height);
+        svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.setAttribute('aria-hidden','true');
+        const defs=document.createElementNS(ns,'defs'),clip=document.createElementNS(ns,'clipPath');
+        const clipId='work-original-text-'+overlay.childElementCount;clip.setAttribute('id',clipId);
+        for(const d of sourceText.paths){const path=document.createElementNS(ns,'path');path.setAttribute('d',d);clip.append(path);}
+        defs.append(clip);svg.append(defs);
+        const original=document.createElementNS(ns,'image');
+        original.setAttribute('href',sourceText.src);original.setAttribute('width',sourceText.width);
+        original.setAttribute('height',sourceText.height);original.setAttribute('clip-path','url(#'+clipId+')');
+        svg.append(original);figure.append(svg);
+      }
       const caption=document.createElement('figcaption');caption.textContent=work.caption;
       figure.append(caption);
       overlay.append(figure);return {figure,image};
