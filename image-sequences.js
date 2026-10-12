@@ -1,6 +1,6 @@
 window.FORUM_IMAGE_INSERTS = {
   "박재영/Q2": {
-    "start": 6.2,
+    "start": 6.533666666666667,
     "images": [
       {
         "caption": "오시선 무빙 팻말",
@@ -14,7 +14,7 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   },
   "민지희/Q5": {
-    "start": 5.3,
+    "start": 5.633666666666667,
     "images": [
       {
         "caption": "installaton at SNU, 2013",
@@ -31,7 +31,7 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   },
   "안정환/Q4": {
-    "start": 5.8,
+    "start": 6.133666666666667,
     "images": [
       {
         "caption": "GBC Hyundai Motor Group HQ Public Art Directing, Creative Directing & PM",
@@ -56,7 +56,7 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   },
   "최지혜/Q4": {
-    "start": 8.65,
+    "start": 8.983666666666666,
     "images": [
       {
         "caption": "2014년 문화역서울 284 기획프로그램3 <최정화_총천연색>展 기획 및 진행, 전시장 운영관리",
@@ -82,7 +82,7 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   },
   "서해영/Q2": {
-    "start": 7.95,
+    "start": 8.283666666666667,
     "images": [
       {
         "caption": "<삼각산 조각1>, 2012.4. 9, 영봉에서 칼라사진, 가변크기, 2012",
@@ -95,7 +95,7 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   },
   "권현빈/Q4": {
-    "start": 4.52,
+    "start": 4.853666666666666,
     "images": [
       {
         "caption": "<무제(Untitled)>, 대리석, 잉크, 240x120x65cm사이즈 테이블에 가변설치, 2024",
@@ -108,7 +108,7 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   },
   "채길원/Q5": {
-    "start": 8.7,
+    "start": 9.033666666666665,
     "images": [
       {
         "caption": "김종영 미술관 (내부)",
@@ -121,7 +121,7 @@ window.FORUM_IMAGE_INSERTS = {
     ]
   },
   "최고은/Q4": {
-    "start": 3.6,
+    "start": 3.933666666666667,
     "images": [
       {
         "caption": "Installation view\nMaterial Pool, 2016-2021, Mirror, Standing Air conditioner, Refrigerator, Wardrobe, Size Variable\n《New ways of living for ( )》, 2021, Suwon Museum of Art, Kyeonggi-do,South Korea",

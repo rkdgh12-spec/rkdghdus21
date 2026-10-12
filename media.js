@@ -9,16 +9,17 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q4": {
     "title": "최고은 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-edited-20261013/choe-goeun-q4-edited-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/choe-goeun-q4-edited-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/choe-goeun-q4.ko.vtt?v=choe-edited-focus-1",
+        "src": "captions/choe-goeun-q4.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "최고은/Q3": {
     "title": "",
@@ -29,10 +30,17 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q5": {
     "title": "최고은 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/choe-goeun-q5-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/choe-goeun-q5-flow.mp4",
     "poster": "",
-    "captions": [],
-    "transcript": ""
+    "captions": [
+      {
+        "src": "captions/choe-goeun-q5.ko.vtt?v=interview-natural-flow-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "최고은/Q9": {
     "title": "",
@@ -43,16 +51,17 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q7": {
     "title": "최고은 인터뷰 Q7",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-edited-20261013/choe-goeun-q7-focus-stable-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/choe-goeun-q7-focus-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/choe-goeun-q7.ko.vtt?v=choe-edited-focus-1",
+        "src": "captions/choe-goeun-q7.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "최고은/Q2": {
     "title": "",
@@ -63,17 +72,31 @@ window.FORUM_MEDIA = {
   },
   "류성실/Q5": {
     "title": "류성실 인터뷰 Q5 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-q5-q6-20261011/ryu-sungsil-q5-intro.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/ryu-sungsil-q5-intro-flow.mp4",
     "poster": "",
-    "captions": [],
-    "transcript": ""
+    "captions": [
+      {
+        "src": "captions/ryu-sungsil-q5-intro.ko.vtt?v=interview-natural-flow-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "류성실/Q6": {
     "title": "류성실 인터뷰 Q6",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-q5-q6-20261011/ryu-sungsil-q6.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/ryu-sungsil-q6-flow.mp4",
     "poster": "",
-    "captions": [],
-    "transcript": ""
+    "captions": [
+      {
+        "src": "captions/ryu-sungsil-q6.ko.vtt?v=interview-natural-flow-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "류성실/Q3": {
     "title": "",
@@ -105,10 +128,17 @@ window.FORUM_MEDIA = {
   },
   "강인애/Q3": {
     "title": "강인애 인터뷰 Q3 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/kang-inae-q3-intro-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kang-inae-q3-intro-flow.mp4",
     "poster": "",
-    "captions": [],
-    "transcript": ""
+    "captions": [
+      {
+        "src": "captions/kang-inae-q3-intro.ko.vtt?v=interview-natural-flow-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "강인애/Q6": {
     "title": "",
@@ -119,10 +149,17 @@ window.FORUM_MEDIA = {
   },
   "강인애/Q5": {
     "title": "강인애 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/kang-inae-q5-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kang-inae-q5-flow.mp4",
     "poster": "",
-    "captions": [],
-    "transcript": ""
+    "captions": [
+      {
+        "src": "captions/kang-inae-q5.ko.vtt?v=interview-natural-flow-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "강인애/Q4": {
     "title": "",
@@ -140,16 +177,17 @@ window.FORUM_MEDIA = {
   },
   "박재영/Q4": {
     "title": "박재영 인터뷰 Q4",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-park-volume-matched-20261012/park-jaeyoung-q4-balanced.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/park-jaeyoung-q4-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/park-jaeyoung-q4.ko.vtt?v=park-subtitles-1",
+        "src": "captions/park-jaeyoung-q4.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "박재영/Q5": {
     "title": "",
@@ -160,16 +198,17 @@ window.FORUM_MEDIA = {
   },
   "박재영/Q2": {
     "title": "박재영 인터뷰 Q2 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-park-volume-matched-20261012/park-jaeyoung-q2-intro-balanced.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/park-jaeyoung-q2-intro-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/park-jaeyoung-q2.ko.vtt?v=park-subtitles-1",
+        "src": "captions/park-jaeyoung-q2.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "박재영/Q3": {
     "title": "",
@@ -208,29 +247,31 @@ window.FORUM_MEDIA = {
   },
   "민지희/Q5": {
     "title": "민지희 인터뷰 Q5 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/min-jihee-q5-intro-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/min-jihee-q5-intro-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/min-jihee-q5.ko.vtt?v=min-subtitles-1",
+        "src": "captions/min-jihee-q5.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "민지희/Q3 후속질문": {
     "title": "민지희 인터뷰 Q3 후속질문",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/min-jihee-q3-followup-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/min-jihee-q3-followup-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/min-jihee-q3-followup.ko.vtt?v=min-subtitles-1",
+        "src": "captions/min-jihee-q3-followup.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "민지희/Q3": {
     "title": "",
@@ -248,29 +289,31 @@ window.FORUM_MEDIA = {
   },
   "안정환/Q4": {
     "title": "안정환 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/an-junghwan-q4-intro-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/an-junghwan-q4-intro-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/an-junghwan-q4.ko.vtt?v=an-subtitles-1",
+        "src": "captions/an-junghwan-q4.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "안정환/Q5": {
     "title": "안정환 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/an-junghwan-q5-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/an-junghwan-q5-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/an-junghwan-q5.ko.vtt?v=an-subtitles-1",
+        "src": "captions/an-junghwan-q5.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "안정환/Q6": {
     "title": "",
@@ -302,55 +345,59 @@ window.FORUM_MEDIA = {
   },
   "최지혜/Q3": {
     "title": "최지혜 인터뷰 Q3",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/choi-jihye-q3-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/choi-jihye-q3-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/choi-jihye-q3.ko.vtt?v=choij-subtitles-gray-identity-align-1",
+        "src": "captions/choi-jihye-q3.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "최지혜/Q4": {
     "title": "최지혜 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/choi-jihye-q4-intro-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/choi-jihye-q4-intro-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/choi-jihye-q4.ko.vtt?v=choij-subtitles-gray-identity-align-1",
+        "src": "captions/choi-jihye-q4.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "최지혜/Q5": {
     "title": "최지혜 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/choi-jihye-q5-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/choi-jihye-q5-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/choi-jihye-q5.ko.vtt?v=choij-subtitles-gray-identity-align-1",
+        "src": "captions/choi-jihye-q5.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "서해영/Q2": {
     "title": "서해영 인터뷰 Q2 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/seo-haeyoung-q2-intro-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/seo-haeyoung-q2-intro-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/seo-haeyoung-q2.ko.vtt?v=seo-videos-subtitles-1",
+        "src": "captions/seo-haeyoung-q2.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "서해영/Q3": {
     "title": "",
@@ -361,29 +408,31 @@ window.FORUM_MEDIA = {
   },
   "서해영/Q5": {
     "title": "서해영 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/seo-haeyoung-q5-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/seo-haeyoung-q5-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/seo-haeyoung-q5.ko.vtt?v=seo-videos-subtitles-1",
+        "src": "captions/seo-haeyoung-q5.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "서해영/Q6": {
     "title": "서해영 인터뷰 Q6",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/seo-haeyoung-q6-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/seo-haeyoung-q6-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/seo-haeyoung-q6.ko.vtt?v=seo-videos-subtitles-1",
+        "src": "captions/seo-haeyoung-q6.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "서해영/Q7": {
     "title": "",
@@ -401,29 +450,31 @@ window.FORUM_MEDIA = {
   },
   "권현빈/Q4": {
     "title": "권현빈 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kwon-volume-matched-20261012/kwon-hyunbin-q4-intro-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kwon-hyunbin-q4-intro-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kwon-hyunbin-q4.ko.vtt?v=kwon-videos-subtitles-1",
+        "src": "captions/kwon-hyunbin-q4.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "권현빈/Q5": {
     "title": "권현빈 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kwon-volume-matched-20261012/kwon-hyunbin-q5-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kwon-hyunbin-q5-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kwon-hyunbin-q5.ko.vtt?v=kwon-videos-subtitles-1",
+        "src": "captions/kwon-hyunbin-q5.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "권현빈/Q2": {
     "title": "",
@@ -434,29 +485,31 @@ window.FORUM_MEDIA = {
   },
   "권현빈/Q6": {
     "title": "권현빈 인터뷰 Q6",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kwon-volume-matched-20261012/kwon-hyunbin-q6-balanced-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kwon-hyunbin-q6-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kwon-hyunbin-q6.ko.vtt?v=kwon-videos-subtitles-1",
+        "src": "captions/kwon-hyunbin-q6.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "채길원/Q5": {
     "title": "채길원 인터뷰 Q5 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/chae-gilwon-q5-intro-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/chae-gilwon-q5-intro-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/chae-gilwon-q5.ko.vtt?v=chae-videos-subtitles-1",
+        "src": "captions/chae-gilwon-q5.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "채길원/Q7": {
     "title": "",
@@ -467,16 +520,17 @@ window.FORUM_MEDIA = {
   },
   "채길원/Q4": {
     "title": "채길원 인터뷰 Q4",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/chae-gilwon-q4-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/chae-gilwon-q4-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/chae-gilwon-q4.ko.vtt?v=chae-videos-subtitles-1",
+        "src": "captions/chae-gilwon-q4.ko.vtt?v=interview-natural-flow-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.33366666666666667
   },
   "채길원/Q8": {
     "title": "",

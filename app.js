@@ -428,6 +428,12 @@
     // All destinations use the same hierarchy scale, independent of the incoming route.
     const NODE_ZOOM_LEVELS={chapter:1,person:2,concept:4,subconcept:8,question:8};
     const nodeZoomLevel=node=>NODE_ZOOM_LEVELS[node.kind]||1;
+    function pinReadingHeading(button,id){
+      if(!cameraReadingCentered||cameraReadingNode!==id||selected===null)return;
+      const text=button.querySelector('strong'),box=text.getBoundingClientRect(),area=stage.getBoundingClientRect();
+      button.style.left=(parseFloat(button.style.left)+area.left+width/2-box.left-box.width/2)+'px';
+      button.style.top=(parseFloat(button.style.top)+area.top+height/2-box.top-box.height/2)+'px';
+    }
     function centerReadingText(id){
       cameraReadingNode=id;cameraReadingCentered=true;
       if(depthEnabled)render3D();else render();
@@ -711,7 +717,7 @@
     function updateIntroCaption(){
       const caption=q('#interview-intro-caption');
       const first=lectureOrder.flatMap(group=>group.people).find(item=>item[0]===currentQuestion?.person)?.[1]?.[0];
-      const show=dialog.open&&interviewMode!=='epilogue'&&currentQuestion?.label===first&&!!video.getAttribute('src')&&videoStarted&&video.currentTime<7&&!video.ended&&!dialog.classList.contains('question-intro');
+      const show=dialog.open&&interviewMode!=='epilogue'&&currentQuestion?.label===first&&!!video.getAttribute('src')&&videoStarted&&video.currentTime<7+(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.timelineOffset||0)&&!video.ended&&!dialog.classList.contains('question-intro');
       caption.hidden=!show;
     }
     for(const event of ['playing','timeupdate','seeked','pause','ended','loadedmetadata'])video.addEventListener(event,updateIntroCaption);
@@ -1076,20 +1082,20 @@
       const separated=(a,b,gap=0)=>a.x+a.w+gap<=b.x||b.x+b.w+gap<=a.x||a.y+a.h+gap<=b.y||b.y+b.h+gap<=a.y;
       for(const n of [threeCenter,...chapters.filter(c=>c!==threeCenter)]){
         const b=threeNodes.get(n.id),p=pos[n.id],show=visible.has(n.id)&&p.x>-150&&p.x<width+150&&p.y>-60&&p.y<height+60;b.hidden=!show;if(!show)continue;
-        b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-chapter-past',personChapter!==null&&n.chapter!==personChapter);b.classList.toggle('chapter-other',activeChapter!==null&&n.chapter!==activeChapter);b.setAttribute('aria-expanded',String(expanded.has(n.id)));b.querySelector('small').hidden=!expanded.has(n.id);
+        b.classList.toggle('reading-node',cameraReadingCentered&&cameraReadingNode===n.id);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-chapter-past',personChapter!==null&&n.chapter!==personChapter);b.classList.toggle('chapter-other',activeChapter!==null&&n.chapter!==activeChapter);b.setAttribute('aria-expanded',String(expanded.has(n.id)));b.querySelector('small').hidden=!expanded.has(n.id);
         const w=b.offsetWidth,h=b.offsetHeight,c=pos[threeCenter.id],dx=p.x-c.x,dy=p.y-c.y,m=Math.max(1,Math.hypot(dx,dy)),ux=dx/m,uy=dy/m;
         const positions=[[p.x,p.y]];
         for(const distance of [24,48,72,96,128,160,192,224,256])positions.push([p.x+ux*distance,p.y+uy*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+uy*distance,p.y-ux*distance],[p.x-ux*distance,p.y-uy*distance],[p.x+uy*distance,p.y-ux*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+distance,p.y],[p.x-distance,p.y],[p.x,p.y+distance],[p.x,p.y-distance]);
         const protectRoute=!allConnected&&selected!==null&&nodes[selected].chapter===n.chapter&&nodes[selected].kind!=='chapter';
         let chosen=null;for(const [x,y] of positions){const box={x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16};if(box.x<8||box.y<8||box.x+box.w>width-8||box.y+box.h>height-8)continue;if(boxes.every(other=>separated(box,other,8))&&(!protectRoute||activeObstacles.every(other=>separated(box,other,8)))){chosen={x,y,box};break}}
         if(!chosen){const x=Math.max(w/2+8,Math.min(width-w/2-8,p.x)),y=Math.max(h/2+8,Math.min(height-h/2-8,p.y));chosen={x,y,box:{x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16}}}
-        b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
+        b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';pinReadingHeading(b,n.id);b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
       }
       const selectedQuestionParent=selected!==null&&nodes[selected].kind==='question'?nodes[selected].parent:null;
       const labelPriority=n=>n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.id===selectedQuestionParent?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
-        b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));setRevealOpacity(b,n);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
+        b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));setRevealOpacity(b,n);b.classList.toggle('reading-node',cameraReadingCentered&&cameraReadingNode===n.id);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='block';label.style.width='max-content';const lw=label.offsetWidth,lh=label.offsetHeight,candidates=[];
         for(const gap of [10,18,26,36,50,66]){const diagonal=gap*.71;candidates.push([x+gap,y-lh/2],[x-lw-gap,y-lh/2],[x-lw/2,y+gap],[x-lw/2,y-lh-gap],[x+diagonal,y+diagonal],[x-lw-diagonal,y+diagonal],[x+diagonal,y-lh-diagonal],[x-lw-diagonal,y-lh-diagonal])}
         let choice=null;for(const [lx,ly] of candidates){const box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}}
@@ -1164,7 +1170,7 @@
         const {region,heading,members}=areas.get(c.id),x=c.x*k+ox,y=c.y*k+oy;
         heading.classList.toggle('selected',selected===c.id);heading.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);heading.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);region.classList.toggle('person-chapter-past',personChapter!==null&&c.chapter!==personChapter);region.classList.toggle('chapter-other',activeChapter!==null&&c.chapter!==activeChapter);heading.setAttribute('aria-expanded',String(expanded.has(c.id)));heading.querySelector('small').hidden=!expanded.has(c.id);region.style.display=expanded.has(c.id)?'':'none';heading.style.filter=fullReveal?`opacity(${fullRevealNode(c)})`:'';region.style.filter=fullReveal?`opacity(${c.chapter===5?fullRevealCore():fullRevealNode(c)})`:'';
         const w=heading.offsetWidth,h=heading.offsetHeight;
-        const box={x:x-w/2,y:y-h/2,w,h};heading.style.left=box.x+'px';heading.style.top=box.y+'px';
+        const box={x:x-w/2,y:y-h/2,w,h};heading.style.left=box.x+'px';heading.style.top=box.y+'px';pinReadingHeading(heading,c.id);
         boxes.push({x:box.x-9,y:box.y-10,w:w+18,h:h+20});
         const ps=[];const pad=Math.max(16,75*k);
         for(const n of members.filter(n=>visible.has(n.id))){for(let i=0;i<8;i++){const a=i*Math.PI/4;ps.push([n.x*k+ox+Math.cos(a)*pad,n.y*k+oy+Math.sin(a)*pad])}}
@@ -1193,7 +1199,7 @@
       const ordered=[...points].sort((a,b)=>labelPriority(a)-labelPriority(b));
       for(const n of ordered){
         const {b,label}=elems.get(n.id),x=n.x*k+ox,y=n.y*k+oy;
-        b.style.left=x+'px';b.style.top=y+'px';b.style.filter=fullReveal?`opacity(${fullRevealNode(n)})`:'';b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.hidden=!visible.has(n.id)||x<0||x>width||y<0||y>height;
+        b.style.left=x+'px';b.style.top=y+'px';b.style.filter=fullReveal?`opacity(${fullRevealNode(n)})`:'';b.classList.toggle('reading-node',cameraReadingCentered&&cameraReadingNode===n.id);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.hidden=!visible.has(n.id)||x<0||x>width||y<0||y>height;
         b.classList.toggle('connected',connectedQuestions.has(n.id));
         if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='none';

@@ -198,3 +198,6 @@
   #forum-source-network :is(.node-layer,.three-nodes) :is(.dot,.area-heading){animation:none}
 }
 
+
+/* Keep the waypoint currently being read fully legible. */
+#forum-source-network .stage .dot.reading-node,#forum-source-network .stage .area-heading.reading-node{opacity:1!important}
