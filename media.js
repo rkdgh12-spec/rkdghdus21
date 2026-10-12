@@ -256,21 +256,39 @@ window.FORUM_MEDIA = {
     "title": "최지혜 인터뷰 Q3",
     "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choij-volume-matched-20261012/choi-jihye-q3-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/choi-jihye-q3.ko.vtt?v=choij-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "최지혜/Q4": {
     "title": "최지혜 인터뷰 Q4 · 자기소개 포함",
     "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choij-volume-matched-20261012/choi-jihye-q4-intro-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/choi-jihye-q4.ko.vtt?v=choij-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "최지혜/Q5": {
     "title": "최지혜 인터뷰 Q5",
     "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choij-volume-matched-20261012/choi-jihye-q5-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/choi-jihye-q5.ko.vtt?v=choij-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "서해영/Q2": {
