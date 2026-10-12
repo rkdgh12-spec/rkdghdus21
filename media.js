@@ -9,9 +9,15 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q4": {
     "title": "최고은 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ambient-stable-20261013/choe-goeun-q4-intro-ambient-stable.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-edited-20261013/choe-goeun-q4-edited-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/choe-goeun-q4.ko.vtt?v=choe-edited-focus-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "최고은/Q3": {
@@ -36,10 +42,16 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "최고은/Q7": {
-    "title": "",
-    "src": "",
+    "title": "최고은 인터뷰 Q7",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-edited-20261013/choe-goeun-q7-focus-stable-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/choe-goeun-q7.ko.vtt?v=choe-edited-focus-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "최고은/Q2": {

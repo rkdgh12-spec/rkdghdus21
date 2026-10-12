@@ -119,5 +119,30 @@ window.FORUM_IMAGE_INSERTS = {
         "src": "images/interview-works/chae-gilwon-2.jpg"
       }
     ]
+  },
+  "최고은/Q4": {
+    "start": 3.6,
+    "images": [
+      {
+        "caption": "Installation view\nMaterial Pool, 2016-2021, Mirror, Standing Air conditioner, Refrigerator, Wardrobe, Size Variable\n《New ways of living for ( )》, 2021, Suwon Museum of Art, Kyeonggi-do,South Korea",
+        "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-edited-20261013/choe-goeun-material-pool-floor-clean.png",
+        "originalText": {
+          "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-edited-20261013/choe-goeun-material-pool-original.jpg",
+          "width": 1533,
+          "height": 1141,
+          "paths": [
+            "M0 0H1533V1055H0Z",
+            "M1000 1055H1533V1141H1000Z",
+            "M0 1136H1000V1141H0Z"
+          ],
+          "filter": "none"
+        },
+        "imageFilter": "brightness(1.008)"
+      },
+      {
+        "caption": "Torso 161, 2016\nRefrigerator, Standing Air Conditioner, 174ⅹ54ⅹ18(cm)\nSolo show 《TORSO》, 2016, Kimchongyung Museum, Seoul,South Korea",
+        "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-edited-20261013/choe-goeun-torso-161.jpg"
+      }
+    ]
   }
 };
