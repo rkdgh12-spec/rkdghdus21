@@ -5,7 +5,7 @@
   const stage=dialog?.querySelector('.interview-media');
   if(!video||!dialog||!stage)return;
   const sequences=window.FORUM_IMAGE_INSERTS||{};
-  const imageDuration=3;
+  const imageDuration=4;
   const overlay=document.createElement('div');
   overlay.id='interview-work-images';overlay.hidden=true;
   const speech=document.createElement('div');
