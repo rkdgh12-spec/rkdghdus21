@@ -328,10 +328,16 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "서해영/Q2": {
-    "title": "",
-    "src": "",
+    "title": "서해영 인터뷰 Q2 · 자기소개 포함",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-seo-volume-matched-20261012/seo-haeyoung-q2-intro-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/seo-haeyoung-q2.ko.vtt?v=seo-videos-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "서해영/Q3": {
@@ -342,17 +348,29 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "서해영/Q5": {
-    "title": "",
-    "src": "",
+    "title": "서해영 인터뷰 Q5",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-seo-volume-matched-20261012/seo-haeyoung-q5-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/seo-haeyoung-q5.ko.vtt?v=seo-videos-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "서해영/Q6": {
-    "title": "",
-    "src": "",
+    "title": "서해영 인터뷰 Q6",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-seo-volume-matched-20261012/seo-haeyoung-q6-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/seo-haeyoung-q6.ko.vtt?v=seo-videos-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "서해영/Q7": {
