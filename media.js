@@ -127,8 +127,8 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "박재영/Q4": {
-    "title": "",
-    "src": "",
+    "title": "박재영 인터뷰 Q4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-park-volume-matched-20261012/park-jaeyoung-q4-balanced.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -141,8 +141,8 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "박재영/Q2": {
-    "title": "",
-    "src": "",
+    "title": "박재영 인터뷰 Q2 · 자기소개 포함",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-park-volume-matched-20261012/park-jaeyoung-q2-intro-balanced.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
