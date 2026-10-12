@@ -258,7 +258,7 @@ window.FORUM_MEDIA = {
     "poster": "",
     "captions": [
       {
-        "src": "captions/choi-jihye-q3.ko.vtt?v=choij-subtitles-1",
+        "src": "captions/choi-jihye-q3.ko.vtt?v=choij-subtitles-large-clear-1",
         "label": "한국어",
         "language": "ko"
       }
@@ -271,7 +271,7 @@ window.FORUM_MEDIA = {
     "poster": "",
     "captions": [
       {
-        "src": "captions/choi-jihye-q4.ko.vtt?v=choij-subtitles-1",
+        "src": "captions/choi-jihye-q4.ko.vtt?v=choij-subtitles-large-clear-1",
         "label": "한국어",
         "language": "ko"
       }
@@ -284,7 +284,7 @@ window.FORUM_MEDIA = {
     "poster": "",
     "captions": [
       {
-        "src": "captions/choi-jihye-q5.ko.vtt?v=choij-subtitles-1",
+        "src": "captions/choi-jihye-q5.ko.vtt?v=choij-subtitles-large-clear-1",
         "label": "한국어",
         "language": "ko"
       }
