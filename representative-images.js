@@ -5,6 +5,7 @@
   const stage=dialog?.querySelector('.interview-media');
   if(!video||!dialog||!stage)return;
   const sequences=window.FORUM_IMAGE_INSERTS||{};
+  const imageDuration=2;
   const overlay=document.createElement('div');
   overlay.id='interview-work-images';overlay.hidden=true;
   const speech=document.createElement('div');
@@ -47,8 +48,8 @@
     configure();
     stage.classList.toggle('work-images-intro-finished',!!sequence&&time>=sequence.start);
     const active=sequence&&dialog.open&&!dialog.classList.contains('question-intro')
-      &&!video.ended&&time>=sequence.start&&time<sequence.start+sequence.images.length;
-    const index=active?Math.floor(time-sequence.start):-1;
+      &&!video.ended&&time>=sequence.start&&time<sequence.start+sequence.images.length*imageDuration;
+    const index=active?Math.floor((time-sequence.start)/imageDuration):-1;
     if(index<0||!frames[index]?.image.complete||!frames[index].image.naturalWidth){hide();return;}
     if(index!==currentIndex){
       frames.forEach(({figure},i)=>figure.hidden=i!==index);
