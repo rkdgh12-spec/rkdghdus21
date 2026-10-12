@@ -198,14 +198,26 @@ window.FORUM_MEDIA = {
     "title": "민지희 인터뷰 Q5 · 자기소개 포함",
     "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-min-volume-matched-20261012/min-jihee-q5-intro-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/min-jihee-q5.ko.vtt?v=min-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "민지희/Q3 후속질문": {
     "title": "민지희 인터뷰 Q3 후속질문",
     "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-min-volume-matched-20261012/min-jihee-q3-followup-balanced-web.mp4",
     "poster": "",
-    "captions": [],
+    "captions": [
+      {
+        "src": "captions/min-jihee-q3-followup.ko.vtt?v=min-subtitles-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
     "transcript": ""
   },
   "민지희/Q3": {
