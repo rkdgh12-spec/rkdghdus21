@@ -405,8 +405,8 @@
       const box=element.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
-    // Keep camera travel and connection tracing synchronized at 1.3x speed.
-    const NODE_TRAVEL_MS=1900;
+    // Keep camera travel and connection tracing synchronized at 1.1x speed.
+    const NODE_TRAVEL_MS=2245;
     function travel(points,duration,frame,done){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
@@ -427,6 +427,9 @@
       }
       requestAnimationFrame(tick);
     }
+    // All destinations use the same hierarchy scale, independent of the incoming route.
+    const NODE_ZOOM_LEVELS={chapter:1,person:2,concept:4,subconcept:8,question:8};
+    const nodeZoomLevel=node=>NODE_ZOOM_LEVELS[node.kind]||1;
     function followConnectionToLabel(previous,id,after){
       cameraMotion++;
       if(depthEnabled){
@@ -439,16 +442,11 @@
         const wideTransit=chapterTransit||personTransit;
         const sourceId=previous;
         if(sourceId!==undefined&&sourceId!==null&&threeProjected[sourceId])startFocus={x:threeProjected[sourceId].x,y:threeProjected[sourceId].y};
-        const focusId=kind==='question'?node.parent:id;
-        let goalZoom=presentationMode?({chapter:1,person:2,concept:4,subconcept:8,question:8}[kind]||1):start.zoom;
+        const focusId=id;
+        let goalZoom=nodeZoomLevel(node);
         const goalYaw=start.yaw;
         const goalElevation=start.elevation;
         threeZoom=goalZoom;threeYaw=goalYaw;threeElevation=goalElevation;render3D();
-        if(kind==='question'){
-          const parentPoint=threeProjected[focusId],questionPoint=threeProjected[id];
-          const fitPair=Math.min(1,width*.37/Math.max(1,Math.abs(questionPoint.x-parentPoint.x)),height*.28/Math.max(1,Math.abs(questionPoint.y-parentPoint.y)));
-          if(fitPair<1){goalZoom=Math.max(2.2,goalZoom*fitPair);threeZoom=goalZoom;render3D()}
-        }
         const conceptGroup=kind==='concept'?[id,...children(id).filter(n=>n.kind==='subconcept').map(n=>n.id)]:[];
         if(conceptGroup.length>=3){
           const xs=conceptGroup.map(nid=>threeProjected[nid].x),ys=conceptGroup.map(nid=>threeProjected[nid].y);
@@ -518,11 +516,12 @@
         return;
       }
       const start={x:ox,y:oy,k},node=nodes[id];
+      k=fitK*nodeZoomLevel(node);
       const conceptGroup=node.kind==='concept'?[node,...children(id).filter(n=>n.kind==='subconcept')]:[];
       if(conceptGroup.length>=3){
         const xs=conceptGroup.map(n=>n.x),ys=conceptGroup.map(n=>n.y);
         const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
-        k=Math.max(fitK*.45,Math.min(start.k,width*.56/Math.max(1,maxx-minx),height*.50/Math.max(1,maxy-miny)));
+        k=Math.max(fitK*.45,Math.min(k,width*.56/Math.max(1,maxx-minx),height*.50/Math.max(1,maxy-miny)));
         ox=width/2-(minx+maxx)*k/2;oy=height/2-(miny+maxy)*k/2;render();
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
         const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();after()};
@@ -532,11 +531,11 @@
       }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
       for(let i=0;i<2;i++){const label=selectedTextPoint(id);ox+=width/2-label.x;oy+=height/2-label.y;render()}
-      const goal={x:ox,y:oy};ox=start.x;oy=start.y;render();
-      const finish=()=>{ox=goal.x;oy=goal.y;render();after()};
+      const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
+      const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();after()};
       if(reducedMotion){finish();return}
       const distance=Math.hypot(goal.x-start.x,goal.y-start.y);
-      travel([start,goal],NODE_TRAVEL_MS,p=>{ox=p.x;oy=p.y;render()},finish);
+      travel([start,goal],NODE_TRAVEL_MS,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish);
     }
     function showDetail(n,openQuestion=true){
       if(!n){markStepArrival(null);panel.hidden=true;detail.hidden=true;detail.innerHTML='';return}
@@ -1064,7 +1063,7 @@
         b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
       }
       const selectedQuestionParent=selected!==null&&nodes[selected].kind==='question'?nodes[selected].parent:null;
-      const labelPriority=n=>n.id===selectedQuestionParent?0:n.id===selected?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
+      const labelPriority=n=>n.id===selected?0:n.id===selectedQuestionParent?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
         b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));setRevealOpacity(b,n);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
