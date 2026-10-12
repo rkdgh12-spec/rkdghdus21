@@ -318,7 +318,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-title-composition .intro-description{font-weight:550}
 
 /* Identity captions accompany the opening self-introduction in each first clip. */
-#interview-dialog .interview-intro-caption{--identity-caption-size:clamp(21.6px,2.52vw,40.8px);position:absolute;left:6%;top:83.4%;bottom:auto;z-index:5;max-width:84%;pointer-events:none;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;text-shadow:-2px 0 0 #777,2px 0 0 #777,0 -2px 0 #777,0 2px 0 #777,-2px -2px 0 #777,2px -2px 0 #777,-2px 2px 0 #777,2px 2px 0 #777,0 3px 6px rgba(60,60,60,.55);line-height:1.2}
+#interview-dialog .interview-intro-caption{--identity-caption-size:clamp(21.6px,2.52vw,40.8px);position:absolute;left:6%;top:calc(83.4% - var(--identity-caption-size) * 1.2);bottom:auto;z-index:5;max-width:84%;pointer-events:none;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;text-shadow:-2px 0 0 #555,2px 0 0 #555,0 -2px 0 #555,0 2px 0 #555,-2px -2px 0 #555,2px -2px 0 #555,-2px 2px 0 #555,2px 2px 0 #555,0 3px 6px rgba(60,60,60,.55);line-height:1.2}
 #interview-dialog .interview-intro-caption[hidden]{display:none!important}
 #interview-dialog .intro-caption-heading{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 #interview-dialog .intro-caption-heading strong{font-size:var(--identity-caption-size);font-weight:700;letter-spacing:-.025em}
@@ -332,4 +332,4 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 @media(max-width:700px){#interview-dialog.question-cinema.epilogue-mode #interview-chapter{font-size:12px}}
 
 /* Dialogue captions remain legible in the interview player and fullscreen. */
-#interview-video::cue{font-family:Pretendard,"Noto Sans KR",sans-serif;font-size:clamp(21.6px,2.52vw,40.8px);font-weight:500;line-height:1.2;color:#fff;background-color:transparent;text-shadow:-2px 0 0 #777,2px 0 0 #777,0 -2px 0 #777,0 2px 0 #777,-2px -2px 0 #777,2px -2px 0 #777,-2px 2px 0 #777,2px 2px 0 #777,0 3px 6px rgba(60,60,60,.55)}
+#interview-video::cue{font-family:Pretendard,"Noto Sans KR",sans-serif;font-size:clamp(21.6px,2.52vw,40.8px);font-weight:500;line-height:1.2;color:#fff;background-color:transparent;text-shadow:-2px 0 0 #555,2px 0 0 #555,0 -2px 0 #555,0 2px 0 #555,-2px -2px 0 #555,2px -2px 0 #555,-2px 2px 0 #555,2px 2px 0 #555,0 3px 6px rgba(60,60,60,.55)}
