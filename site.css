@@ -333,3 +333,10 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 /* Dialogue captions remain legible in the interview player and fullscreen. */
 #interview-video::cue{font-family:Pretendard,"Noto Sans KR",sans-serif;font-size:clamp(21.6px,2.52vw,40.8px);font-weight:500;line-height:1.2;color:#fff;background-color:transparent;text-shadow:-2px 0 0 #555,2px 0 0 #555,0 -2px 0 #555,0 2px 0 #555,-2px -2px 0 #555,2px -2px 0 #555,-2px 2px 0 #555,2px 2px 0 #555,0 3px 6px rgba(60,60,60,.55)}
+
+/* Profile details arrive with the existing person-name emphasis, without resizing the name. */
+#forum-source-network .node-label.person .node-person-meta{position:absolute;left:0;top:calc(100% + .55em);display:grid;gap:.18em;width:max-content;max-width:26em;line-height:1.5;text-align:left;white-space:normal;word-break:keep-all;pointer-events:none;opacity:0;visibility:hidden;transition:opacity 140ms ease,visibility 140ms ease}
+#forum-source-network .node-label.person .node-person-role{display:block;font-size:.78em;font-weight:600;color:var(--concept-ink)}
+#forum-source-network .node-label.person .node-person-career{display:block;font-size:.66em;font-weight:400;color:var(--secondary)}
+#forum-source-network .dot.step-arrived .node-person-meta{opacity:1;visibility:visible}
+@media(prefers-reduced-motion:reduce){#forum-source-network .node-label.person .node-person-meta{transition:none}}

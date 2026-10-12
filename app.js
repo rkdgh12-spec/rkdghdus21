@@ -191,6 +191,25 @@
       t.textContent=e.kind!=='hierarchy'?edgeLabel(a)+' ↔ '+edgeLabel(b)+' · '+e.reason:edgeLabel(a)+' → '+edgeLabel(b);
       l.append(t);personCurrentLayer.append(l);paths.push(l);
     }
+    function appendPersonMetadata(label,n){
+      if(n.kind!=='person')return;
+      const profile=(window.FORUM_PROFILES||{})[n.label];
+      if(!profile)return;
+      const metadata=document.createElement('span');metadata.className='node-person-meta';
+      if(profile.role){const role=document.createElement('span');role.className='node-person-role';role.textContent=profile.role;metadata.append(role)}
+      if(profile.career?.length){const career=document.createElement('span');career.className='node-person-career';career.textContent=profile.career.join(' · ');metadata.append(career)}
+      if(metadata.childElementCount)label.append(metadata);
+    }
+    function reservePersonMetadata(label,button,choice,boxes){
+      const metadata=label.querySelector('.node-person-meta');
+      if(!metadata||!button.classList.contains('step-arrived'))return;
+      const gap=parseFloat(getComputedStyle(label).fontSize)*.55;
+      const w=metadata.offsetWidth,h=metadata.offsetHeight;
+      const left=Math.max(12-choice.x,Math.min(0,width-12-choice.x-w));
+      const top=choice.y+label.offsetHeight+gap+h>height-12?-h-gap:label.offsetHeight+gap;
+      metadata.style.left=left+'px';metadata.style.top=top+'px';
+      boxes.push({x:choice.x+left-4,y:choice.y+top-3,w:w+8,h:h+6});
+    }
     for(const n of points){
       const b=document.createElement('button');b.type='button';b.className='dot '+n.kind+' cursor-interaction';b.style.setProperty('--diameter',({person:6.5,concept:4.2,subconcept:3,question:3.5})[n.kind]+'px');
       b.setAttribute('aria-label',kindNames[n.kind]+' '+(n.person?n.person+' / ':'')+(n.question||n.label));b.setAttribute('data-tooltip',n.question||(n.label+(n.subtitle?' · '+n.subtitle:'')));
@@ -198,7 +217,7 @@
       const mark=document.createElement('span');mark.className='node-mark';b.append(mark);
       b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',()=>select(n.id));
       const label=document.createElement('span');label.className='node-label '+n.kind;
-      const labelText=document.createElement('span');labelText.className='node-label-text';labelText.textContent=n.label;label.append(labelText);b.append(label);
+      const labelText=document.createElement('span');labelText.className='node-label-text';labelText.textContent=n.label;label.append(labelText);appendPersonMetadata(label,n);b.append(label);
       if(n.kind!=='question')b.setAttribute('aria-expanded','false');
       layer.append(b);elems.set(n.id,{b,label});
     }
@@ -954,7 +973,7 @@
       const b=document.createElement('button');b.type='button';b.className='three-node cursor-interaction '+(n.kind==='chapter'?'area-heading'+(n.chapter===5?' core':''):'dot '+n.kind);
       b.setAttribute('aria-label',kindNames[n.kind]+' '+(n.person&&n.kind!=='person'?n.person+' / ':'')+(n.question||n.label));b.title=n.question||displayLabel(n);
       if(n.kind==='chapter')b.innerHTML='<span class="chapter-number">제'+esc(n.chapter)+'장</span><strong>'+esc(n.label)+'</strong><small hidden>'+esc(n.subtitle)+'</small>';
-      else{b.style.setProperty('--diameter',({person:6.5,concept:4.2,subconcept:3,question:3.5})[n.kind]+'px');const mark=document.createElement('span');mark.className='node-mark';const label=document.createElement('span');label.className='node-label '+n.kind;const labelText=document.createElement('span');labelText.className='node-label-text';labelText.textContent=n.label;label.append(labelText);b.append(mark,label)}
+      else{b.style.setProperty('--diameter',({person:6.5,concept:4.2,subconcept:3,question:3.5})[n.kind]+'px');const mark=document.createElement('span');mark.className='node-mark';const label=document.createElement('span');label.className='node-label '+n.kind;const labelText=document.createElement('span');labelText.className='node-label-text';labelText.textContent=n.label;label.append(labelText);appendPersonMetadata(label,n);b.append(mark,label)}
       if(n.kind!=='question')b.setAttribute('aria-expanded','false');
       b.addEventListener('pointerdown',e=>{if(e.button!==1)e.stopPropagation()});b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',()=>select(n.id));threeLayer.append(b);threeNodes.set(n.id,b);
     }
@@ -1052,7 +1071,7 @@
         for(const gap of [10,18,26,36,50,66]){const diagonal=gap*.71;candidates.push([x+gap,y-lh/2],[x-lw-gap,y-lh/2],[x-lw/2,y+gap],[x-lw/2,y-lh-gap],[x+diagonal,y+diagonal],[x-lw-diagonal,y+diagonal],[x+diagonal,y-lh-diagonal],[x-lw-diagonal,y-lh-diagonal])}
         let choice=null;for(const [lx,ly] of candidates){const box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}}
         if(!choice&&stage.classList.contains('high-zoom-labels'))choice=zoomLabelFallback(x,y,lw,lh);
-        if(choice){label.style.left=choice.x-x+b.offsetWidth/2+'px';label.style.top=choice.y-y+b.offsetHeight/2+'px';label.style.width=choice.w+'px';boxes.push(choice)}else label.style.display='none';
+        if(choice){label.style.left=choice.x-x+b.offsetWidth/2+'px';label.style.top=choice.y-y+b.offsetHeight/2+'px';label.style.width=choice.w+'px';boxes.push(choice);reservePersonMetadata(label,b,choice,boxes)}else label.style.display='none';
       }
     }
     function render(){
@@ -1171,7 +1190,7 @@
           if(boxes.every(r=>separated(box,r,8))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}
         }
         if(!choice&&stage.classList.contains('high-zoom-labels'))choice=zoomLabelFallback(x,y,lw,lh);
-        if(choice){label.style.left=(choice.x-x+b.offsetWidth/2)+'px';label.style.top=(choice.y-y+b.offsetHeight/2)+'px';label.style.width=choice.w+'px';boxes.push(choice)}else label.style.display='none';
+        if(choice){label.style.left=(choice.x-x+b.offsetWidth/2)+'px';label.style.top=(choice.y-y+b.offsetHeight/2)+'px';label.style.width=choice.w+'px';boxes.push(choice);reservePersonMetadata(label,b,choice,boxes)}else label.style.display='none';
       }
       render3D();
     }
