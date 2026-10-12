@@ -92,8 +92,8 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "강인애/Q3": {
-    "title": "",
-    "src": "",
+    "title": "강인애 인터뷰 Q3 · 자기소개 포함",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kang-volume-matched-20261012/kang-inae-q3-intro-balanced-web.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
@@ -106,8 +106,8 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "강인애/Q5": {
-    "title": "",
-    "src": "",
+    "title": "강인애 인터뷰 Q5",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kang-volume-matched-20261012/kang-inae-q5-balanced-web.mp4",
     "poster": "",
     "captions": [],
     "transcript": ""
