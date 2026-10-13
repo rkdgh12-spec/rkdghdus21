@@ -122,7 +122,7 @@
       {chapter:1,people:[['최고은',['Q4','Q7']]]},
       {chapter:2,people:[['류성실',['Q5','Q6']],['강인애',['Q3','Q5']]]},
       {chapter:3,people:[['박재영',['Q2','Q4']],['민지희',['Q5','Q3 후속질문']],['안정환',['Q4','Q5']]]},
-      {chapter:4,people:[['최지혜',['Q4','Q3','Q5']],['서해영',['Q2','Q5','Q6']]]},
+      {chapter:4,people:[['최지혜',['Q3','Q5']],['서해영',['Q2','Q6']]]},
       {chapter:5,people:[['권현빈',['Q4','Q5','Q6']],['채길원',['Q5','Q4']]]}
     ];
     const prologueData=window.FORUM_PROLOGUE||{slides:[]},prologueSlides=prologueData.slides;
@@ -1364,8 +1364,8 @@
       if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.00015)return;
       idleYaw=yaw;idleElevation=elevation;render3D();
     }
-    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:3,presentationMode,depthEnabled}))}catch{}}
-    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;const cueOffset=s.cueVersion===3||s.cueIndex<0?0:s.cueVersion===2?(s.cueIndex>=prologueSlides.length?1:0):prologueSlides.length+1;cueIndex=Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex+cueOffset)):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
+    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:4,presentationMode,depthEnabled}))}catch{}}
+    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===4&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?cues.findIndex(c=>c.id===selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
     new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(epilogueMapView){restoreEpilogueMapView();return}if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
     fit();showDetail(null);restore();updateCue();resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();

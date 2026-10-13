@@ -618,20 +618,20 @@ window.FORUM_MEDIA = {
   },
   "권현빈/Q5": {
     "title": "권현빈 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kwon-hyunbin-q5-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kwon-concise-20261013/kwon-hyunbin-q5-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kwon-hyunbin-q5.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/kwon-hyunbin-q5-concise.ko.vtt?v=lecture-223-kwon-concise-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
     "transcript": "",
-    "timelineOffset": 0.33366666666666667,
+    "timelineOffset": 0.4004,
     "speechBounds": {
-      "firstSpeech": 1.054,
-      "lastSpeech": 50.574
+      "firstSpeech": 0.7203333333333335,
+      "lastSpeech": 37.20376666666667
     }
   },
   "권현빈/Q2": {
@@ -643,20 +643,20 @@ window.FORUM_MEDIA = {
   },
   "권현빈/Q6": {
     "title": "권현빈 인터뷰 Q6",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kwon-hyunbin-q6-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kwon-concise-20261013/kwon-hyunbin-q6-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kwon-hyunbin-q6.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/kwon-hyunbin-q6-concise.ko.vtt?v=lecture-223-kwon-concise-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
     "transcript": "",
-    "timelineOffset": 0.33366666666666667,
+    "timelineOffset": 0.4004,
     "speechBounds": {
-      "firstSpeech": 1.054,
-      "lastSpeech": 55.954
+      "firstSpeech": 0.7203333333333335,
+      "lastSpeech": 41.300333333333334
     }
   },
   "채길원/Q5": {
