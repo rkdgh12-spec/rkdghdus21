@@ -1196,7 +1196,9 @@
       epilogueVideoWash.hidden=!active;
       if(!active)return;
       const time=video.currentTime||0,duration=video.duration;
-      const outgoing=Number.isFinite(duration)?audioSmooth((time-(duration-3.4))/3.4):0;
+      const speechEnd=interviewAudioBounds?.lastSpeech??Math.max(0,(duration||0)-4);
+      const whiteStart=speechEnd+.5;
+      const outgoing=Number.isFinite(duration)?audioSmooth((time-whiteStart)/Math.max(.1,duration-.5-whiteStart)):0;
       const light=outgoing;
       epilogueVideoWash.style.opacity='1';
       epilogueVideoWash.style.setProperty('--epilogue-light-opacity',String(light));

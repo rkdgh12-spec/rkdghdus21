@@ -2,7 +2,7 @@
 window.FORUM_MEDIA = {
   "epilogue/film": {
     "title": "에필로그 · 조각교육의 방향",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-soft-end.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-complete-end.mp4",
     "poster": "",
     "captions": [
       {
@@ -705,7 +705,7 @@ window.FORUM_MEDIA = {
     "timelineOffset": 0.33366666666666667,
     "speechBounds": {
       "firstSpeech": 1.024,
-      "lastSpeech": 66.444
+      "lastSpeech": 68.77
     }
   },
   "채길원/Q8": {
