@@ -306,11 +306,11 @@ window.FORUM_MEDIA = {
   },
   "박재영/Q2": {
     "title": "박재영 인터뷰 Q2 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/park-jaeyoung-q2-intro-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-park-kwon-concise-20261013/park-jaeyoung-q2-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/park-jaeyoung-q2.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/park-jaeyoung-q2-concise.ko.vtt?v=lecture-park-kwon-concise-1",
         "label": "한국어",
         "language": "ko"
       }
@@ -319,8 +319,9 @@ window.FORUM_MEDIA = {
     "timelineOffset": 0.33366666666666667,
     "speechBounds": {
       "firstSpeech": 0.444,
-      "lastSpeech": 42.244
-    }
+      "lastSpeech": 37.5289
+    },
+    "duration": 38.4384
   },
   "박재영/Q3": {
     "title": "",
@@ -602,11 +603,11 @@ window.FORUM_MEDIA = {
   },
   "권현빈/Q4": {
     "title": "권현빈 인터뷰 Q4 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kwon-hyunbin-q4-intro-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-park-kwon-concise-20261013/kwon-hyunbin-q4-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kwon-hyunbin-q4.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/kwon-hyunbin-q4-concise.ko.vtt?v=lecture-park-kwon-concise-1",
         "label": "한국어",
         "language": "ko"
       }
@@ -615,8 +616,9 @@ window.FORUM_MEDIA = {
     "timelineOffset": 0.33366666666666667,
     "speechBounds": {
       "firstSpeech": 1.054,
-      "lastSpeech": 51.264
-    }
+      "lastSpeech": 42.3249
+    },
+    "duration": 43.71033333333333
   },
   "권현빈/Q5": {
     "title": "권현빈 인터뷰 Q5",
