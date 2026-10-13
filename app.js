@@ -96,6 +96,7 @@
     const q=(s)=>root.querySelector(s);
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
+    const OVERVIEW_3D_VIEW={yaw:0,elevation:1.38};
     const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false,chapterElevationBeforeFocus=null;
     let epilogueRoam=null;
     function stopEpilogueRoam(){
@@ -297,9 +298,9 @@
       if(reducedMotion&&!depthEnabled){render();return}
       const token=++cameraMotion,duration=depthEnabled?(ringTransition?7600:5200):5000,start=performance.now();
       if(depthEnabled){
-        const turn=((0-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
+        const turn=((OVERVIEW_3D_VIEW.yaw-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
-        threeYaw=goalYaw;threeElevation=1.38;threeZoom=1.09;render3D();
+        threeYaw=goalYaw;threeElevation=OVERVIEW_3D_VIEW.elevation;threeZoom=1.09;render3D();
         let region=threeSvg.querySelector('.three-volume.outer');
         if(region){
           const box=region.getBBox();
@@ -450,11 +451,11 @@
       const box=element.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
-    // Calibrate cruise speed to the existing Ryu -> platform leg in the lecture route.
+    // Use the fixed whole-map overview for every leg, regardless of the current lens.
     const NODE_TRAVEL_MS=2352;
     const NODE_READING_HOLD_MS=1200;
     const NODE_TRAVEL_RAMP_MS=120;
-    let travelReference=null,screenTravelSpeed=null;
+    let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
       const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
       const a=chain(from),b=chain(to),join=a.find(id=>b.includes(id));
@@ -469,36 +470,25 @@
       travelReference={from:from.id,to:to.id,duration:count>1?Math.max(850,Math.round(NODE_TRAVEL_MS/count)):NODE_TRAVEL_MS};
       return travelReference;
     }
-    function nodeScreenCruiseSpeed(){
-      const key=[depthEnabled,width,height].join('/');
-      if(screenTravelSpeed?.key===key)return screenTravelSpeed.pixelsPerMs;
-      const reference=getTravelReference(),group=[reference.to,...children(reference.to).filter(n=>n.kind==='subconcept').map(n=>n.id)];
-      const point=id=>depthEnabled?{x:threeProjected[id].x/threeZoom,y:threeProjected[id].y/threeZoom}:{x:nodes[id].x*fitK,y:nodes[id].y*fitK};
-      const a=point(reference.from),b=point(reference.to),baseLength=Math.hypot(b.x-a.x,b.y-a.y);
-      let goalZoom=4;
-      if(group.length>=3){
-        const ps=group.map(point),xs=ps.map(p=>p.x),ys=ps.map(p=>p.y);
-        goalZoom=Math.max(.45,Math.min(goalZoom,width*.56/Math.max(1,Math.max(...xs)-Math.min(...xs)),height*.50/Math.max(1,Math.max(...ys)-Math.min(...ys))));
+    function overviewTravelDistance(from,to){
+      if(!overviewTravelPoints){
+        const c=Math.cos(OVERVIEW_3D_VIEW.yaw),s=Math.sin(OVERVIEW_3D_VIEW.yaw),ce=Math.cos(OVERVIEW_3D_VIEW.elevation),se=Math.sin(OVERVIEW_3D_VIEW.elevation);
+        overviewTravelPoints=nodes.map(n=>{
+          const x=n.x-threeCenter.x,y=n.y-threeCenter.y,z=threeHeight(n),u=x*c-y*s,v=x*s+y*c;
+          const d=v*ce-z*se,p=3200/Math.max(1200,3200+d);
+          return {x:u*p,y:(v*se-z*ce)*p};
+        });
       }
-      const pixelsPerMs=Math.max(.01,baseLength*(2+goalZoom)/2/(reference.duration-NODE_TRAVEL_RAMP_MS));
-      screenTravelSpeed={key,pixelsPerMs};
-      return pixelsPerMs;
+      const a=overviewTravelPoints[from??threeCenter.id],b=overviewTravelPoints[to];
+      // Overview fit, viewport size and translation cancel in the distance ratio.
+      return Math.hypot(b.x-a.x,b.y-a.y);
     }
-    function screenTravelTimeline(lengthAt){
-      // Integrate the projected line length as the lens changes, then invert it.
-      // This keeps each millisecond's blue-line advance equal in screen pixels.
-      const count=128,cost=[0];let total=0,previous=Math.max(0,lengthAt(0));
-      for(let i=1;i<=count;i++){const next=Math.max(0,lengthAt(i/count));total+=(previous+next)/2/count;cost.push(total);previous=next}
-      const cruiseMs=total/nodeScreenCruiseSpeed(),duration=Math.max(1,cruiseMs+Math.min(NODE_TRAVEL_RAMP_MS,cruiseMs*.25));
-      const progressAt=t=>{
-        const target=nodeTravelProgress(t,duration)*total;
-        if(total<.01)return nodeTravelProgress(t,duration);
-        let lo=0,hi=count;
-        while(lo+1<hi){const mid=(lo+hi)>>1;if(cost[mid]<target)lo=mid;else hi=mid}
-        const part=(target-cost[lo])/Math.max(.000001,cost[hi]-cost[lo]);
-        return Math.max(0,Math.min(1,(lo+part)/count));
-      };
-      return {duration,progressAt};
+    function overviewTravelTimeline(from,to){
+      const reference=getTravelReference(),referenceLength=overviewTravelDistance(reference.from,reference.to);
+      const unitsPerMs=Math.max(.000001,referenceLength/(reference.duration-NODE_TRAVEL_RAMP_MS));
+      const cruiseMs=overviewTravelDistance(from,to)/unitsPerMs;
+      const duration=Math.max(1,cruiseMs+Math.min(NODE_TRAVEL_RAMP_MS,cruiseMs*.25));
+      return {duration,progressAt:t=>nodeTravelProgress(t,duration)};
     }
     function nodeTravelProgress(t,duration){
       const elapsed=Math.max(0,Math.min(1,t))*duration,ramp=Math.min(NODE_TRAVEL_RAMP_MS,duration*.2),cruise=duration-ramp;
@@ -598,10 +588,7 @@
         threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
         const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();centerReadingText(id);after()};
         if(reducedMotion){finish();return}
-        const sourcePoint=previous!==null&&threeProjected[previous]?threeProjected[previous]:startFocus;
-        const targetPoint=threeProjected[id];
-        const baseLength=Math.hypot(targetPoint.x-sourcePoint.x,targetPoint.y-sourcePoint.y)/Math.max(.001,start.zoom);
-        let timeline;
+        const timeline=overviewTravelTimeline(previous,id);
         const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
         if(wideTransit){
           const sourcePoint=sourceId!==undefined&&sourceId!==null?threeProjected[sourceId]:null;
@@ -614,8 +601,6 @@
           const from=sourceId!==undefined&&sourceId!==null?threeProjected[sourceId]:null,to=threeProjected[id];
           const midpoint=from&&to?{x:start.x+width/2-(from.x+to.x)/2,y:start.y+height/2-(from.y+to.y)/2}:{x:start.x,y:start.y};
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
-          const zoomAt=progress=>progress<.42?start.zoom+(overviewZoom-start.zoom)*smooth(progress/.42):progress<.58?overviewZoom:overviewZoom+(goal.zoom-overviewZoom)*smooth((progress-.58)/.42);
-          timeline=screenTravelTimeline(progress=>baseLength*zoomAt(progress));
           travel([start,goal],timeline.duration,(_p,progress)=>{
             lastManual3D=performance.now();
             if(progress<.42){
@@ -632,7 +617,6 @@
             render3D();
           },finish,timeline.progressAt);
         }else{
-          timeline=screenTravelTimeline(progress=>baseLength*(start.zoom+(goal.zoom-start.zoom)*progress));
           travel([start,goal],timeline.duration,(p,progress)=>{
             lastManual3D=performance.now();
             threePanX=p.x;threePanY=p.y;
@@ -662,8 +646,7 @@
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
         const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();centerReadingText(id);after()};
         if(reducedMotion){finish();return}
-        const baseLength=previous!==null?Math.hypot(node.x-nodes[previous].x,node.y-nodes[previous].y):Math.hypot(width/2-(node.x*start.k+start.x),height/2-(node.y*start.k+start.y))/Math.max(.001,start.k);
-        const timeline=screenTravelTimeline(progress=>baseLength*(start.k+(goal.k-start.k)*progress));
+        const timeline=overviewTravelTimeline(previous,id);
         travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish,timeline.progressAt);
         return timeline;
       }
@@ -671,8 +654,7 @@
       const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
       const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();centerReadingText(id);after()};
       if(reducedMotion){finish();return}
-      const baseLength=previous!==null?Math.hypot(node.x-nodes[previous].x,node.y-nodes[previous].y):Math.hypot(width/2-(node.x*start.k+start.x),height/2-(node.y*start.k+start.y))/Math.max(.001,start.k);
-      const timeline=screenTravelTimeline(progress=>baseLength*(start.k+(goal.k-start.k)*progress));
+      const timeline=overviewTravelTimeline(previous,id);
       travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish,timeline.progressAt);
       return timeline;
     }
