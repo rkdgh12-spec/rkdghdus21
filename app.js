@@ -568,7 +568,8 @@
     // Tune Ryu first: move time from the reading tail into the Q approach.
     const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800,anchorCamera:true,continuousReturn:true}};
     const PERSON_CONTEXT_SCALE={'최고은':.765};
-    const PERSON_SUBCONCEPT_TRAVEL_SCALE={'최고은':1.35};
+    const PERSON_CONCEPT_TRAVEL_SCALE={'강인애':1.25};
+    const PERSON_SUBCONCEPT_TRAVEL_SCALE={'최고은':1.35,'강인애':1.35};
     const PERSON_QUESTION_TRAVEL_SCALE={'최고은/Q4':1.2,'최고은/Q7':2};
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
@@ -608,9 +609,10 @@
       const ratio=overviewTravelDistance(from,to)/Math.max(.000001,referenceLength);
       const zoomReturn=returning&&nodes[from].kind==='subconcept'&&nodes[to].kind==='concept';
       const isQuestionApproach=!!readingPace&&nodes[from]?.kind==='subconcept'&&nodes[to].kind==='question'&&nodes[to].parent===from;
+      const conceptApproach=!returning&&nodes[from]?.kind==='person'&&nodes[to].kind==='concept'&&nodes[to].parent===from;
       const subconceptApproach=!returning&&nodes[from]?.kind==='concept'&&nodes[to].kind==='subconcept'&&nodes[to].parent===from;
       const questionApproach=!returning&&nodes[from]?.kind==='subconcept'&&nodes[to].kind==='question'&&nodes[to].parent===from;
-      const travelScale=subconceptApproach?(PERSON_SUBCONCEPT_TRAVEL_SCALE[nodes[to].person]||1):questionApproach?(PERSON_QUESTION_TRAVEL_SCALE[nodes[to].person+'/'+nodes[to].label]||1):1;
+      const travelScale=conceptApproach?(PERSON_CONCEPT_TRAVEL_SCALE[nodes[to].person]||1):subconceptApproach?(PERSON_SUBCONCEPT_TRAVEL_SCALE[nodes[to].person]||1):questionApproach?(PERSON_QUESTION_TRAVEL_SCALE[nodes[to].person+'/'+nodes[to].label]||1):1;
       const duration=Math.max(zoomReturn?1250:policy.min,Math.min(policy.max,policy.base*Math.pow(ratio,.6)))*travelScale+(isQuestionApproach?readingPace.questionExtraMs:0);
       const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
       const pace=p=>{
@@ -684,7 +686,7 @@
     const contextZoomKey=person=>[person,depthEnabled,width,height].join('|');
     const nodeZoomLevel=node=>Math.max(NODE_ZOOM_LEVELS[node.kind]||1,node.person!=='류성실'&&['subconcept','question'].includes(node.kind)?Math.min(maxThreeZoom,(personContextZoom.get(contextZoomKey(node.person))||0)*1.2):0);
     const cameraTravelProgress=(previous,node,t)=>previous===null&&node.kind==='chapter'&&node.chapter===1?t:t*t*(3-2*t);
-    const anchorsReadingCamera=(from,to)=>nodes[to].parent===from&&(PERSON_READING_PACE[nodes[to].person]?.anchorCamera&&['subconcept','question'].includes(nodes[to].kind)||nodes[to].person==='최고은'&&nodes[to].kind==='subconcept');
+    const anchorsReadingCamera=(from,to)=>nodes[to].parent===from&&(PERSON_READING_PACE[nodes[to].person]?.anchorCamera&&['subconcept','question'].includes(nodes[to].kind)||['최고은','강인애'].includes(nodes[to].person)&&nodes[to].kind==='subconcept');
     function anchoredCameraPan(start,startPoint,goalPoint,scaleRatio,progress,center={x:0,y:0}){
       // Interpolate the destination on screen, then solve pan for the current zoom.
       // Independent pan/zoom interpolation can carry the destination past its endpoint.
