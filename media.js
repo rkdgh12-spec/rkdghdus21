@@ -221,11 +221,11 @@ window.FORUM_MEDIA = {
   },
   "강인애/Q3": {
     "title": "강인애 인터뷰 Q3 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kang-replacement-20261013/kang-inae-q3-intro-replacement-web.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kang-concise-20261013/kang-inae-q3-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kang-inae-q3-replacement.ko.vtt?v=kang-replacement-subtitles-1",
+        "src": "captions/kang-inae-q3-concise.ko.vtt?v=lecture-223-kang-concise-2",
         "label": "한국어",
         "language": "ko"
       }
@@ -235,7 +235,7 @@ window.FORUM_MEDIA = {
     "introEnd": 9.45,
     "speechBounds": {
       "firstSpeech": 1.694,
-      "lastSpeech": 50.484
+      "lastSpeech": 45.278800000000004
     }
   },
   "강인애/Q6": {
