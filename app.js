@@ -462,7 +462,7 @@
       overlay.setAttribute('class','lecture-route');overlay.setAttribute('aria-hidden','true');
       overlay.style.opacity='0';
       const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');
-      line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','3.5');
+      line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','3');
       overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
       const forkBranches={overlay,sources:new Map()};activeForkBranches=forkBranches;
       let motion=cameraMotion,finished=false,finishing=false;
@@ -480,7 +480,7 @@
           const armLine=document.createElementNS(NS,'path'),armHead=document.createElementNS(NS,'circle');
           armLine.setAttribute('class','lecture-route-line lecture-route-fork');
           armLine.dataset.forkSource=String(sourceId);armLine.dataset.forkTarget=String(child.id);
-          armHead.setAttribute('class','lecture-route-head');armHead.setAttribute('r','3.5');
+          armHead.setAttribute('class','lecture-route-head');armHead.setAttribute('r','3');
           overlay.append(armLine,armHead);
           const timelines=armIds.slice(1).map((id,i)=>overviewTravelTimeline(armIds[i],id,{
             continueFromNode:true,passThrough:i<armIds.length-2,
