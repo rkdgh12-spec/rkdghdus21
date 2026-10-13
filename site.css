@@ -405,3 +405,6 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 /* Upcoming descendants show their labels first; blue lines appear only as travelled. */
 #forum-source-network .stage :is(.wires,.three-wires) .links.branch-upcoming{opacity:0!important;transition:none!important}
+
+/* Guided legs use neutral base edges immediately, including every subconcept -> Q leg. */
+#forum-source-network .stage.guided-transition :is(.wires,.three-wires) .links:is(.active,.branch){transition:none!important}
