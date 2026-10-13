@@ -689,7 +689,7 @@
         if(motion===cameraMotion){
           const white=document.createElement('div');white.className='epilogue-center-white';white.setAttribute('aria-hidden','true');
           (document.fullscreenElement||document.body).append(white);
-          await new Promise(resolve=>setTimeout(resolve,900));
+          await new Promise(resolve=>setTimeout(resolve,3200));
           if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');}
           white.remove();
           await new Promise(resolve=>setTimeout(resolve,500));

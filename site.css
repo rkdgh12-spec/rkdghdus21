@@ -361,10 +361,14 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 #interview-dialog #interview-work-images .work-image-original-text{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;filter:brightness(.90) contrast(1.05) saturate(.96)}
 
-/* Final epilogue handoff: white spreads from the viewport centre. */
-.epilogue-center-white{position:fixed;inset:0;z-index:2147483647;pointer-events:none;background:#fff;clip-path:circle(0 at 50% 50%);animation:epilogue-center-white 900ms cubic-bezier(.22,.61,.36,1) forwards}
-@keyframes epilogue-center-white{from{clip-path:circle(0 at 50% 50%)}to{clip-path:circle(150vmax at 50% 50%)}}
+
+/* Feathered light blooms from the centre before the white question screen. */
+.epilogue-center-white{position:fixed;inset:0;z-index:2147483647;pointer-events:none;overflow:hidden;background:transparent}
+.epilogue-center-white::before{content:"";position:absolute;left:50%;top:50%;width:160vmax;height:160vmax;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,255,255,.96) 15%,rgba(255,255,255,.72) 32%,rgba(255,255,255,.34) 49%,rgba(255,255,255,.08) 65%,rgba(255,255,255,0) 80%);filter:blur(4vmax);transform:translate(-50%,-50%) scale(.02);opacity:0;animation:epilogue-light-bloom 3200ms ease-in-out forwards}
+.epilogue-center-white::after{content:"";position:absolute;inset:0;background:#fff;opacity:0;animation:epilogue-white-fill 3200ms ease-in-out forwards}
+@keyframes epilogue-light-bloom{0%{opacity:0;transform:translate(-50%,-50%) scale(.02)}18%{opacity:.65}48%{opacity:1;transform:translate(-50%,-50%) scale(.55)}100%{opacity:1;transform:translate(-50%,-50%) scale(2.5)}}
+@keyframes epilogue-white-fill{0%,48%{opacity:0}100%{opacity:1}}
 #interview-dialog.epilogue-mode.question-intro{background:#fff}
-#interview-dialog.epilogue-mode.question-intro .interview-copy{animation:epilogue-question-appear 500ms ease-out both}
+#interview-dialog.epilogue-mode.question-intro .interview-copy{animation:epilogue-question-appear 900ms ease-out both}
 @keyframes epilogue-question-appear{from{opacity:0}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.epilogue-center-white,#interview-dialog.epilogue-mode.question-intro .interview-copy{animation:none}}
+@media(prefers-reduced-motion:reduce){.epilogue-center-white::before,.epilogue-center-white::after,#interview-dialog.epilogue-mode.question-intro .interview-copy{animation:none}}
