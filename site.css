@@ -372,6 +372,8 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 @keyframes epilogue-light-bloom{0%{opacity:0;transform:translate(-50%,-50%) scale(.02)}18%{opacity:.65}48%{opacity:1;transform:translate(-50%,-50%) scale(.55)}100%{opacity:1;transform:translate(-50%,-50%) scale(2.5)}}
 @keyframes epilogue-white-fill{0%,48%{opacity:0}100%{opacity:1}}
 #interview-dialog.epilogue-mode.question-intro{background:#fff}
-#interview-dialog.epilogue-mode.question-intro .interview-copy{animation:epilogue-question-appear 900ms ease-out both}
+#interview-dialog.epilogue-mode.question-intro .interview-media{visibility:hidden}
+#interview-dialog.epilogue-mode.question-intro .interview-copy{animation:none;transition:none;opacity:1}
+#interview-dialog.epilogue-mode.question-intro #interview-question,#interview-dialog.epilogue-mode.question-intro #interview-chapter{animation:epilogue-question-appear 900ms ease-out both}
 @keyframes epilogue-question-appear{from{opacity:0}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.epilogue-center-white::before,.epilogue-center-white::after,#interview-dialog.epilogue-mode.question-intro .interview-copy{animation:none}}
+@media(prefers-reduced-motion:reduce){.epilogue-center-white::before,.epilogue-center-white::after,#interview-dialog.epilogue-mode.question-intro #interview-question,#interview-dialog.epilogue-mode.question-intro #interview-chapter{animation:none}}

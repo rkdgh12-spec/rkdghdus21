@@ -692,7 +692,10 @@
           const white=document.createElement('div');white.className='epilogue-center-white';white.setAttribute('aria-hidden','true');
           (document.fullscreenElement||document.body).append(white);
           await new Promise(resolve=>setTimeout(resolve,3200));
-          if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');}
+          if(motion===cameraMotion){
+            openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');
+            await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+          }
           white.remove();
           await new Promise(resolve=>setTimeout(resolve,500));
         }
@@ -769,7 +772,7 @@
         nextButton.style.right=Math.max(0,document.documentElement.clientWidth-reference.right)+'px';
         nextButton.style.bottom=Math.max(0,window.innerHeight-reference.bottom-window.scrollY)+'px';
         dialog.showModal();
-        if(!reducedMotion)dialog.animate([{opacity:0},{opacity:1}],{duration:240,easing:'ease-out'});
+        if(!reducedMotion&&!isEpilogue)dialog.animate([{opacity:0},{opacity:1}],{duration:240,easing:'ease-out'});
       }
       dialog.scrollTop=0;
       dialog.classList.add('question-intro');
