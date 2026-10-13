@@ -441,7 +441,7 @@
         if(nodes[id].kind!=='question'||!routeArrived||interviewQueued)return;
         interviewQueued=true;
         const arrivalMotion=cameraMotion;
-        setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
+        setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},1000);
       };
       followReadableRoute(previous,id,guided,()=>{
         if(openingChapterEntrance?.id===id)openingChapterEntrance=null;
@@ -484,7 +484,7 @@
           overlay.append(armLine,armHead);
           const timelines=armIds.slice(1).map((id,i)=>overviewTravelTimeline(armIds[i],id,{
             continueFromNode:true,passThrough:i<armIds.length-2,
-            readingDeparture:true,readingArrival:i<armIds.length-2
+            readingDeparture:true,readingArrival:true
           }));
           arms.push({ids:armIds,line:armLine,head:armHead,timelines,duration:timelines.reduce((sum,item)=>sum+item.duration,0)});
         }
@@ -532,12 +532,19 @@
       const box=element.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
-    // Use the fixed whole-map overview for every leg, regardless of the current lens.
+    // Fixed overview distances set the rhythm; bounds protect reading time and the lecture budget.
     const NODE_REFERENCE_TRAVEL_MS=850;
     const NODE_TRAVEL_RAMP_MS=120;
-    const NODE_PASS_SPEED=.28;
-    const NODE_READING_ZONE=.32;
-    const CHAPTER_TRAVEL_SPEED_MULTIPLIER=1.5;
+    const NODE_PASS_SPEED=.5;
+    const NODE_READING_ZONE=.28;
+    const NODE_TRAVEL_TIMES={
+      chapter:{base:1800,min:1700,max:2200},
+      person:{base:1750,min:1600,max:2100},
+      concept:{base:1350,min:1200,max:1700},
+      subconcept:{base:1450,min:1300,max:1800},
+      question:{base:760,min:650,max:900},
+      returning:{base:600,min:450,max:800}
+    };
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
       const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
@@ -570,22 +577,24 @@
       if(from===null&&nodes[to].kind==='chapter'&&nodes[to].chapter===1)
         return {duration:flow.openingDuration??2352,progressAt:t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}};
       const reference=getTravelReference(),referenceLength=overviewTravelDistance(reference.from,reference.to);
-      const unitsPerMs=Math.max(.000001,referenceLength/(reference.duration-NODE_TRAVEL_RAMP_MS));
-      const acrossChapters=from!==null&&from!==undefined&&nodes[from].chapter!==nodes[to].chapter;
-      const speedMultiplier=acrossChapters?CHAPTER_TRAVEL_SPEED_MULTIPLIER:1;
-      const cruiseMs=Math.max(.001,overviewTravelDistance(from,to)/unitsPerMs/speedMultiplier);
+      const returning=flow.returning??(from!==null&&from!==undefined&&nodes[from].parent===to);
+      const policy=NODE_TRAVEL_TIMES[returning?'returning':nodes[to].kind]||NODE_TRAVEL_TIMES.concept;
+      const ratio=overviewTravelDistance(from,to)/Math.max(.000001,referenceLength);
+      const duration=Math.max(policy.min,Math.min(policy.max,policy.base*Math.pow(ratio,.6)));
       const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
       const pace=p=>{
         let speed=1;
-        if(flow.readingDeparture&&p<NODE_READING_ZONE)speed=NODE_PASS_SPEED+(1-NODE_PASS_SPEED)*smooth(p/NODE_READING_ZONE);
-        if(flow.readingArrival&&p>1-NODE_READING_ZONE)speed=NODE_PASS_SPEED+(1-NODE_PASS_SPEED)*smooth((1-p)/NODE_READING_ZONE);
+        if(!returning&&flow.readingDeparture&&p<NODE_READING_ZONE)speed=NODE_PASS_SPEED+(1-NODE_PASS_SPEED)*smooth(p/NODE_READING_ZONE);
+        if(!returning&&flow.readingArrival&&p>1-NODE_READING_ZONE)speed=NODE_PASS_SPEED+(1-NODE_PASS_SPEED)*smooth((1-p)/NODE_READING_ZONE);
         return speed;
       };
-      const count=128,cost=[0];let total=0,previous=cruiseMs/pace(0);
-      for(let i=1;i<=count;i++){const next=cruiseMs/pace(i/count);total+=(previous+next)/2/count;cost.push(total);previous=next}
-      const ramp=Math.min(NODE_TRAVEL_RAMP_MS/speedMultiplier,total*.25);
+      // Normalize the glide inside its duration, so slowing near text never stretches a long leg.
+      const count=128,cost=[0];let weight=0,previous=1/pace(0);
+      for(let i=1;i<=count;i++){const next=1/pace(i/count);weight+=(previous+next)/2/count;cost.push(weight);previous=next}
+      const ramp=Math.min(NODE_TRAVEL_RAMP_MS,duration*.2);
       const rampIn=flow.continueFromNode?0:ramp,rampOut=flow.passThrough?0:ramp;
-      const duration=Math.max(1,total+(rampIn+rampOut)/2);
+      const total=duration-(rampIn+rampOut)/2;
+      for(let i=1;i<=count;i++)cost[i]=cost[i]/weight*total;
       const progressAt=t=>{
         const elapsed=Math.max(0,Math.min(1,t))*duration;
         const target=rampIn&&elapsed<rampIn?elapsed*elapsed/(2*rampIn):rampOut&&elapsed>duration-rampOut?total-(duration-elapsed)**2/(2*rampOut):elapsed-rampIn/2;
@@ -606,12 +615,11 @@
     function travel(points,duration,frame,done,progressAt,onProgress,continueFromNode=false){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
-      let start=continueFromNode?performance.now():null,last=0,firstChapterEmphasized=false;
+      let start=continueFromNode?performance.now():null,firstChapterEmphasized=false;
       function tick(now){
         if(token!==cameraMotion)return;
         if(start===null)start=now;
         const t=Math.min(1,(now-start)/duration);
-        if(t<1&&now-last<24){requestAnimationFrame(tick);return}last=now;
         const progress=progressAt?progressAt(t):nodeTravelProgress(t,duration),distance=total*progress;let i=0;
         while(i<segments.length-1&&lengths[i+1]<distance)i++;
         const part=segments[i]?Math.max(0,Math.min(1,(distance-lengths[i])/segments[i])):1;
@@ -669,14 +677,14 @@
           routeBranchPreview=previous;nodeBranchReveal={id:previous,start:performance.now()};
           readingDeparture=true;trace?.startFork(previous);render();
         }
-        const readingArrival=passThrough&&previous!==null&&nodes[target].parent===previous;
+        const readingArrival=passThrough&&!returning;
         const legIndex=index;
         followConnectionToLabel(previous,target,()=>{
           markStepArrival(target,true);
           if(!passThrough){routeBranchPreview=null;trace?.finish();stage.classList.remove('guided-transition');render();after();return}
           // Move through intermediate nodes at a reduced, nonzero speed.
           readingDeparture=readingArrival;previous=target;index++;next();
-        },{continueFromNode:index>0,passThrough,readingArrival,readingDeparture,onProgress:p=>{
+        },{continueFromNode:index>0,passThrough,returning,readingArrival,readingDeparture:!returning&&readingDeparture,onProgress:p=>{
           if(previous!==null&&routeBranchPreview===previous&&nodes[previous].kind==='person'&&nodes[target].parent===previous&&p>=.45){
             routeBranchPreview=forwardFork?target:null;nodeBranchReveal=forwardFork?{id:target,start:null}:null;render();
           }
@@ -740,24 +748,20 @@
           threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
           travel([start,goal],timeline.duration,(_p,progress)=>{
             lastManual3D=performance.now();
-            if(progress<.42){
-              const t=smooth(progress/.42);
-              threeZoom=start.zoom+(overviewZoom-start.zoom)*t;
-              threePanX=start.x+(midpoint.x-start.x)*t;threePanY=start.y+(midpoint.y-start.y)*t;
-            }else if(progress<.58){
-              threeZoom=overviewZoom;threePanX=midpoint.x;threePanY=midpoint.y;
-            }else{
-              const t=smooth((progress-.58)/.42);
-              threeZoom=overviewZoom+(goal.zoom-overviewZoom)*t;
-              threePanX=midpoint.x+(goal.x-midpoint.x)*t;threePanY=midpoint.y+(goal.y-midpoint.y)*t;
-            }
+            // Pass through the wide view continuously, with no stationary middle section.
+            const envelope=Math.sin(Math.PI*progress)**2;
+            threePanX=start.x+(goal.x-start.x)*progress+(midpoint.x-(start.x+goal.x)/2)*envelope;
+            threePanY=start.y+(goal.y-start.y)*progress+(midpoint.y-(start.y+goal.y)/2)*envelope;
+            threeZoom=progress<.5
+              ?start.zoom*Math.pow(overviewZoom/start.zoom,smooth(progress*2))
+              :overviewZoom*Math.pow(goal.zoom/overviewZoom,smooth((progress-.5)*2));
             render3D();
           },finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
         }else{
           travel([start,goal],timeline.duration,(p,progress)=>{
             lastManual3D=performance.now();
             threePanX=p.x;threePanY=p.y;
-            threeZoom=start.zoom+(goal.zoom-start.zoom)*progress;
+            threeZoom=start.zoom*Math.pow(goal.zoom/start.zoom,progress);
             render3D();
             const from=previous!==null?threeProjected[previous]:null,to=threeProjected[focusId];
             if(to){
@@ -784,7 +788,7 @@
         const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
         const timeline=overviewTravelTimeline(previous,id,flow);
-        travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+        travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k*Math.pow(goal.k/start.k,progress);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
         return timeline;
       }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
@@ -792,7 +796,7 @@
       const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
       if(reducedMotion){finish();return}
       const timeline=overviewTravelTimeline(previous,id,flow);
-      travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+      travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k*Math.pow(goal.k/start.k,progress);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
       return timeline;
     }
     function showDetail(n,openQuestion=true){
