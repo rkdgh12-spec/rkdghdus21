@@ -452,6 +452,8 @@
       let index=0,previous=from;
       function next(){
         const target=route[index];cameraReadingNode=target;cameraReadingCentered=false;
+        const enteringQuestion=previous!==null&&nodes[previous].kind==='subconcept'&&nodes[target].kind==='question'&&nodes[target].parent===previous;
+        const legMs=enteringQuestion?Math.round(movingMs*.8):movingMs;
         followConnectionToLabel(previous,target,()=>{
           const motion=cameraMotion;markStepArrival(target,true);centerReadingText(target);
           if(index===route.length-1){after();return}
@@ -459,8 +461,8 @@
           const enteringDeeper=previous!==null&&nodes[target].parent===previous;
           const resume=()=>{if(cameraMotion!==motion||selected!==to)return;previous=target;index++;next()};
           if(!reducedMotion&&enteringDeeper)setTimeout(resume,NODE_READING_HOLD_MS);else resume();
-        },movingMs);
-        if(guided)traceRoute(previous,target,null,movingMs,true);
+        },legMs);
+        if(guided)traceRoute(previous,target,null,legMs,true);
       }
       next();
     }
