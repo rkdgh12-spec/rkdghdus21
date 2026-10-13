@@ -640,7 +640,7 @@
       };
       if(!returning&&flow.readingArrival&&nodes[from]?.kind==='concept'&&nodes[to].kind==='subconcept'){
         // Finish framing first, then keep the word steady while the line still glides in.
-        const readingMs=.9*(readingPace?.readingMs??1600)/(PERSON_SUBCONCEPT_ENTRY_SPEED[nodes[to].person]||1),totalDuration=duration+readingMs,arrival=.84,tailSpeed=(1-arrival)/readingMs;
+        const readingMs=.81*(readingPace?.readingMs??1600)/(PERSON_SUBCONCEPT_ENTRY_SPEED[nodes[to].person]||1),totalDuration=duration+readingMs,arrival=.84,tailSpeed=(1-arrival)/readingMs;
         return {duration:totalDuration,readingStartsAt:duration/totalDuration,
           cameraProgressAt:t=>smooth(Math.min(1,t*totalDuration/duration)),
           progressAt:t=>{
