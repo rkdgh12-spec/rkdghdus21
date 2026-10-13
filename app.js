@@ -676,7 +676,7 @@
     const NODE_ZOOM_LEVELS={chapter:1,person:2,concept:4,subconcept:8,question:8};
     const personContextZoom=new Map();
     const contextZoomKey=person=>[person,depthEnabled,width,height].join('|');
-    const nodeZoomLevel=node=>Math.max(NODE_ZOOM_LEVELS[node.kind]||1,['subconcept','question'].includes(node.kind)?Math.min(maxThreeZoom,(personContextZoom.get(contextZoomKey(node.person))||0)*1.2):0);
+    const nodeZoomLevel=node=>Math.max(NODE_ZOOM_LEVELS[node.kind]||1,node.person!=='류성실'&&['subconcept','question'].includes(node.kind)?Math.min(maxThreeZoom,(personContextZoom.get(contextZoomKey(node.person))||0)*1.2):0);
     const cameraTravelProgress=(previous,node,t)=>previous===null&&node.kind==='chapter'&&node.chapter===1?t:t*t*(3-2*t);
     const anchorsReadingCamera=(from,to)=>PERSON_READING_PACE[nodes[to].person]?.anchorCamera&&nodes[to].parent===from&&['subconcept','question'].includes(nodes[to].kind);
     function anchoredCameraPan(start,startPoint,goalPoint,scaleRatio,progress,center={x:0,y:0}){
@@ -693,10 +693,11 @@
       return [person.parent,person.id,...children(person.id).filter(n=>n.kind==='concept').map(n=>n.id)];
     }
     function readingContext(){return cameraReadingNode===null?null:contextFrameIds(cameraReadingNode)}
+    const usesMaxPersonFrame=contextIds=>nodes[contextIds[1]].person!=='류성실';
     let settledContextFrame=null;
     const contextCameraStamp=()=>[width,height,depthEnabled?1:0,...(depthEnabled?[threePanX,threePanY,threeZoom,threeYaw,idleYaw,threeElevation,idleElevation]:[ox,oy,k])];
     function rememberContextFrame(contextIds){
-      if(!contextIds)return;
+      if(!contextIds||!usesMaxPersonFrame(contextIds))return;
       settledContextFrame={person:contextIds[1],camera:contextCameraStamp()};
       personContextZoom.set(contextZoomKey(nodes[contextIds[1]].person),depthEnabled?threeZoom:k/fitK);
     }
@@ -706,6 +707,14 @@
       return current.length===saved.length&&current.every((value,index)=>Math.abs(value-saved[index])<.001);
     }
     function contextFrameFit(contextIds,point,scale,limit){
+      // Ryu keeps the approved chapter/name/concept framing without alteration.
+      if(!usesMaxPersonFrame(contextIds)){
+        const anchor=point(contextIds[1]);
+        const spanX=2*Math.max(...contextIds.map(id=>Math.abs(point(id).x-anchor.x)));
+        const spanY=2*Math.max(...contextIds.map(id=>Math.abs(point(id).y-anchor.y)));
+        const fitX=Math.max(180,width-340)/Math.max(1,spanX),fitY=Math.max(160,height-240)/Math.max(1,spanY);
+        return depthEnabled?Math.max(.45,scale*Math.min(1,fitX,fitY)):Math.max(fitK*.45,Math.min(fitK*2.8,fitX,fitY));
+      }
       // Keep the person central; only the name and main concepts constrain the frame.
       const anchor=point(contextIds[1]),ids=contextIds.slice(1);
       const spanX=2*Math.max(1,...ids.map(id=>Math.abs(point(id).x-anchor.x)));
@@ -713,6 +722,7 @@
       return Math.min(limit,scale*Math.min(Math.max(40,width-192)/spanX,Math.max(40,height-128)/spanY));
     }
     function keepContextLabelsInside(contextIds,scale,apply){
+      if(!usesMaxPersonFrame(contextIds))return scale;
       const stageBox=stage.getBoundingClientRect(),ids=contextIds.slice(1);
       for(let attempt=0;attempt<5;attempt++){
         let ratio=1;
@@ -824,7 +834,7 @@
     function followConnectionToLabel(previous,id,after,flow={}){
       cameraMotion++;
       const context=contextFrameIds(id),previousContext=previous==null?null:contextFrameIds(previous);
-      if(context&&previousContext&&context[1]===previousContext[1]&&isSettledContextFrame(context)){
+      if(context&&usesMaxPersonFrame(context)&&previousContext&&context[1]===previousContext[1]&&isSettledContextFrame(context)){
         // Once the complete name/concept frame is in view, only the route advances.
         const timeline=flow.timeline||overviewTravelTimeline(previous,id,flow);
         const finish=()=>{if(!flow.passThrough)centerReadingText(id);after()};
