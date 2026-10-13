@@ -566,7 +566,7 @@
       returning:{base:600,min:450,max:800}
     };
     // Tune Ryu first: move time from the reading tail into the Q approach.
-    const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800}};
+    const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800,anchorCamera:true}};
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
       const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
@@ -676,6 +676,13 @@
     const NODE_ZOOM_LEVELS={chapter:1,person:2,concept:4,subconcept:8,question:8};
     const nodeZoomLevel=node=>NODE_ZOOM_LEVELS[node.kind]||1;
     const cameraTravelProgress=(previous,node,t)=>previous===null&&node.kind==='chapter'&&node.chapter===1?t:t*t*(3-2*t);
+    const anchorsReadingCamera=(from,to)=>PERSON_READING_PACE[nodes[to].person]?.anchorCamera&&nodes[to].parent===from&&['subconcept','question'].includes(nodes[to].kind);
+    function anchoredCameraPan(start,startPoint,goalPoint,scaleRatio,progress,center={x:0,y:0}){
+      // Interpolate the destination on screen, then solve pan for the current zoom.
+      // Independent pan/zoom interpolation can carry the destination past its endpoint.
+      return {x:startPoint.x+(goalPoint.x-startPoint.x)*progress-center.x-(startPoint.x-center.x-start.x)*scaleRatio,
+        y:startPoint.y+(goalPoint.y-startPoint.y)*progress-center.y-(startPoint.y-center.y-start.y)*scaleRatio};
+    }
     function contextFrameIds(id){
       const node=nodes[id];
       if(!node||!['person','concept'].includes(node.kind))return null;
@@ -752,6 +759,7 @@
       if(depthEnabled){
         lastManual3D=performance.now();
         const start={x:threePanX,y:threePanY,zoom:threeZoom,yaw:threeYaw,elevation:threeElevation};
+        const anchored=anchorsReadingCamera(previous,id),startTarget=anchored?{...threeProjected[id]}:null;
         let startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
         const node=nodes[id],kind=node.kind,contextIds=contextFrameIds(id);
         const sourceId=previous;
@@ -787,10 +795,11 @@
             if(Number.isFinite(timeline.readingStartsAt))cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;
             threePanX=start.x+(goal.x-start.x)*progress;threePanY=start.y+(goal.y-start.y)*progress;
             threeZoom=start.zoom*Math.pow(goal.zoom/start.zoom,progress);
+            if(anchored){const pan=anchoredCameraPan(start,startTarget,goalFocus,threeZoom/start.zoom,progress,{x:width/2,y:height/2});threePanX=pan.x;threePanY=pan.y}
             render3D();
             const from=previous!==null?threeProjected[previous]:null,to=threeProjected[focusId];
             // The broad structure stays fixed while the line advances from name to concept.
-            if(to&&!contextIds&&!timeline.cameraProgressAt){
+            if(to&&!contextIds&&!timeline.cameraProgressAt&&!anchored){
               const currentX=(from?from.x:startFocus.x)*(1-progress)+to.x*progress;
               const currentY=(from?from.y:startFocus.y)*(1-progress)+to.y*progress;
               const desiredX=startFocus.x+(goalFocus.x-startFocus.x)*progress;
@@ -820,10 +829,11 @@
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
       if(node.kind==='subconcept'){const textPoint=selectedTextPoint(id);ox+=width/2-textPoint.x;oy+=height/2-textPoint.y;render()}
       const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
+      const anchored=anchorsReadingCamera(previous,id),startTarget={x:node.x*start.k+start.x,y:node.y*start.k+start.y},goalTarget={x:node.x*goal.k+goal.x,y:node.y*goal.k+goal.y};
       const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
       if(reducedMotion){finish();return}
       const timeline=overviewTravelTimeline(previous,id,flow);
-      travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);if(Number.isFinite(timeline.readingStartsAt))cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+      travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);if(Number.isFinite(timeline.readingStartsAt))cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;k=start.k*Math.pow(goal.k/start.k,p);const pan=anchored?anchoredCameraPan(start,startTarget,goalTarget,k/start.k,p):{x:start.x+(goal.x-start.x)*p,y:start.y+(goal.y-start.y)*p};ox=pan.x;oy=pan.y;render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
       return timeline;
     }
     function showDetail(n,openQuestion=true){
