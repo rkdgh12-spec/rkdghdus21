@@ -131,21 +131,22 @@ window.FORUM_MEDIA = {
   },
   "최고은/Q7": {
     "title": "최고은 인터뷰 Q7",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/choe-goeun-q7-focus-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-choe-concise-20261013/choe-goeun-q7-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/choe-goeun-q7.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/choe-goeun-q7-concise.ko.vtt?v=lecture-ryu-choe-concise-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
     "transcript": "",
-    "timelineOffset": 0.33366666666666667,
+    "timelineOffset": 0,
     "speechBounds": {
-      "firstSpeech": 1.024,
-      "lastSpeech": 52.644
-    }
+      "firstSpeech": 0.5855666666666663,
+      "lastSpeech": 41.20556666666666
+    },
+    "duration": 41.875166666666665
   },
   "최고은/Q2": {
     "title": "",
@@ -175,21 +176,22 @@ window.FORUM_MEDIA = {
   },
   "류성실/Q6": {
     "title": "류성실 인터뷰 Q6",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-replacement-20261013/ryu-sungsil-q6-replacement-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-choe-concise-20261013/ryu-sungsil-q6-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/ryu-sungsil-q6-replacement.ko.vtt?v=ryu-replacement-subtitles-1",
+        "src": "captions/ryu-sungsil-q6-concise.ko.vtt?v=lecture-ryu-choe-concise-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
     "transcript": "",
-    "timelineOffset": 0.33366666666666667,
+    "timelineOffset": 0,
     "speechBounds": {
-      "firstSpeech": 0.994,
-      "lastSpeech": 45.914
-    }
+      "firstSpeech": 0.7938000000000001,
+      "lastSpeech": 30.465233333333334
+    },
+    "duration": 31.498133333333335
   },
   "류성실/Q3": {
     "title": "",
