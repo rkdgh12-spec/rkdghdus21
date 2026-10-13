@@ -361,14 +361,18 @@
       const keep=new Set([...ancestors(selected),...descendants(selected)]);
       if(showingNodeBranches()&&nodes[routeBranchPreview].kind==='concept'){
         for(const id of ancestors(routeBranchPreview))keep.add(id);
-        for(const n of branchChildren(routeBranchPreview))keep.add(n.id);
+        for(const n of branchChildren(routeBranchPreview))for(const id of descendants(n.id))keep.add(id);
       }
       return keep;
     }
     function nodeBranchState(e){
       if(!nodeBranchReveal||selected!==nodeBranchReveal.id&&(!showingNodeBranches()||routeBranchPreview!==nodeBranchReveal.id))return null;
       const source=nodes[nodeBranchReveal.id],a=nodes[e.source],b=nodes[e.target];
-      const branch=e.kind==='hierarchy'&&a.id===source.id&&branchChildren(source.id).some(n=>n.id===b.id);
+      const branchIds=new Set(branchChildren(source.id).map(n=>n.id));
+      const branch=e.kind==='hierarchy'&&a.id===source.id&&branchIds.has(b.id);
+      // The blue fork draws these edges from the common source, without an early preview.
+      if(source.kind==='concept'&&showingNodeBranches()&&e.kind==='hierarchy'&&(branch||(branchIds.has(a.id)&&b.kind==='question')))
+        return {opacity:0,progress:0,reverse:false,trace:false};
       const related=source.kind==='person'&&[a,b].some(n=>n.person===source.label&&n.kind==='concept');
       if(!branch&&!related)return null;
       const elapsed=nodeBranchReveal.start===null?-1:performance.now()-nodeBranchReveal.start;
@@ -443,9 +447,46 @@
       const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');
       line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');
       overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
-      let motion=cameraMotion,finished=false;
+      let motion=cameraMotion,finished=false,finishing=false;
+      const forks=[];
       const remove=()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null};
       const point=id=>depthEnabled?threeProjected[id]:{x:nodes[id].x*k+ox,y:nodes[id].y*k+oy};
+      function startFork(sourceId){
+        if(forks.some(fork=>fork.sourceId===sourceId))return;
+        const started=performance.now(),arms=[];
+        for(const child of branchChildren(sourceId)){
+          expanded.add(child.id);
+          for(const questionId of descendants(child.id)){
+            if(nodes[questionId].kind!=='question'||questionId===to)continue;
+            const chain=ancestors(questionId),armIds=chain.slice(chain.indexOf(sourceId));
+            const armLine=document.createElementNS(NS,'path'),armHead=document.createElementNS(NS,'circle');
+            armLine.setAttribute('class','lecture-route-line lecture-route-fork');
+            armLine.dataset.forkSource=String(sourceId);armLine.dataset.forkTarget=String(questionId);
+            armHead.setAttribute('class','lecture-route-head');armHead.setAttribute('r','2.7');
+            overlay.append(armLine,armHead);
+            const timelines=armIds.slice(1).map((id,i)=>overviewTravelTimeline(armIds[i],id,{
+              continueFromNode:true,passThrough:i<armIds.length-2,
+              readingDeparture:true,readingArrival:i<armIds.length-2
+            }));
+            arms.push({ids:armIds,line:armLine,head:armHead,timelines,duration:timelines.reduce((sum,item)=>sum+item.duration,0)});
+          }
+        }
+        forks.push({sourceId,started,arms});updateVisible();render();drawForks();
+      }
+      function drawForks(){
+        const now=performance.now();let complete=true;
+        for(const fork of forks)for(const arm of fork.arms){
+          let elapsed=Math.max(0,now-fork.started),index=0;
+          if(elapsed<arm.duration)complete=false;
+          while(index<arm.timelines.length-1&&elapsed>=arm.timelines[index].duration){elapsed-=arm.timelines[index].duration;index++}
+          const timeline=arm.timelines[index],progress=timeline.progressAt(Math.min(1,elapsed/timeline.duration));
+          const points=arm.ids.slice(0,index+1).map(point),a=point(arm.ids[index]),b=point(arm.ids[index+1]);
+          const tip={x:a.x+(b.x-a.x)*progress,y:a.y+(b.y-a.y)*progress};points.push(tip);
+          arm.line.setAttribute('d',points.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(''));
+          arm.head.setAttribute('cx',tip.x);arm.head.setAttribute('cy',tip.y);
+        }
+        return complete;
+      }
       function draw(index,progress){
         if(activeRoute!==overlay)return;
         overlay.style.opacity='';
@@ -455,14 +496,17 @@
         // Keep one path for the entire journey; only its travelled portion is drawn.
         line.setAttribute('d',points.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(''));
         head.setAttribute('cx',tip.x);head.setAttribute('cy',tip.y);
+        drawForks();
       }
+      const fade=()=>{finished=true;overlay.classList.add('finish');setTimeout(remove,330)};
       function monitor(){
         if(finished)return;
         if(motion!==cameraMotion||selected!==to||activeRoute!==overlay){remove();return}
+        if(drawForks()&&finishing){fade();return}
         requestAnimationFrame(monitor);
       }
       requestAnimationFrame(monitor);
-      return {draw,expectMotion:()=>{motion=cameraMotion},finish:()=>{finished=true;overlay.classList.add('finish');setTimeout(remove,330)}};
+      return {draw,startFork,expectMotion:()=>{motion=cameraMotion},finish:()=>{finishing=true;if(drawForks())fade()}};
     }
     function selectedTextPoint(id){
       const n=nodes[id],button=depthEnabled?threeNodes.get(id):n.kind==='chapter'?areas.get(id).heading:elems.get(id).b;
@@ -597,20 +641,25 @@
           if(nodeBranchReveal?.id!==previous)nodeBranchReveal={id:previous,start:performance.now()};
           render();
         }
+        // All arms leave the concept at the same moment the main trace reaches it.
+        if(previous!==null&&nodes[previous].kind==='concept'&&nodes[target].parent===previous){
+          routeBranchPreview=previous;nodeBranchReveal={id:previous,start:performance.now()};
+          trace?.startFork(previous);render();
+        }
         const readingArrival=passThrough&&previous!==null&&nodes[target].parent===previous;
         const legIndex=index;
         followConnectionToLabel(previous,target,()=>{
           markStepArrival(target,true);
-          if(!passThrough){routeBranchPreview=null;trace?.finish();stage.classList.remove('guided-transition');after();return}
+          if(!passThrough){routeBranchPreview=null;trace?.finish();stage.classList.remove('guided-transition');render();after();return}
           // Move through intermediate nodes at a reduced, nonzero speed.
           readingDeparture=readingArrival;previous=target;index++;next();
         },{continueFromNode:index>0,passThrough,readingArrival,readingDeparture,onProgress:p=>{
-          if(routeBranchPreview===previous&&nodes[target].parent===previous&&p>=.45){
+          if(routeBranchPreview===previous&&nodes[previous].kind==='person'&&nodes[target].parent===previous&&p>=.45){
             routeBranchPreview=forwardFork?target:null;nodeBranchReveal=forwardFork?{id:target,start:null}:null;render();
           }
           if(forwardFork&&p>=.65){
             if(routeBranchPreview!==target){routeBranchPreview=target;nodeBranchReveal={id:target,start:null};render()}
-            revealNodeBranches(target);
+            if(nodes[target].kind==='person')revealNodeBranches(target);
           }
           trace?.draw(legIndex,p);
         }});
