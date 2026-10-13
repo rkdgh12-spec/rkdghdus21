@@ -347,8 +347,9 @@
     function select(id){return recordStep(()=>selectStep(id))}
     let nodeBranchReveal=null,routeBranchPreview=null;
     const showingNodeBranches=()=>routeBranchPreview!==null&&stage.classList.contains('guided-transition');
-    const questionRouteNodes=new Set(cues.filter(cue=>nodes[cue.id]?.kind==='question').flatMap(cue=>ancestors(cue.id)));
-    const hasQuestionRoute=id=>questionRouteNodes.has(id)||(selected!==null&&nodes[selected].kind==='question'&&ancestors(selected).includes(id))||(!presentationMode&&[...descendants(id)].some(nid=>nodes[nid].kind==='question'));
+    // Reveal every child branch with a Q, including Qs outside the lecture order.
+    const questionRouteNodes=new Set(nodes.filter(n=>n.kind==='question').flatMap(n=>ancestors(n.id)));
+    const hasQuestionRoute=id=>questionRouteNodes.has(id);
     function branchChildren(id){
       const kind=nodes[id].kind;
       return children(id).filter(n=>kind==='person'?n.kind==='concept':kind==='concept'&&n.kind==='subconcept'&&hasQuestionRoute(n.id));
