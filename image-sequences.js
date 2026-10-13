@@ -153,7 +153,7 @@ window.FORUM_IMAGE_INSERTS = {
         "caption": "<BigKing Travel -Series of victorious Return> 2017, digital print, 30.5X42cm"
       },
       {
-        "src": "images/interview-works/ryu-sungsil-2-detail-safe.svg",
+        "src": "images/interview-works/ryu-sungsil-2-official-2500.jpg",
         "caption": "《The Burning Love Song》 exhibition display, 2022 (Photo : Sangtae Kim)"
       }
     ]
