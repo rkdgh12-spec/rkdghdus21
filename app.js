@@ -569,8 +569,8 @@
     // Tune Ryu first: move time from the reading tail into the Q approach.
     const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800,anchorCamera:true,continuousReturn:true}};
     const PERSON_CONTEXT_SCALE={'최고은':.765};
-    const PERSON_CONCEPT_TRAVEL_SCALE={'강인애':1.5625};
-    const PERSON_SUBCONCEPT_TRAVEL_SCALE={'최고은':1.35,'강인애':1.2273};
+    const PERSON_CONCEPT_TRAVEL_SCALE={'강인애':1.5625,'박재영':1.25};
+    const PERSON_SUBCONCEPT_TRAVEL_SCALE={'최고은':1.35,'강인애':1.35,'박재영':.9091};
     const PERSON_QUESTION_TRAVEL_SCALE={'최고은/Q4':1.2,'최고은/Q7':2,'박재영':1.1111};
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
