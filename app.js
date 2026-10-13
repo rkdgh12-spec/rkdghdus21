@@ -565,6 +565,8 @@
       question:{base:760,min:650,max:900},
       returning:{base:600,min:450,max:800}
     };
+    // Tune Ryu first: move time from the reading tail into the Q approach.
+    const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800}};
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
       const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
@@ -598,10 +600,12 @@
         return {duration:flow.openingDuration??2352,progressAt:t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}};
       const reference=getTravelReference(),referenceLength=overviewTravelDistance(reference.from,reference.to);
       const returning=flow.returning??(from!==null&&from!==undefined&&nodes[from].parent===to);
+      const readingPace=!returning?PERSON_READING_PACE[nodes[to].person]:null;
       const policy=NODE_TRAVEL_TIMES[returning?'returning':nodes[to].kind]||NODE_TRAVEL_TIMES.concept;
       const ratio=overviewTravelDistance(from,to)/Math.max(.000001,referenceLength);
       const zoomReturn=returning&&nodes[from].kind==='subconcept'&&nodes[to].kind==='concept';
-      const duration=Math.max(zoomReturn?1250:policy.min,Math.min(policy.max,policy.base*Math.pow(ratio,.6)));
+      const isQuestionApproach=!!readingPace&&nodes[from]?.kind==='subconcept'&&nodes[to].kind==='question'&&nodes[to].parent===from;
+      const duration=Math.max(zoomReturn?1250:policy.min,Math.min(policy.max,policy.base*Math.pow(ratio,.6)))+(isQuestionApproach?readingPace.questionExtraMs:0);
       const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
       const pace=p=>{
         let speed=1;
@@ -626,7 +630,7 @@
       };
       if(!returning&&flow.readingArrival&&nodes[from]?.kind==='concept'&&nodes[to].kind==='subconcept'){
         // Finish framing first, then keep the word steady while the line still glides in.
-        const readingMs=1600,totalDuration=duration+readingMs,arrival=.84,tailSpeed=(1-arrival)/readingMs;
+        const readingMs=readingPace?.readingMs??1600,totalDuration=duration+readingMs,arrival=.84,tailSpeed=(1-arrival)/readingMs;
         return {duration:totalDuration,readingStartsAt:duration/totalDuration,
           cameraProgressAt:t=>smooth(Math.min(1,t*totalDuration/duration)),
           progressAt:t=>{
@@ -637,6 +641,7 @@
             return (u3-2*u2+u)*.6+(-2*u3+3*u2)*arrival+(u3-u2)*duration*tailSpeed;
           }};
       }
+      if(isQuestionApproach)return {duration,progressAt,cameraProgressAt:smooth};
       return {duration,progressAt};
     }
     function nodeTravelProgress(t,duration){
@@ -779,7 +784,7 @@
           travel([start,goal],timeline.duration,(_p,lineProgress,elapsedProgress)=>{
             lastManual3D=performance.now();
             const progress=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,lineProgress);
-            if(timeline.cameraProgressAt)cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;
+            if(Number.isFinite(timeline.readingStartsAt))cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;
             threePanX=start.x+(goal.x-start.x)*progress;threePanY=start.y+(goal.y-start.y)*progress;
             threeZoom=start.zoom*Math.pow(goal.zoom/start.zoom,progress);
             render3D();
@@ -818,7 +823,7 @@
       const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
       if(reducedMotion){finish();return}
       const timeline=overviewTravelTimeline(previous,id,flow);
-      travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);if(timeline.cameraProgressAt)cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+      travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);if(Number.isFinite(timeline.readingStartsAt))cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
       return timeline;
     }
     function showDetail(n,openQuestion=true){
