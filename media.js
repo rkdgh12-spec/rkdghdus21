@@ -84,21 +84,22 @@ window.FORUM_MEDIA = {
   },
   "류성실/Q5": {
     "title": "류성실 인터뷰 Q5 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-replacement-20261013/ryu-sungsil-q5-intro-replacement-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-ryu-q5-worldview-20261013/ryu-sungsil-q5-worldview-edited-final.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/ryu-sungsil-q5-replacement.ko.vtt?v=ryu-replacement-subtitles-1",
+        "src": "captions/ryu-sungsil-q5-worldview-edited.ko.vtt?v=ryu-q5-worldview-edit-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
     "transcript": "",
-    "timelineOffset": 0.33366666666666667,
+    "timelineOffset": 0.0333666666666667,
     "speechBounds": {
-      "firstSpeech": 1.024,
-      "lastSpeech": 47.244
-    }
+      "firstSpeech": 0.723,
+      "lastSpeech": 45.675
+    },
+    "introEnd": 5.1
   },
   "류성실/Q6": {
     "title": "류성실 인터뷰 Q6",
