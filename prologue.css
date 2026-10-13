@@ -272,3 +272,7 @@
 /* Move the full diagram ten percent of its own height, keeping all internal gaps. */
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(calc(45px + 10%))}
 @media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(calc(22px + 10%))}}
+
+/* Centre the first-page diagram in the stage without changing its internal layout. */
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-content{position:relative;padding-bottom:0}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{position:absolute;top:50%;left:0;margin-top:0;transform:translateY(-50%)}
