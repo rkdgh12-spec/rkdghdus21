@@ -653,8 +653,11 @@
       function next(){
         const target=route[index];cameraReadingNode=target;cameraReadingCentered=false;
         const passThrough=index<route.length-1;
-        const forwardFork=passThrough&&isBranchSource(target)&&(nodes[target].kind==='person'||nodes[route[index+1]].parent===target);
-        if(nodes[target].kind==='person'&&passThrough){routeBranchPreview=target;nodeBranchReveal={id:target,start:null};render()}
+        const returning=previous!==null&&nodes[previous].parent===target;
+        const forwardFork=!returning&&passThrough&&isBranchSource(target)&&nodes[route[index+1]].parent===target;
+        // Returning along the previous interview's path never unfolds branch previews.
+        if(returning){routeBranchPreview=null;nodeBranchReveal=null;render()}
+        else if(nodes[target].kind==='person'&&passThrough){routeBranchPreview=target;nodeBranchReveal={id:target,start:null};render()}
         else if(forwardFork&&routeBranchPreview===null){routeBranchPreview=target;nodeBranchReveal={id:target,start:null};render()}
         else if(previous!==null&&nodes[previous].kind==='person'&&passThrough){
           routeBranchPreview=previous;
