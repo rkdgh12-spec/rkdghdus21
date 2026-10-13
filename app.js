@@ -566,7 +566,7 @@
       returning:{base:600,min:450,max:800}
     };
     // Tune Ryu first: move time from the reading tail into the Q approach.
-    const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800,anchorCamera:true}};
+    const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800,anchorCamera:true,continuousReturn:true}};
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
       const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
@@ -752,14 +752,41 @@
         }});
         trace?.expectMotion();
       }
-      next();
+      const returnLegs=[];
+      if(guided&&nodes[from]?.kind==='question'&&nodes[to].kind==='question'&&nodes[from].person===nodes[to].person&&PERSON_READING_PACE[nodes[to].person]?.continuousReturn){
+        let source=from,elapsed=0;
+        for(const target of route){
+          if(nodes[source].parent!==target)break;
+          const timeline=overviewTravelTimeline(source,target,{returning:true,passThrough:true,continueFromNode:returnLegs.length>0});
+          returnLegs.push({target,start:elapsed,timeline});elapsed+=timeline.duration;source=target;
+        }
+      }
+      if(returnLegs.length>1&&returnLegs.length<route.length){
+        // Retrace every edge, but pull the camera back to the shared context only once.
+        // Re-centering the camera at each old node creates a redundant swing past the Q.
+        const last=returnLegs[returnLegs.length-1],duration=last.start+last.timeline.duration;
+        cameraReadingNode=last.target;cameraReadingCentered=false;routeBranchPreview=null;nodeBranchReveal=null;render();
+        let completed=0;
+        followConnectionToLabel(from,last.target,()=>{
+          index=returnLegs.length;previous=last.target;readingDeparture=false;next();
+        },{returning:true,passThrough:true,continuousReturn:true,
+          timeline:{duration,progressAt:t=>t,cameraProgressAt:t=>t*t*(3-2*t)},
+          onProgress:p=>{
+            const elapsed=p*duration;
+            while(completed<returnLegs.length&&elapsed>=returnLegs[completed].start+returnLegs[completed].timeline.duration){
+              trace?.draw(completed,1);markStepArrival(returnLegs[completed].target,true);completed++;
+            }
+            if(completed<returnLegs.length){const leg=returnLegs[completed];trace?.draw(completed,leg.timeline.progressAt((elapsed-leg.start)/leg.timeline.duration))}
+          }});
+        trace?.expectMotion();
+      }else next();
     }
     function followConnectionToLabel(previous,id,after,flow={}){
       cameraMotion++;
       if(depthEnabled){
         lastManual3D=performance.now();
         const start={x:threePanX,y:threePanY,zoom:threeZoom,yaw:threeYaw,elevation:threeElevation};
-        const anchored=anchorsReadingCamera(previous,id),startTarget=anchored?{...threeProjected[id]}:null;
+        const anchored=flow.continuousReturn||anchorsReadingCamera(previous,id),startTarget=anchored?{...threeProjected[id]}:null;
         let startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
         const node=nodes[id],kind=node.kind,contextIds=contextFrameIds(id);
         const sourceId=previous;
@@ -788,13 +815,13 @@
         threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
         const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
-        const timeline=overviewTravelTimeline(previous,id,flow);
+        const timeline=flow.timeline||overviewTravelTimeline(previous,id,flow);
           travel([start,goal],timeline.duration,(_p,lineProgress,elapsedProgress)=>{
             lastManual3D=performance.now();
             const progress=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,lineProgress);
             if(Number.isFinite(timeline.readingStartsAt))cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;
             threePanX=start.x+(goal.x-start.x)*progress;threePanY=start.y+(goal.y-start.y)*progress;
-            threeZoom=start.zoom*Math.pow(goal.zoom/start.zoom,progress);
+            threeZoom=flow.continuousReturn?start.zoom+(goal.zoom-start.zoom)*progress:start.zoom*Math.pow(goal.zoom/start.zoom,progress);
             if(anchored){const pan=anchoredCameraPan(start,startTarget,goalFocus,threeZoom/start.zoom,progress,{x:width/2,y:height/2});threePanX=pan.x;threePanY=pan.y}
             render3D();
             const from=previous!==null?threeProjected[previous]:null,to=threeProjected[focusId];
@@ -822,18 +849,18 @@
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
         const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
-        const timeline=overviewTravelTimeline(previous,id,flow);
-        travel([start,goal],timeline.duration,(_p,t)=>{const p=cameraTravelProgress(previous,node,t);ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+        const timeline=flow.timeline||overviewTravelTimeline(previous,id,flow);
+        travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=flow.continuousReturn?start.k+(goal.k-start.k)*p:start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
         return timeline;
       }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
       if(node.kind==='subconcept'){const textPoint=selectedTextPoint(id);ox+=width/2-textPoint.x;oy+=height/2-textPoint.y;render()}
       const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
-      const anchored=anchorsReadingCamera(previous,id),startTarget={x:node.x*start.k+start.x,y:node.y*start.k+start.y},goalTarget={x:node.x*goal.k+goal.x,y:node.y*goal.k+goal.y};
+      const anchored=flow.continuousReturn||anchorsReadingCamera(previous,id),startTarget={x:node.x*start.k+start.x,y:node.y*start.k+start.y},goalTarget={x:node.x*goal.k+goal.x,y:node.y*goal.k+goal.y};
       const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
       if(reducedMotion){finish();return}
-      const timeline=overviewTravelTimeline(previous,id,flow);
-      travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);if(Number.isFinite(timeline.readingStartsAt))cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;k=start.k*Math.pow(goal.k/start.k,p);const pan=anchored?anchoredCameraPan(start,startTarget,goalTarget,k/start.k,p):{x:start.x+(goal.x-start.x)*p,y:start.y+(goal.y-start.y)*p};ox=pan.x;oy=pan.y;render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+      const timeline=flow.timeline||overviewTravelTimeline(previous,id,flow);
+      travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);if(Number.isFinite(timeline.readingStartsAt))cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;k=flow.continuousReturn?start.k+(goal.k-start.k)*p:start.k*Math.pow(goal.k/start.k,p);const pan=anchored?anchoredCameraPan(start,startTarget,goalTarget,k/start.k,p):{x:start.x+(goal.x-start.x)*p,y:start.y+(goal.y-start.y)*p};ox=pan.x;oy=pan.y;render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
       return timeline;
     }
     function showDetail(n,openQuestion=true){
