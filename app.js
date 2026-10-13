@@ -758,8 +758,20 @@
       q('#interview-stage-next').title='인터뷰 영상 재생';
     }
     function updateIntroCaption(){
-      const caption=q('#interview-intro-caption');
-      const show=dialog.open&&interviewMode!=='epilogue'&&!!currentQuestion?.person&&!!video.getAttribute('src')&&videoStarted&&video.currentTime<(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.introEnd??(7+(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.timelineOffset||0)))&&!video.ended&&!dialog.classList.contains('question-intro');
+      const caption=q('#interview-intro-caption'),time=video.currentTime||0;
+      let show=dialog.open&&!!video.getAttribute('src')&&videoStarted&&!video.ended&&!dialog.classList.contains('question-intro');
+      if(interviewMode==='epilogue'){
+        const item=(window.FORUM_MEDIA?.['epilogue/film']?.peopleTimeline||[]).find(item=>time>=item.start&&time<item.end);
+        const profile=item&&window.FORUM_PROFILES?.[item.person];
+        show=show&&!!profile&&time<item.identityEnd;
+        if(show&&caption.dataset.epiloguePerson!==item.person){
+          caption.dataset.epiloguePerson=item.person;
+          caption.innerHTML='<div class="intro-caption-heading"><strong>'+esc(item.person)+'</strong><span>'+esc(profile.role)+'</span></div>'+(profile.career?.length?'<p>'+profile.career.map(esc).join(' · ')+'</p>':'');
+        }
+      }else{
+        caption.dataset.epiloguePerson='';
+        show=show&&!!currentQuestion?.person&&time<(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.introEnd??(7+(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.timelineOffset||0)));
+      }
       caption.hidden=!show;
     }
     for(const event of ['playing','timeupdate','seeked','pause','ended','loadedmetadata'])video.addEventListener(event,updateIntroCaption);

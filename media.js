@@ -1,11 +1,83 @@
 // Published interview videos by person/question key.
 window.FORUM_MEDIA = {
   "epilogue/film": {
-    "title": "조소과 교육의 앞으로",
-    "src": "",
+    "title": "에필로그 · 조각교육의 방향",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-150s.mp4",
     "poster": "",
-    "captions": [],
-    "transcript": ""
+    "captions": [
+      {
+        "src": "captions/epilogue-education-150s.ko.vtt?v=epilogue-education-150s-1",
+        "label": "한국어",
+        "language": "ko"
+      }
+    ],
+    "transcript": "",
+    "peopleTimeline": [
+      {
+        "person": "최고은",
+        "start": 0.5005000000000001,
+        "end": 20.854166666666664,
+        "identityEnd": 7.5005
+      },
+      {
+        "person": "류성실",
+        "start": 21.488133333333327,
+        "end": 32.2322,
+        "identityEnd": 28.488133333333327
+      },
+      {
+        "person": "강인애",
+        "start": 32.86616666666666,
+        "end": 48.1481,
+        "identityEnd": 39.86616666666666
+      },
+      {
+        "person": "박재영",
+        "start": 48.78206666666666,
+        "end": 61.96189999999999,
+        "identityEnd": 55.78206666666666
+      },
+      {
+        "person": "민지희",
+        "start": 62.595866666666666,
+        "end": 79.4794,
+        "identityEnd": 69.59586666666667
+      },
+      {
+        "person": "안정환",
+        "start": 80.11336666666666,
+        "end": 92.45903333333334,
+        "identityEnd": 87.11336666666666
+      },
+      {
+        "person": "최지혜",
+        "start": 93.093,
+        "end": 107.30720000000001,
+        "identityEnd": 100.093
+      },
+      {
+        "person": "서해영",
+        "start": 107.94116666666667,
+        "end": 122.22210000000001,
+        "identityEnd": 114.94116666666667
+      },
+      {
+        "person": "권현빈",
+        "start": 122.85606666666668,
+        "end": 131.59813333333332,
+        "identityEnd": 129.85606666666666
+      },
+      {
+        "person": "채길원",
+        "start": 132.19873333333334,
+        "end": 149.01553333333337,
+        "identityEnd": 139.19873333333334
+      }
+    ],
+    "speechBounds": {
+      "firstSpeech": 0.69,
+      "lastSpeech": 149.01
+    }
   },
   "최고은/Q4": {
     "title": "최고은 인터뷰 Q4 · 자기소개 포함",
