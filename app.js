@@ -209,9 +209,13 @@
         for(const questionLabel of questionLabels){
           const question=points.find(n=>n.kind==='question'&&n.person===name&&n.label===questionLabel);
           if(!question)throw new Error('강연 순서에 없는 질문: '+name+' '+questionLabel);
-          for(const id of ancestors(question.id).slice(2)){
+          const questionPath=ancestors(question.id).slice(2);
+          const singleRoute=questionPath.slice(0,-1).every(id=>children(id).length===1);
+          for(const id of questionPath){
             const n=nodes[id];
-            if(n.kind==='subconcept')continue;
+            // A linear concept -> subconcept -> Q chain advances with one cue.
+            // The camera still visits each node for reading through followReadableRoute().
+            if(n.kind==='subconcept'||singleRoute&&n.kind!=='question')continue;
             cues.push({id,label:name+' · '+(n.kind==='question'?nodes[n.parent].label+' · '+n.label+' '+n.topic:n.label)});
           }
         }
@@ -452,7 +456,7 @@
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
     // Use the fixed whole-map overview for every leg, regardless of the current lens.
-    const NODE_TRAVEL_MS=2352;
+    const NODE_REFERENCE_TRAVEL_MS=850;
     const NODE_READING_HOLD_MS=1200;
     const NODE_TRAVEL_RAMP_MS=120;
     const CHAPTER_TRAVEL_SPEED_MULTIPLIER=1.5;
@@ -466,9 +470,8 @@
       if(travelReference)return travelReference;
       const from=nodes.find(n=>n.kind==='person'&&n.label==='류성실');
       const to=nodes.find(n=>n.person==='류성실'&&n.kind==='concept'&&n.label==='플랫폼');
-      const cueIndex=cues.findIndex(c=>c.id===to.id),previous=nodes[cues[cueIndex-1]?.id];
-      const count=previous&&previous.person===to.person?hierarchyRoute(previous.id,to.id).length:1;
-      travelReference={from:from.id,to:to.id,duration:count>1?Math.max(850,Math.round(NODE_TRAVEL_MS/count)):NODE_TRAVEL_MS};
+      // Preserve the Ryu -> platform timing when presentation cues are regrouped.
+      travelReference={from:from.id,to:to.id,duration:NODE_REFERENCE_TRAVEL_MS};
       return travelReference;
     }
     function overviewTravelDistance(from,to){
@@ -1523,8 +1526,8 @@
       if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.00015)return;
       idleYaw=yaw;idleElevation=elevation;render3D();
     }
-    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:4,presentationMode,depthEnabled}))}catch{}}
-    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===4&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?cues.findIndex(c=>c.id===selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
+    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:5,presentationMode,depthEnabled}))}catch{}}
+    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===5&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?cues.findIndex(c=>c.id===selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
     new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(epilogueMapView){restoreEpilogueMapView();return}if(epilogueRoam){render();return}if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
     fit();showDetail(null);restore();updateCue();resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
