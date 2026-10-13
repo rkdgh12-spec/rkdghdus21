@@ -440,7 +440,7 @@
       }
       function tick(now){if(token!==cameraMotion){overlay.remove();if(activeRoute===overlay)activeRoute=null;return}if(start===null)start=now;
         const t=Math.min(1,(now-start)/duration);draw(progressAt?progressAt(t):nodeTravelProgress(t,duration));
-        if(t<1)requestAnimationFrame(tick);else{stage.classList.remove('guided-transition');overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
+        if(t<1)requestAnimationFrame(tick);else{overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
       requestAnimationFrame(tick);
     }
     function selectedTextPoint(id){
@@ -552,7 +552,7 @@
         const target=route[index];cameraReadingNode=target;cameraReadingCentered=false;
         const timeline=followConnectionToLabel(previous,target,()=>{
           const motion=cameraMotion;markStepArrival(target,true);centerReadingText(target);
-          if(index===route.length-1){after();return}
+          if(index===route.length-1){stage.classList.remove('guided-transition');after();return}
           // Pause only when entering a deeper node; retracing parents back to a person continues immediately.
           const enteringDeeper=previous!==null&&nodes[target].parent===previous;
           const resume=()=>{if(cameraMotion!==motion||selected!==to)return;previous=target;index++;next()};
@@ -1406,6 +1406,7 @@
       stage.classList.toggle('chapter-hover',hoverChapter!==null);
       stage.classList.toggle('core-chapter-hover',hoverChapter!==null&&nodes[hoverChapter].chapter===5);
       const connectedQuestions=new Set();
+      const futureBranch=branchKeep!==null?descendants(selected):new Set();
       edges.forEach((e,i)=>{
         const l=paths[i],a=nodes[e.source],b=nodes[e.target],shown=visible.has(e.source)&&visible.has(e.target)&&!(allConnected&&thinnedCrossEdges.has(i));
         const linkedMeaning=e.kind!=='hierarchy'&&(e.source===emphasis||e.target===emphasis);
@@ -1428,6 +1429,8 @@
         l.classList.toggle('branch-past',branchKeep!==null&&((a.person===focusedPerson&&!branchKeep.has(a.id))||(b.person===focusedPerson&&!branchKeep.has(b.id))));
         const branchRoute=branchKeep!==null&&e.kind==='hierarchy'&&a.chapter===personChapter&&b.chapter===personChapter&&branchKeep.has(a.id)&&branchKeep.has(b.id);
         l.classList.toggle('branch-route',branchRoute);
+        // Descendant text can be visible before its connecting blue trace begins.
+        l.classList.toggle('branch-upcoming',presentationMode&&branchRoute&&selected!==b.id&&futureBranch.has(b.id));
         l.classList.toggle('branch-other-chapter',branchKeep!==null&&(a.chapter!==personChapter||b.chapter!==personChapter));
         l.classList.toggle('branch-local-other',branchKeep!==null&&!branchRoute&&a.chapter===personChapter&&b.chapter===personChapter);
         l.classList.toggle('branch',e.kind==='hierarchy'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
@@ -1514,8 +1517,8 @@
     stage.addEventListener('pointerdown',()=>{epilogueMapAnchor=null});
     const pointers=new Map();let pinch=null,framePending=false;
     function scheduleRender(){if(framePending)return;framePending=true;requestAnimationFrame(()=>{framePending=false;render()})}
-    stage.addEventListener('wheel',()=>{if(prologueOpen)return;cameraMotion++;cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
-    stage.addEventListener('pointerdown',()=>{if(prologueOpen)return;cameraMotion++;cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},true);
+    stage.addEventListener('wheel',()=>{if(prologueOpen)return;cameraMotion++;stage.classList.remove('guided-transition');cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
+    stage.addEventListener('pointerdown',()=>{if(prologueOpen)return;cameraMotion++;stage.classList.remove('guided-transition');cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},true);
     stage.addEventListener('pointermove',()=>{if(depthEnabled&&pointers.size)lastManual3D=performance.now()},true);
     stage.addEventListener('pointerdown',e=>{if(prologueOpen)return;if(e.button!==0&&!(depthEnabled&&e.button===1))return;if(depthEnabled)e.preventDefault();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});stage.setPointerCapture(e.pointerId);if(pointers.size===1)drag={x:e.clientX,y:e.clientY,ox,oy,panX:threePanX,panY:threePanY,rotate:depthEnabled&&e.button===1};else if(pointers.size===2){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;pinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),k:depthEnabled?threeZoom:k,wx:(cx-ox)/k,wy:(cy-oy)/k,cx,cy,panX:threePanX,panY:threePanY};drag=null}});
     stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const previous=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(depthEnabled){if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;threeZoom=Math.max(.45,Math.min(maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));const ratio=threeZoom/pinch.k;threePanX=pinch.panX+cx-pinch.cx-(pinch.cx-width/2)* (ratio-1)+pinch.panX*(ratio-1);threePanY=pinch.panY+cy-pinch.cy-(pinch.cy-height/2)*(ratio-1)+pinch.panY*(ratio-1);scheduleRender()}else if(drag?.rotate){threeYaw+=(e.clientX-previous.x)*.006;threeElevation=Math.max(.28,Math.min(1.45,threeElevation-(e.clientY-previous.y)*.005));scheduleRender()}else if(drag){threePanX=drag.panX+e.clientX-drag.x;threePanY=drag.panY+e.clientY-drag.y;scheduleRender()}return}if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect();k=Math.max(fitK*.45,Math.min(fitK*maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));ox=(a.x+b.x)/2-r.left-pinch.wx*k;oy=(a.y+b.y)/2-r.top-pinch.wy*k;scheduleRender()}else if(drag){ox=drag.ox+e.clientX-drag.x;oy=drag.oy+e.clientY-drag.y;scheduleRender()}});

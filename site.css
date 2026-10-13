@@ -402,3 +402,6 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .intro-title-composition h1{font-size:33.6px}
 #forum-source-network .intro-title-composition .intro-description{font-size:21.6px}
 }
+
+/* Upcoming descendants show their labels first; blue lines appear only as travelled. */
+#forum-source-network .stage :is(.wires,.three-wires) .links.branch-upcoming{opacity:0!important;transition:none!important}
