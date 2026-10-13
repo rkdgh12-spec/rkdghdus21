@@ -175,6 +175,10 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #interview-dialog.question-cinema #interview-close{position:absolute;top:20px;right:24px;pointer-events:auto;font-size:12px;background:#ffffffdc;color:#33434a;border:0;padding:7px 10px}
 #interview-dialog.question-cinema .interview-copy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 9vw;box-sizing:border-box;background:#fff;z-index:3;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility .45s ease}
 #interview-dialog.question-cinema.question-intro .interview-copy{opacity:1;visibility:visible}
+#interview-dialog.question-cinema.question-intro .interview-media{visibility:hidden}
+#interview-dialog.question-cinema.question-playing .interview-copy{transition:none}
+#interview-dialog .interview-start-wash{position:absolute;inset:0;background:#000;z-index:9;pointer-events:none}
+#interview-dialog .interview-start-wash[hidden]{display:none}
 #interview-dialog.question-cinema #interview-chapter{font-size:clamp(12px,1.1vw,17px);font-weight:500;color:#53636b;margin:0 0 24px;letter-spacing:.02em}
 #interview-dialog.question-cinema #interview-question{font-size:clamp(25px,3vw,48px);line-height:1.55;font-weight:600;color:#17272e;text-align:center;max-width:1000px;margin:0;word-break:keep-all;text-wrap:balance}
 #interview-dialog.question-cinema #interview-video{width:100%;height:100%;max-height:none;object-fit:contain;background:#000}
@@ -321,7 +325,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #interview-dialog .interview-intro-caption{--identity-caption-size:clamp(21.6px,2.52vw,40.8px);position:absolute;left:6%;top:calc(83.4% - var(--identity-caption-size) * 1.2);bottom:auto;z-index:5;max-width:84%;pointer-events:none;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;text-shadow:-1.6px 0 0 #4b4b4b,1.6px 0 0 #4b4b4b,0 -1.6px 0 #4b4b4b,0 1.6px 0 #4b4b4b,-1.6px -1.6px 0 #4b4b4b,1.6px -1.6px 0 #4b4b4b,-1.6px 1.6px 0 #4b4b4b,1.6px 1.6px 0 #4b4b4b,0 3px 6px rgba(60,60,60,.55);line-height:1.2}
 #interview-dialog .interview-intro-caption[hidden]{display:none!important}
 #interview-dialog.epilogue-mode .interview-intro-caption:not([hidden]){display:block!important}
-#interview-dialog .epilogue-video-wash{position:absolute;inset:0;background:#fff;z-index:8;pointer-events:none}
+#interview-dialog .epilogue-video-wash{position:absolute;inset:0;overflow:hidden;background:transparent;z-index:8;pointer-events:none}
+#interview-dialog .epilogue-video-wash::before{content:"";position:absolute;left:50%;top:50%;width:160vmax;height:160vmax;border-radius:50%;background:radial-gradient(circle,#fff 0%,rgba(255,255,255,.96) 15%,rgba(255,255,255,.72) 32%,rgba(255,255,255,.34) 49%,rgba(255,255,255,.08) 65%,transparent 80%);filter:blur(4vmax);transform:translate(-50%,-50%) scale(var(--epilogue-light-scale,2.5));opacity:var(--epilogue-light-opacity,1)}
+#interview-dialog .epilogue-video-wash::after{content:"";position:absolute;inset:0;background:#fff;opacity:var(--epilogue-light-fill,1)}
 #interview-dialog .epilogue-video-wash[hidden]{display:none}
 #interview-dialog .intro-caption-heading{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 #interview-dialog .intro-caption-heading strong{font-size:var(--identity-caption-size);font-weight:700;letter-spacing:-.025em}
@@ -371,9 +377,15 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 .epilogue-center-white::after{content:"";position:absolute;inset:0;background:#fff;opacity:0;animation:epilogue-white-fill 3200ms ease-in-out forwards}
 @keyframes epilogue-light-bloom{0%{opacity:0;transform:translate(-50%,-50%) scale(.02)}18%{opacity:.65}48%{opacity:1;transform:translate(-50%,-50%) scale(.55)}100%{opacity:1;transform:translate(-50%,-50%) scale(2.5)}}
 @keyframes epilogue-white-fill{0%,48%{opacity:0}100%{opacity:1}}
+.epilogue-map-reveal::before{animation:none;transform:translate(-50%,-50%) scale(2.5);opacity:1}
+.epilogue-map-reveal::after{animation:none;opacity:1}
+.epilogue-map-reveal.revealing::before{animation:epilogue-map-unveil 2400ms ease-in-out forwards}
+.epilogue-map-reveal.revealing::after{animation:epilogue-map-unfill 2400ms ease-in-out forwards}
+@keyframes epilogue-map-unveil{0%{opacity:1;transform:translate(-50%,-50%) scale(2.5)}55%{opacity:1;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(.02)}}
+@keyframes epilogue-map-unfill{0%{opacity:1}65%,100%{opacity:0}}
 #interview-dialog.epilogue-mode.question-intro{background:#fff}
 #interview-dialog.epilogue-mode.question-intro .interview-media{visibility:hidden}
 #interview-dialog.epilogue-mode.question-intro .interview-copy{animation:none;transition:none;opacity:1}
 #interview-dialog.epilogue-mode.question-intro #interview-question,#interview-dialog.epilogue-mode.question-intro #interview-chapter{animation:epilogue-question-appear 900ms ease-out both}
 @keyframes epilogue-question-appear{from{opacity:0}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.epilogue-center-white::before,.epilogue-center-white::after,#interview-dialog.epilogue-mode.question-intro #interview-question,#interview-dialog.epilogue-mode.question-intro #interview-chapter{animation:none}}
+@media(prefers-reduced-motion:reduce){.epilogue-center-white::before,.epilogue-center-white::after,#interview-dialog.epilogue-mode.question-intro #interview-question,#interview-dialog.epilogue-mode.question-intro #interview-chapter{animation:none}.epilogue-map-reveal.revealing{display:none}}

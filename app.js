@@ -94,7 +94,24 @@
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
     const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false,chapterElevationBeforeFocus=null;
+    let epilogueRoam=null;
+    function stopEpilogueRoam(){
+      if(!epilogueRoam)return;
+      epilogueRoam=null;idleYaw=0;idleElevation=0;idleStrength=0;lastManual3D=performance.now();
+    }
+    function startEpilogueRoam(){
+      selected=null;cameraReadingNode=null;cameraReadingCentered=false;fullReveal=null;showDetail(null);
+      if(!depthEnabled){setDepthEnabled(true);threeYaw=-.34;threeElevation=.82;threeZoom=1;epilogueMapAnchor={x:.5,y:.5};}
+      autoCentered3D=false;idleYaw=0;idleElevation=0;idleStrength=0;threeZoom*=.94;
+      render3D();
+      if(!reducedMotion)epilogueRoam={start:performance.now(),yaw:threeYaw,elevation:threeElevation,zoom:threeZoom};
+      q('#map-status').textContent='에필로그 · 창작의 지형을 천천히 탐색합니다';save();
+    }
+    root.addEventListener('pointerdown',stopEpilogueRoam,true);
+    root.addEventListener('wheel',stopEpilogueRoam,{capture:true,passive:true});
+    root.addEventListener('keydown',stopEpilogueRoam,true);
     function setDepthEnabled(enabled){
+      stopEpilogueRoam();
       cameraMotion++;depthEnabled=enabled;if(!enabled)chapterElevationBeforeFocus=null;
       if(enabled){autoCentered3D=true;threePanX=0;threePanY=0}
       stage.classList.toggle('three-view',enabled);
@@ -321,6 +338,7 @@
       if(selected===id&&nodes[id].kind==='person')revealPersonBranches(id);
     }
     function selectStep(id){
+      stopEpilogueRoam();
       cameraReadingNode=null;cameraReadingCentered=false;idleYaw=0;idleElevation=0;idleStrength=0;
       markStepArrival(null);
       setPrologueView(null);
@@ -600,9 +618,10 @@
     let interviewAudioBounds=null,interviewAudioFrame=0,interviewUserVolume=video.volume,interviewAppliedVolume=video.volume;
     const audioSmooth=x=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t)};
     function interviewAudioFactor(){
+      if(!dialog.open||!videoStarted||video.ended||dialog.classList.contains('question-intro'))return 0;
       const t=video.currentTime||0,duration=video.duration;
       const first=interviewAudioBounds?.firstSpeech??.45;
-      const fadeInEnd=Math.max(.08,first-.04),fadeInStart=Math.max(0,fadeInEnd-.18);
+      const fadeInEnd=Math.max(.08,first-.04),fadeInStart=Math.max(0,fadeInEnd-.28);
       const incoming=audioSmooth((t-fadeInStart)/(fadeInEnd-fadeInStart));
       if(!Number.isFinite(duration))return incoming;
       const last=interviewAudioBounds?.lastSpeech??Math.max(0,duration-.55);
@@ -615,6 +634,7 @@
       const target=Math.max(0,Math.min(1,interviewUserVolume*interviewAudioFactor()));
       if(Math.abs(video.volume-target)>.0001){interviewAppliedVolume=target;video.volume=target}
       updateEpilogueVisuals();
+      updateInterviewStartVisuals();
       if(!video.paused&&!video.ended)interviewAudioFrame=requestAnimationFrame(updateInterviewAudio);
     }
     function configureInterviewAudio(media){
@@ -627,7 +647,7 @@
     });
     for(const event of ['play','playing','loadedmetadata','timeupdate','seeking','seeked','pause','ended'])video.addEventListener(event,updateInterviewAudio);
 
-    function stopVideo(){cancelAnimationFrame(interviewAudioFrame);interviewAudioFrame=0;q('#interview-intro-caption').hidden=true;clearTimeout(questionScreenTimer);questionScreenTimer=null;questionScreenToken++;dialog.classList.remove('question-intro','question-playing','play-blocked');exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
+    function stopVideo(){cancelAnimationFrame(interviewAudioFrame);interviewAudioFrame=0;videoStarted=false;interviewAppliedVolume=0;video.volume=0;q('#interview-intro-caption').hidden=true;clearTimeout(questionScreenTimer);questionScreenTimer=null;questionScreenToken++;dialog.classList.remove('question-intro','question-playing','play-blocked');exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
     function openEpilogue(){openInterview(epilogueFilm,'epilogue')}
     let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null,epilogueContours=null,epilogueOrigin=null;
     function syncEpilogueOverlay(){
@@ -800,14 +820,28 @@
     const epilogueVideoWash=document.createElement('div');
     epilogueVideoWash.className='epilogue-video-wash';epilogueVideoWash.setAttribute('aria-hidden','true');epilogueVideoWash.hidden=true;
     q('.interview-media').append(epilogueVideoWash);
+    const interviewStartWash=document.createElement('div');
+    interviewStartWash.className='interview-start-wash';interviewStartWash.setAttribute('aria-hidden','true');interviewStartWash.hidden=true;
+    q('.interview-media').append(interviewStartWash);
+    function updateInterviewStartVisuals(){
+      const time=video.currentTime||0;
+      const active=dialog.open&&videoStarted&&!dialog.classList.contains('question-intro')&&time<1.25;
+      interviewStartWash.hidden=!active;
+      if(!active)return;
+      const progress=audioSmooth((time-.12)/1.13),radius=progress*115;
+      interviewStartWash.style.background=progress===0?'#000':`radial-gradient(circle at center,transparent ${Math.max(0,radius-22)}vmax,#000 ${radius}vmax)`;
+    }
     function updateEpilogueVisuals(){
       const active=interviewMode==='epilogue'&&dialog.open&&videoStarted&&!dialog.classList.contains('question-intro');
       epilogueVideoWash.hidden=!active;
       if(!active)return;
       const time=video.currentTime||0,duration=video.duration;
-      const incoming=1-audioSmooth(time/1.1);
-      const outgoing=Number.isFinite(duration)?audioSmooth((time-(duration-1.15))/1.15):0;
-      epilogueVideoWash.style.opacity=String(Math.max(incoming,outgoing));
+      const outgoing=Number.isFinite(duration)?audioSmooth((time-(duration-3.4))/3.4):0;
+      const light=outgoing;
+      epilogueVideoWash.style.opacity='1';
+      epilogueVideoWash.style.setProperty('--epilogue-light-opacity',String(light));
+      epilogueVideoWash.style.setProperty('--epilogue-light-scale',String(.02+light*2.48));
+      epilogueVideoWash.style.setProperty('--epilogue-light-fill',String(audioSmooth((light-.48)/.52)));
       updateIntroCaption();
     }
     function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue')return;const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
@@ -847,9 +881,15 @@
         updateEpilogueVisuals();const token=questionScreenToken;
         await new Promise(resolve=>setTimeout(resolve,350));
         if(!dialog.open||token!==questionScreenToken)return;
-        restoreEpilogueMapView();
-        if(!reducedMotion){const fade=dialog.animate([{opacity:1},{opacity:0}],{duration:900,easing:'ease-in-out'});await fade.finished;if(dialog.open&&token===questionScreenToken)closeInterview();fade.cancel()}
-        else closeInterview();return;
+        const reveal=document.createElement('div');reveal.className='epilogue-center-white epilogue-map-reveal';reveal.setAttribute('aria-hidden','true');
+        (document.fullscreenElement||document.body).append(reveal);
+        const returnMotion=cameraMotion;
+        closeInterview();
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+        if(!dialog.open&&cameraMotion===returnMotion&&!prologueOpen&&q('.intro').hidden){startEpilogueRoam();reveal.classList.add('revealing');}
+        else{reveal.remove();return;}
+        if(!reducedMotion)await new Promise(resolve=>setTimeout(resolve,2400));
+        reveal.remove();return;
       }
       if(dialog.classList.contains('question-cinema')){closeInterview();return}exitVideoFullscreen();q('#interview-play').hidden=false
     });
@@ -857,6 +897,7 @@
     function updateCue(){const start=prologueSlides.length+1;q('#sequence-count').textContent=prologueOpen?'프롤로그':cues[cueIndex]?.overview?'지형도':Math.max(0,cueIndex-start+1)+' / '+(cues.length-start);q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!(dialog.open&&dialog.classList.contains('question-intro'))&&(!presentationMode||prologueOpen||cueIndex>=cues.length-1);q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
+      stopEpilogueRoam();
       epilogueMapAnchor=null;
       if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}
       const nextIndex=Math.max(-1,Math.min(cues.length-1,index));
@@ -1361,6 +1402,13 @@
       setTimeout(()=>requestAnimationFrame(idleMotionTick),70);
       if(!depthEnabled||prologueOpen||document.hidden||reducedMotion||!q('.intro').hidden)return;
       if(now-lastIdleFrame<70)return;lastIdleFrame=now;
+      if(epilogueRoam&&!dialog.open){
+        const t=now-epilogueRoam.start;
+        threeYaw=epilogueRoam.yaw+.28*Math.sin(t/18000);
+        threeElevation=Math.max(.28,Math.min(1.45,epilogueRoam.elevation+.055*(Math.cos(t/23000)-1)));
+        threeZoom=epilogueRoam.zoom*(1+.025*Math.sin(t/26000));
+        idleYaw=0;idleElevation=0;render3D();return;
+      }
       const target=now-lastManual3D>1800&&pointers.size===0&&!(selected!==null&&cameraReadingNode!==null)?1:0;
       idleStrength+=(target-idleStrength)*.14;
       const yaw=Math.sin(now/4300)*.06*idleStrength,elevation=Math.cos(now/6100)*.03*idleStrength;
