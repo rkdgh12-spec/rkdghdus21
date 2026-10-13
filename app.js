@@ -361,6 +361,7 @@
       if(showingNodeBranches()&&nodes[routeBranchPreview].kind==='person')return null;
       if(focusedPerson===null||!['concept','subconcept','question'].includes(nodes[selected].kind))return null;
       const keep=new Set([...ancestors(selected),...descendants(selected)]);
+      for(const id of readingContext()||[])keep.add(id);
       // Keep every fork destination readable until its common-source trace finishes.
       const forkBranches=visibleForkBranches();
       if(forkBranches)for(const [sourceId,childIds] of forkBranches.sources){
@@ -406,6 +407,7 @@
     }
     function selectStep(id){
       stopEpilogueRoam();
+      readingProjectionBounds=depthEnabled?lastProjectionBounds:null;
       routeBranchPreview=null;
       cameraReadingNode=null;cameraReadingCentered=false;idleYaw=0;idleElevation=0;idleStrength=0;
       markStepArrival(null);
@@ -541,7 +543,7 @@
       chapter:{base:1800,min:1700,max:2200},
       person:{base:1750,min:1600,max:2100},
       concept:{base:1350,min:1200,max:1700},
-      subconcept:{base:1450,min:1300,max:1800},
+      subconcept:{base:2100,min:1900,max:2400},
       question:{base:760,min:650,max:900},
       returning:{base:600,min:450,max:800}
     };
@@ -580,7 +582,8 @@
       const returning=flow.returning??(from!==null&&from!==undefined&&nodes[from].parent===to);
       const policy=NODE_TRAVEL_TIMES[returning?'returning':nodes[to].kind]||NODE_TRAVEL_TIMES.concept;
       const ratio=overviewTravelDistance(from,to)/Math.max(.000001,referenceLength);
-      const duration=Math.max(policy.min,Math.min(policy.max,policy.base*Math.pow(ratio,.6)));
+      const zoomReturn=returning&&nodes[from].kind==='subconcept'&&nodes[to].kind==='concept';
+      const duration=Math.max(zoomReturn?1250:policy.min,Math.min(policy.max,policy.base*Math.pow(ratio,.6)));
       const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
       const pace=p=>{
         let speed=1;
@@ -612,6 +615,7 @@
       return (elapsed-ramp/2)/cruise;
     }
     let cameraReadingNode=null,cameraReadingCentered=false,openingChapterEntrance=null;
+    let readingProjectionBounds=null,lastProjectionBounds=null;
     function travel(points,duration,frame,done,progressAt,onProgress,continueFromNode=false){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
@@ -635,6 +639,15 @@
     // All destinations use the same hierarchy scale, independent of the incoming route.
     const NODE_ZOOM_LEVELS={chapter:1,person:2,concept:4,subconcept:8,question:8};
     const nodeZoomLevel=node=>NODE_ZOOM_LEVELS[node.kind]||1;
+    const cameraTravelProgress=(previous,node,t)=>previous===null&&node.kind==='chapter'&&node.chapter===1?t:t*t*(3-2*t);
+    function contextFrameIds(id){
+      const node=nodes[id];
+      if(!node||!['person','concept'].includes(node.kind))return null;
+      const person=ancestors(id).map(nid=>nodes[nid]).find(n=>n.kind==='person');
+      if(!person)return null;
+      return [person.parent,person.id,...children(person.id).filter(n=>n.kind==='concept').map(n=>n.id)];
+    }
+    function readingContext(){return cameraReadingNode===null?null:contextFrameIds(cameraReadingNode)}
     function pinReadingHeading(button,id){
       if(!cameraReadingCentered||cameraReadingNode!==id||selected===null)return;
       const text=button.querySelector('strong'),box=text.getBoundingClientRect(),area=stage.getBoundingClientRect();
@@ -642,6 +655,7 @@
       button.style.top=(parseFloat(button.style.top)+area.top+height/2-box.top-box.height/2)+'px';
     }
     function centerReadingText(id){
+      if(contextFrameIds(id))return;
       cameraReadingNode=id;cameraReadingCentered=true;
       if(depthEnabled)render3D();else render();
     }
@@ -703,27 +717,23 @@
         lastManual3D=performance.now();
         const start={x:threePanX,y:threePanY,zoom:threeZoom,yaw:threeYaw,elevation:threeElevation};
         let startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
-        const node=nodes[id],kind=node.kind;
-        const chapterTransit=presentationMode&&kind==='chapter'&&previous!==null&&nodes[previous].chapter!==node.chapter;
-        const personTransit=presentationMode&&kind==='person'&&previous!==null&&nodes[previous].person&&nodes[previous].person!==node.person;
-        const wideTransit=chapterTransit||personTransit;
+        const node=nodes[id],kind=node.kind,contextIds=contextFrameIds(id);
         const sourceId=previous;
         if(sourceId!==undefined&&sourceId!==null&&threeProjected[sourceId])startFocus={x:threeProjected[sourceId].x,y:threeProjected[sourceId].y};
         const focusId=id;
-        let goalZoom=nodeZoomLevel(node);
+        let goalZoom=contextIds?2.8:nodeZoomLevel(node);
         const goalYaw=start.yaw;
         const goalElevation=start.elevation;
         threeZoom=goalZoom;threeYaw=goalYaw;threeElevation=goalElevation;render3D();
-        const conceptGroup=kind==='concept'?[id,...children(id).filter(n=>n.kind==='subconcept').map(n=>n.id)]:[];
-        if(conceptGroup.length>=3){
-          const xs=conceptGroup.map(nid=>threeProjected[nid].x),ys=conceptGroup.map(nid=>threeProjected[nid].y);
-          const fitGroup=Math.min(1,width*.56/Math.max(1,Math.max(...xs)-Math.min(...xs)),height*.50/Math.max(1,Math.max(...ys)-Math.min(...ys)));
-          if(fitGroup<1){goalZoom=Math.max(.45,goalZoom*fitGroup);threeZoom=goalZoom;render3D()}
+        if(contextIds){
+          const xs=contextIds.map(nid=>threeProjected[nid].x),ys=contextIds.map(nid=>threeProjected[nid].y);
+          const fitGroup=Math.min(1,Math.max(180,width-340)/Math.max(1,Math.max(...xs)-Math.min(...xs)),Math.max(160,height-240)/Math.max(1,Math.max(...ys)-Math.min(...ys)));
+          goalZoom=Math.max(.45,goalZoom*fitGroup);threeZoom=goalZoom;render3D();
         }
         const p=threeProjected[focusId];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
-        if(conceptGroup.length>=3){
-          const xs=conceptGroup.map(nid=>threeProjected[nid].x),ys=conceptGroup.map(nid=>threeProjected[nid].y);
+        if(contextIds){
+          const xs=contextIds.map(nid=>threeProjected[nid].x),ys=contextIds.map(nid=>threeProjected[nid].y);
           threePanX+=width/2-(Math.min(...xs)+Math.max(...xs))/2;
           threePanY+=height/2-(Math.min(...ys)+Math.max(...ys))/2;
           render3D();
@@ -734,37 +744,15 @@
         const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
         const timeline=overviewTravelTimeline(previous,id,flow);
-        const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
-        if(wideTransit){
-          const sourcePoint=sourceId!==undefined&&sourceId!==null?threeProjected[sourceId]:null;
-          const targetPoint=threeProjected[id];
-          const spanX=sourcePoint&&targetPoint?Math.abs(targetPoint.x-sourcePoint.x):0;
-          const spanY=sourcePoint&&targetPoint?Math.abs(targetPoint.y-sourcePoint.y):0;
-          const pairFit=Math.min(Math.max(180,width-320)/Math.max(1,spanX),Math.max(150,height-260)/Math.max(1,spanY));
-          const overviewZoom=Math.min(start.zoom,start.zoom*pairFit);
-          threeZoom=overviewZoom;threePanX=start.x;threePanY=start.y;render3D();
-          const from=sourceId!==undefined&&sourceId!==null?threeProjected[sourceId]:null,to=threeProjected[id];
-          const midpoint=from&&to?{x:start.x+width/2-(from.x+to.x)/2,y:start.y+height/2-(from.y+to.y)/2}:{x:start.x,y:start.y};
-          threeZoom=start.zoom;threePanX=start.x;threePanY=start.y;render3D();
-          travel([start,goal],timeline.duration,(_p,progress)=>{
+          travel([start,goal],timeline.duration,(_p,lineProgress)=>{
             lastManual3D=performance.now();
-            // Pass through the wide view continuously, with no stationary middle section.
-            const envelope=Math.sin(Math.PI*progress)**2;
-            threePanX=start.x+(goal.x-start.x)*progress+(midpoint.x-(start.x+goal.x)/2)*envelope;
-            threePanY=start.y+(goal.y-start.y)*progress+(midpoint.y-(start.y+goal.y)/2)*envelope;
-            threeZoom=progress<.5
-              ?start.zoom*Math.pow(overviewZoom/start.zoom,smooth(progress*2))
-              :overviewZoom*Math.pow(goal.zoom/overviewZoom,smooth((progress-.5)*2));
-            render3D();
-          },finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
-        }else{
-          travel([start,goal],timeline.duration,(p,progress)=>{
-            lastManual3D=performance.now();
-            threePanX=p.x;threePanY=p.y;
+            const progress=cameraTravelProgress(previous,node,lineProgress);
+            threePanX=start.x+(goal.x-start.x)*progress;threePanY=start.y+(goal.y-start.y)*progress;
             threeZoom=start.zoom*Math.pow(goal.zoom/start.zoom,progress);
             render3D();
             const from=previous!==null?threeProjected[previous]:null,to=threeProjected[focusId];
-            if(to){
+            // The broad structure stays fixed while the line advances from name to concept.
+            if(to&&!contextIds){
               const currentX=(from?from.x:startFocus.x)*(1-progress)+to.x*progress;
               const currentY=(from?from.y:startFocus.y)*(1-progress)+to.y*progress;
               const desiredX=startFocus.x+(goalFocus.x-startFocus.x)*progress;
@@ -773,22 +761,20 @@
               render3D();
             }
           },finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
-        }
         return timeline;
       }
-      const start={x:ox,y:oy,k},node=nodes[id];
-      k=fitK*nodeZoomLevel(node);
-      const conceptGroup=node.kind==='concept'?[node,...children(id).filter(n=>n.kind==='subconcept')]:[];
-      if(conceptGroup.length>=3){
-        const xs=conceptGroup.map(n=>n.x),ys=conceptGroup.map(n=>n.y);
+      const start={x:ox,y:oy,k},node=nodes[id],contextIds=contextFrameIds(id);
+      k=fitK*(contextIds?2.8:nodeZoomLevel(node));
+      if(contextIds){
+        const xs=contextIds.map(nid=>nodes[nid].x),ys=contextIds.map(nid=>nodes[nid].y);
         const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
-        k=Math.max(fitK*.45,Math.min(k,width*.56/Math.max(1,maxx-minx),height*.50/Math.max(1,maxy-miny)));
+        k=Math.max(fitK*.45,Math.min(k,Math.max(180,width-340)/Math.max(1,maxx-minx),Math.max(160,height-240)/Math.max(1,maxy-miny)));
         ox=width/2-(minx+maxx)*k/2;oy=height/2-(miny+maxy)*k/2;render();
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
         const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
         const timeline=overviewTravelTimeline(previous,id,flow);
-        travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k*Math.pow(goal.k/start.k,progress);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+        travel([start,goal],timeline.duration,(_p,t)=>{const p=cameraTravelProgress(previous,node,t);ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
         return timeline;
       }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
@@ -796,7 +782,7 @@
       const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
       if(reducedMotion){finish();return}
       const timeline=overviewTravelTimeline(previous,id,flow);
-      travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k*Math.pow(goal.k/start.k,progress);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+      travel([start,goal],timeline.duration,(_p,t)=>{const p=cameraTravelProgress(previous,node,t);ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
       return timeline;
     }
     function showDetail(n,openQuestion=true){
@@ -1415,7 +1401,8 @@
       const branchKeep=focusedBranchNodes(focusedPerson);
       stage.classList.toggle('chapter-focus',activeChapter!==null);
       stage.classList.toggle('high-zoom-labels',threeZoom>=3);
-      threeScene.style.setProperty('--three-label-zoom',labelZoom(threeZoom).toFixed(2));
+      const contextIds=readingContext(),contextSet=new Set(contextIds||[]);
+      threeScene.style.setProperty('--three-label-zoom',Math.max(selected!==null&&nodes[selected].person?1.4:1,labelZoom(threeZoom)).toFixed(2));
       threeSvg.setAttribute('viewBox',`0 0 ${width} ${height}`);
       const rawXYZ=(x,y,z)=>{x-=threeCenter.x;y-=threeCenter.y;const c=Math.cos(threeYaw+idleYaw),s=Math.sin(threeYaw+idleYaw),u=x*c-y*s,v=x*s+y*c,ce=Math.cos(threeElevation+idleElevation),se=Math.sin(threeElevation+idleElevation),d=v*ce-z*se,p=3200/Math.max(1200,3200+d);return {x:u*p,y:(v*se-z*ce)*p,d,p}};
       const boundaryPoints=path=>{if(path.style.display==='none')return [];const length=path.getTotalLength();if(!length)return [];return Array.from({length:64},(_,i)=>{const p=path.getPointAtLength(length*i/64);return [(p.x-ox)/k,(p.y-oy)/k]})};
@@ -1425,7 +1412,12 @@
       for(const p of outerBoundary)base.push(rawXYZ(p[0],p[1],190));
       for(const p of coreBoundary)base.push(rawXYZ(p[0],p[1],210));
       if(outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
-      const minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
+      let minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
+      // Labels and outline shapes may change during a cue; they must not refit the camera.
+      if(selected!==null&&readingProjectionBounds&&readingProjectionBounds.yaw===threeYaw&&readingProjectionBounds.elevation===threeElevation){
+        ({minx,maxx,miny,maxy}=readingProjectionBounds);
+      }
+      lastProjectionBounds={minx,maxx,miny,maxy,yaw:threeYaw,elevation:threeElevation};
       const cameraNode=selected!==null?nodes[cameraReadingNode??selected]:threeCenter;
       const centerPoint=rawXYZ(cameraNode.x,cameraNode.y,threeHeight(cameraNode));
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
@@ -1489,27 +1481,28 @@
         const w=b.offsetWidth,h=b.offsetHeight,c=pos[threeCenter.id],dx=p.x-c.x,dy=p.y-c.y,m=Math.max(1,Math.hypot(dx,dy)),ux=dx/m,uy=dy/m;
         const positions=[[p.x,p.y]];
         for(const distance of [24,48,72,96,128,160,192,224,256])positions.push([p.x+ux*distance,p.y+uy*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+uy*distance,p.y-ux*distance],[p.x-ux*distance,p.y-uy*distance],[p.x+uy*distance,p.y-ux*distance],[p.x-uy*distance,p.y+ux*distance],[p.x+distance,p.y],[p.x-distance,p.y],[p.x,p.y+distance],[p.x,p.y-distance]);
-        const protectRoute=!allConnected&&selected!==null&&nodes[selected].chapter===n.chapter&&nodes[selected].kind!=='chapter';
+        const protectRoute=!contextIds&&!allConnected&&selected!==null&&nodes[selected].chapter===n.chapter&&nodes[selected].kind!=='chapter';
         let chosen=null;for(const [x,y] of positions){const box={x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16};if(box.x<8||box.y<8||box.x+box.w>width-8||box.y+box.h>height-8)continue;if(boxes.every(other=>separated(box,other,8))&&(!protectRoute||activeObstacles.every(other=>separated(box,other,8)))){chosen={x,y,box};break}}
         if(!chosen){const x=Math.max(w/2+8,Math.min(width-w/2-8,p.x)),y=Math.max(h/2+8,Math.min(height-h/2-8,p.y));chosen={x,y,box:{x:x-w/2-8,y:y-h/2-8,w:w+16,h:h+16}}}
         b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';pinReadingHeading(b,n.id);b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
       }
       const selectedQuestionParent=selected!==null&&nodes[selected].kind==='question'?nodes[selected].parent:null;
-      const labelPriority=n=>n.id===epilogueRoam?.focusId?-2:n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.id===selectedQuestionParent?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
+      const labelPriority=n=>contextIds?(n.id===contextIds[1]?-2:contextSet.has(n.id)?-1:n.kind==='person'?2:n.kind==='concept'?3:6):n.id===epilogueRoam?.focusId?-2:n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.id===selectedQuestionParent?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
         b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));setRevealOpacity(b,n);b.classList.toggle('reading-node',cameraReadingCentered&&cameraReadingNode===n.id);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
         label.style.display='block';label.style.width='max-content';const lw=label.offsetWidth,lh=label.offsetHeight,candidates=[];
         for(const gap of [10,18,26,36,50,66]){const diagonal=gap*.71;candidates.push([x+gap,y-lh/2],[x-lw-gap,y-lh/2],[x-lw/2,y+gap],[x-lw/2,y-lh-gap],[x+diagonal,y+diagonal],[x-lw-diagonal,y+diagonal],[x+diagonal,y-lh-diagonal],[x-lw-diagonal,y-lh-diagonal])}
         let choice=null;for(const [lx,ly] of candidates){const box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}}
-        if(!choice&&stage.classList.contains('high-zoom-labels'))choice=zoomLabelFallback(x,y,lw,lh);
+        if(!choice&&(contextSet.has(n.id)||stage.classList.contains('high-zoom-labels')))choice=zoomLabelFallback(x,y,lw,lh);
         if(cameraReadingCentered&&selected!==null&&cameraReadingNode===n.id)choice={x:width/2-lw/2,y:height/2-lh/2,w:lw,h:lh};
         if(choice){label.style.left=choice.x-x+b.offsetWidth/2+'px';label.style.top=choice.y-y+b.offsetHeight/2+'px';label.style.width=choice.w+'px';boxes.push(choice);reservePersonMetadata(label,b,choice,boxes)}else label.style.display='none';
       }
     }
     function render(){
       stage.classList.toggle('high-zoom-labels',(depthEnabled?threeZoom:k/fitK)>=3);
-      flatPlane.style.setProperty('--flat-label-zoom',labelZoom(k/fitK).toFixed(2));
+      const contextIds=readingContext(),contextSet=new Set(contextIds||[]);
+      flatPlane.style.setProperty('--flat-label-zoom',Math.max(selected!==null&&nodes[selected].person?1.4:1,labelZoom(k/fitK)).toFixed(2));
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
       const allConnected=points.every(n=>visible.has(n.id));
       const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
@@ -1603,7 +1596,7 @@
           outerOutline.setAttribute('d',contourPath(outer));
         }else outerOutline.setAttribute('d',roundEnvelope(envelopePoints));
       }
-      const labelPriority=n=>n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.kind==='person'?1:n.kind==='concept'?2:selectedBranch.has(n.id)?3:connectedQuestions.has(n.id)?4:n.kind==='subconcept'?5:6;
+      const labelPriority=n=>contextIds?(n.id===contextIds[1]?-2:contextSet.has(n.id)?-1:n.kind==='person'?2:n.kind==='concept'?3:6):n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.kind==='person'?1:n.kind==='concept'?2:selectedBranch.has(n.id)?3:connectedQuestions.has(n.id)?4:n.kind==='subconcept'?5:6;
       const ordered=[...points].sort((a,b)=>labelPriority(a)-labelPriority(b));
       for(const n of ordered){
         const {b,label}=elems.get(n.id),x=n.x*k+ox,y=n.y*k+oy;
@@ -1627,7 +1620,7 @@
           if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;
           if(boxes.every(r=>separated(box,r,8))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;break}
         }
-        if(!choice&&stage.classList.contains('high-zoom-labels'))choice=zoomLabelFallback(x,y,lw,lh);
+        if(!choice&&(contextSet.has(n.id)||stage.classList.contains('high-zoom-labels')))choice=zoomLabelFallback(x,y,lw,lh);
         if(cameraReadingCentered&&selected!==null&&cameraReadingNode===n.id)choice={x:width/2-lw/2,y:height/2-lh/2,w:lw,h:lh};
         if(choice){label.style.left=(choice.x-x+b.offsetWidth/2)+'px';label.style.top=(choice.y-y+b.offsetHeight/2)+'px';label.style.width=choice.w+'px';boxes.push(choice);reservePersonMetadata(label,b,choice,boxes)}else label.style.display='none';
       }
