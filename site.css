@@ -320,6 +320,9 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 /* Identity captions accompany the opening self-introduction in each first clip. */
 #interview-dialog .interview-intro-caption{--identity-caption-size:clamp(21.6px,2.52vw,40.8px);position:absolute;left:6%;top:calc(83.4% - var(--identity-caption-size) * 1.2);bottom:auto;z-index:5;max-width:84%;pointer-events:none;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;text-shadow:-1.6px 0 0 #4b4b4b,1.6px 0 0 #4b4b4b,0 -1.6px 0 #4b4b4b,0 1.6px 0 #4b4b4b,-1.6px -1.6px 0 #4b4b4b,1.6px -1.6px 0 #4b4b4b,-1.6px 1.6px 0 #4b4b4b,1.6px 1.6px 0 #4b4b4b,0 3px 6px rgba(60,60,60,.55);line-height:1.2}
 #interview-dialog .interview-intro-caption[hidden]{display:none!important}
+#interview-dialog.epilogue-mode .interview-intro-caption:not([hidden]){display:block!important}
+#interview-dialog .epilogue-video-wash{position:absolute;inset:0;background:#fff;z-index:8;pointer-events:none}
+#interview-dialog .epilogue-video-wash[hidden]{display:none}
 #interview-dialog .intro-caption-heading{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 #interview-dialog .intro-caption-heading strong{font-size:var(--identity-caption-size);font-weight:700;letter-spacing:-.025em}
 #interview-dialog .intro-caption-heading span{font-size:calc(var(--identity-caption-size) * .617647);font-weight:500}
