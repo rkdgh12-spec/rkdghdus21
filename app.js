@@ -345,7 +345,8 @@
       for(const n of points)if(n.kind!=='person'&&visible.has(n.parent)&&expanded.has(n.parent))visible.add(n.id);
     }
     function select(id){return recordStep(()=>selectStep(id))}
-    let nodeBranchReveal=null,routeBranchPreview=null;
+    let nodeBranchReveal=null,routeBranchPreview=null,activeForkBranches=null;
+    const visibleForkBranches=()=>activeForkBranches&&activeRoute===activeForkBranches.overlay&&activeForkBranches.overlay.isConnected?activeForkBranches:null;
     const showingNodeBranches=()=>routeBranchPreview!==null&&stage.classList.contains('guided-transition');
     // Reveal every child branch with a Q, including Qs outside the lecture order.
     const questionRouteNodes=new Set(nodes.filter(n=>n.kind==='question').flatMap(n=>ancestors(n.id)));
@@ -360,6 +361,12 @@
       if(showingNodeBranches()&&nodes[routeBranchPreview].kind==='person')return null;
       if(focusedPerson===null||!['concept','subconcept','question'].includes(nodes[selected].kind))return null;
       const keep=new Set([...ancestors(selected),...descendants(selected)]);
+      // Keep every fork destination readable until its common-source trace finishes.
+      const forkBranches=visibleForkBranches();
+      if(forkBranches)for(const [sourceId,childIds] of forkBranches.sources){
+        if(nodes[sourceId].person!==focusedPerson)continue;
+        keep.add(sourceId);for(const id of childIds)keep.add(id);
+      }
       if(showingNodeBranches()&&nodes[routeBranchPreview].kind==='concept'){
         for(const id of ancestors(routeBranchPreview))keep.add(id);
         for(const n of branchChildren(routeBranchPreview))keep.add(n.id);
@@ -367,6 +374,9 @@
       return keep;
     }
     function nodeBranchState(e){
+      const forkBranches=visibleForkBranches(),forkParent=nodes[e.source].parent;
+      if(e.kind==='hierarchy'&&forkBranches&&(forkBranches.sources.get(e.source)?.has(e.target)||nodes[e.target].kind==='question'&&forkBranches.sources.get(forkParent)?.has(e.source)))
+        return {opacity:0,progress:0,reverse:false,trace:false};
       if(!nodeBranchReveal||selected!==nodeBranchReveal.id&&(!showingNodeBranches()||routeBranchPreview!==nodeBranchReveal.id))return null;
       const source=nodes[nodeBranchReveal.id],a=nodes[e.source],b=nodes[e.target];
       const branchIds=new Set(branchChildren(source.id).map(n=>n.id));
@@ -454,15 +464,17 @@
       const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');
       line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');
       overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
+      const forkBranches={overlay,sources:new Map()};activeForkBranches=forkBranches;
       let motion=cameraMotion,finished=false,finishing=false;
       const forks=[];
-      const remove=()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null};
+      const remove=()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null;if(activeForkBranches===forkBranches){activeForkBranches=null;render()}};
       const point=id=>depthEnabled?threeProjected[id]:{x:nodes[id].x*k+ox,y:nodes[id].y*k+oy};
       function startFork(sourceId){
         if(forks.some(fork=>fork.sourceId===sourceId))return;
         const started=performance.now(),arms=[];
+        forkBranches.sources.set(sourceId,new Set(branchChildren(sourceId).map(child=>child.id)));
         for(const child of branchChildren(sourceId)){
-          // The selected interview continues on the main trace; other arms end at their subconcept.
+          // All arms share one departure; only the selected interview continues beyond its child.
           if(ancestors(to).includes(child.id))continue;
           const armIds=[sourceId,child.id];
           const armLine=document.createElementNS(NS,'path'),armHead=document.createElementNS(NS,'circle');
@@ -649,10 +661,10 @@
           if(nodeBranchReveal?.id!==previous)nodeBranchReveal={id:previous,start:performance.now()};
           render();
         }
-        // All arms leave the concept at the same moment the main trace reaches it.
-        if(previous!==null&&nodes[previous].kind==='concept'&&nodes[target].parent===previous){
+        // Names and concepts use the same simultaneous departure from one source point.
+        if(isBranchSource(previous)&&nodes[target].parent===previous){
           routeBranchPreview=previous;nodeBranchReveal={id:previous,start:performance.now()};
-          trace?.startFork(previous);render();
+          readingDeparture=true;trace?.startFork(previous);render();
         }
         const readingArrival=passThrough&&previous!==null&&nodes[target].parent===previous;
         const legIndex=index;
@@ -667,7 +679,6 @@
           }
           if(forwardFork&&p>=.65){
             if(routeBranchPreview!==target){routeBranchPreview=target;nodeBranchReveal={id:target,start:null};render()}
-            if(nodes[target].kind==='person')revealNodeBranches(target);
           }
           trace?.draw(legIndex,p);
         }});
@@ -1543,7 +1554,7 @@
         l.classList.toggle('branch',e.kind==='hierarchy'&&selectedBranch.has(e.source)&&selectedBranch.has(e.target));
         l.classList.toggle('active',(lineage.has(e.source)&&lineage.has(e.target))||linkedMeaning||(hoverChapter!==null&&(selectedBranch.has(e.source)||selectedBranch.has(e.target))));
         if((activeChapter!==null&&(l.classList.contains('chapter-past')||l.classList.contains('chapter-cross')))||l.classList.contains('person-other-chapter')||(branchKeep!==null&&!branchRoute))for(const animation of l.getAnimations())animation.cancel();
-        if(newlyShown&&!reducedMotion&&!guidedStep&&!fullReveal){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
+        if(newlyShown&&!reducedMotion&&!guidedStep&&!fullReveal&&!revealState){const length=l.getTotalLength();l.animate([{strokeDasharray:length+' '+length,strokeDashoffset:length,opacity:0},{strokeDasharray:length+' '+length,strokeDashoffset:0,opacity:getComputedStyle(l).opacity}],{duration:e.core?1100:750,delay:e.core?180:i%9*22,easing:'cubic-bezier(.2,.6,.2,1)',fill:'backwards'})}
       });
       if(epilogueOverlay&&!depthEnabled)syncEpilogueOverlay();
       if(allConnected&&!networkContours)networkContours=connectedContours();
