@@ -413,40 +413,34 @@
       if(depthEnabled)return;
       let index=0;for(const nid of visible){if(before.has(nid)||!elems.has(nid))continue;const n=nodes[nid],p=nodes[n.parent],{b}=elems.get(nid);b.animate(guided?[{opacity:0},{opacity:1}]:[{transform:`translate(calc(-50% + ${(p.x-n.x)*k}px),calc(-50% + ${(p.y-n.y)*k}px))`,opacity:0},{transform:'translate(-50%,-50%)',opacity:1}],{duration:guided?480:520,delay:guided?Math.min(500+index++*12,780):Math.min(index++*18,320),easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'});}
     }
-    function traceRoute(from,to,onComplete,durationOverride,direct=false,progressAt){
-      activeRoute?.remove();activeRoute=null;
-      const adjacent=new Map();
-      const followPersonHierarchy=['권현빈','채길원'].includes(nodes[from].person)&&nodes[from].person===nodes[to].person;
-      edges.forEach((edge,index)=>{
-        if(followPersonHierarchy&&edge.kind!=='hierarchy')return;
-        if(!visible.has(edge.source)||!visible.has(edge.target)||paths[index].style.display==='none')return;
-        for(const [a,b,forward] of [[edge.source,edge.target,true],[edge.target,edge.source,false]]){if(!adjacent.has(a))adjacent.set(a,[]);adjacent.get(a).push({to:b,index,forward,weight:edge.kind==='hierarchy'?0:1})}});
-      for(const neighbors of adjacent.values())neighbors.sort((a,b)=>a.weight-b.weight);
-      const queue=[from],previous=new Map([[from,null]]);
-      for(let head=0;head<queue.length&&!previous.has(to);head++)for(const step of adjacent.get(queue[head])||[]){if(previous.has(step.to))continue;previous.set(step.to,{from:queue[head],...step});queue.push(step.to)}
-      const route=[];let cursor=to;
-      while(previous.has(cursor)&&previous.get(cursor)){const step=previous.get(cursor);route.unshift(step);cursor=step.from}
-      if(direct)route.length=0;
-      if(!route.length&&from===to)return;
-      const overlay=document.createElementNS(NS,'svg');overlay.setAttribute('class','lecture-route');overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);overlay.setAttribute('aria-hidden','true');
-      const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
-      const token=cameraMotion,duration=durationOverride??Math.min(1500,950+route.length*110);let start=null;const reached=new Set();
-      function draw(progress){
+    function beginReadableTrace(from,route,to){
+      activeRoute?.remove();
+      const ids=[from,...route],prefix=nodes[from].person?ancestors(from).slice(1,-1):[],overlay=document.createElementNS(NS,'svg');
+      overlay.setAttribute('class','lecture-route');overlay.setAttribute('aria-hidden','true');
+      overlay.style.opacity='0';
+      const line=document.createElementNS(NS,'path'),head=document.createElementNS(NS,'circle');
+      line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');
+      overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
+      let motion=cameraMotion,finished=false;
+      const remove=()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null};
+      const point=id=>depthEnabled?threeProjected[id]:{x:nodes[id].x*k+ox,y:nodes[id].y*k+oy};
+      function draw(index,progress){
+        if(activeRoute!==overlay)return;
+        overlay.style.opacity='';
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
-        const samples=[],arrivals=[];let routeLength=0;
-        for(const step of route){const path=depthEnabled?threeSvg.querySelector(`[data-edge-index="${step.index}"]`):paths[step.index];
-          if(!path)continue;const length=path.getTotalLength();routeLength+=length;arrivals.push({id:step.to,distance:routeLength});const count=Math.max(8,Math.min(36,Math.ceil(length/28)));
-          for(let j=0;j<=count;j++){if(samples.length&&j===0)continue;const p=path.getPointAtLength(length*(step.forward?j/count:1-j/count));samples.push([p.x,p.y])}}
-        if(!samples.length){const a=depthEnabled?threeProjected[from]:{x:nodes[from].x*k+ox,y:nodes[from].y*k+oy},b=depthEnabled?threeProjected[to]:{x:nodes[to].x*k+ox,y:nodes[to].y*k+oy};if(!a||!b)return;samples.push([a.x,a.y],[b.x,b.y])}
-        line.setAttribute('d',samples.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(''));
-        const length=line.getTotalLength();line.style.strokeDasharray=`${length} ${length}`;line.style.strokeDashoffset=String(length*(1-progress));
-        const p=line.getPointAtLength(length*progress);head.setAttribute('cx',p.x);head.setAttribute('cy',p.y);
-        for(const arrival of arrivals)if(routeLength>0&&progress>=arrival.distance/routeLength&&!reached.has(arrival.id)){reached.add(arrival.id);markStepArrival(arrival.id,true)}
+        const points=[...prefix,...ids.slice(0,index+1)].map(point),a=point(ids[index]),b=point(ids[index+1]);
+        const tip={x:a.x+(b.x-a.x)*progress,y:a.y+(b.y-a.y)*progress};points.push(tip);
+        // Keep one path for the entire journey; only its travelled portion is drawn.
+        line.setAttribute('d',points.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(''));
+        head.setAttribute('cx',tip.x);head.setAttribute('cy',tip.y);
       }
-      function tick(now){if(token!==cameraMotion){overlay.remove();if(activeRoute===overlay)activeRoute=null;return}if(start===null)start=now;
-        const t=Math.min(1,(now-start)/duration);draw(progressAt?progressAt(t):nodeTravelProgress(t,duration));
-        if(t<1)requestAnimationFrame(tick);else{overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
-      requestAnimationFrame(tick);
+      function monitor(){
+        if(finished)return;
+        if(motion!==cameraMotion||selected!==to||activeRoute!==overlay){remove();return}
+        requestAnimationFrame(monitor);
+      }
+      requestAnimationFrame(monitor);
+      return {draw,expectMotion:()=>{motion=cameraMotion},finish:()=>{finished=true;overlay.classList.add('finish');setTimeout(remove,330)}};
     }
     function selectedTextPoint(id){
       const n=nodes[id],button=depthEnabled?threeNodes.get(id):n.kind==='chapter'?areas.get(id).heading:elems.get(id).b;
@@ -457,8 +451,9 @@
     }
     // Use the fixed whole-map overview for every leg, regardless of the current lens.
     const NODE_REFERENCE_TRAVEL_MS=850;
-    const NODE_READING_HOLD_MS=1200;
     const NODE_TRAVEL_RAMP_MS=120;
+    const NODE_PASS_SPEED=.28;
+    const NODE_READING_ZONE=.32;
     const CHAPTER_TRAVEL_SPEED_MULTIPLIER=1.5;
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
@@ -487,14 +482,33 @@
       // Overview fit, viewport size and translation cancel in the distance ratio.
       return Math.hypot(b.x-a.x,b.y-a.y);
     }
-    function overviewTravelTimeline(from,to){
+    function overviewTravelTimeline(from,to,flow={}){
       const reference=getTravelReference(),referenceLength=overviewTravelDistance(reference.from,reference.to);
       const unitsPerMs=Math.max(.000001,referenceLength/(reference.duration-NODE_TRAVEL_RAMP_MS));
-      const cruiseMs=overviewTravelDistance(from,to)/unitsPerMs;
       const acrossChapters=from!==null&&from!==undefined&&nodes[from].chapter!==nodes[to].chapter;
       const speedMultiplier=acrossChapters?CHAPTER_TRAVEL_SPEED_MULTIPLIER:1;
-      const duration=Math.max(1,(cruiseMs+Math.min(NODE_TRAVEL_RAMP_MS,cruiseMs*.25))/speedMultiplier);
-      return {duration,progressAt:t=>nodeTravelProgress(t,duration)};
+      const cruiseMs=Math.max(.001,overviewTravelDistance(from,to)/unitsPerMs/speedMultiplier);
+      const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
+      const pace=p=>{
+        let speed=1;
+        if(flow.readingDeparture&&p<NODE_READING_ZONE)speed=NODE_PASS_SPEED+(1-NODE_PASS_SPEED)*smooth(p/NODE_READING_ZONE);
+        if(flow.readingArrival&&p>1-NODE_READING_ZONE)speed=NODE_PASS_SPEED+(1-NODE_PASS_SPEED)*smooth((1-p)/NODE_READING_ZONE);
+        return speed;
+      };
+      const count=128,cost=[0];let total=0,previous=cruiseMs/pace(0);
+      for(let i=1;i<=count;i++){const next=cruiseMs/pace(i/count);total+=(previous+next)/2/count;cost.push(total);previous=next}
+      const ramp=Math.min(NODE_TRAVEL_RAMP_MS/speedMultiplier,total*.25);
+      const rampIn=flow.continueFromNode?0:ramp,rampOut=flow.passThrough?0:ramp;
+      const duration=Math.max(1,total+(rampIn+rampOut)/2);
+      const progressAt=t=>{
+        const elapsed=Math.max(0,Math.min(1,t))*duration;
+        const target=rampIn&&elapsed<rampIn?elapsed*elapsed/(2*rampIn):rampOut&&elapsed>duration-rampOut?total-(duration-elapsed)**2/(2*rampOut):elapsed-rampIn/2;
+        let lo=0,hi=count;
+        while(lo+1<hi){const mid=(lo+hi)>>1;if(cost[mid]<target)lo=mid;else hi=mid}
+        const part=(target-cost[lo])/Math.max(.000001,cost[hi]-cost[lo]);
+        return Math.max(0,Math.min(1,(lo+part)/count));
+      };
+      return {duration,progressAt};
     }
     function nodeTravelProgress(t,duration){
       const elapsed=Math.max(0,Math.min(1,t))*duration,ramp=Math.min(NODE_TRAVEL_RAMP_MS,duration*.2),cruise=duration-ramp;
@@ -503,10 +517,10 @@
       return (elapsed-ramp/2)/cruise;
     }
     let cameraReadingNode=null,cameraReadingCentered=false;
-    function travel(points,duration,frame,done,progressAt){
+    function travel(points,duration,frame,done,progressAt,onProgress,continueFromNode=false){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
-      let start=null,last=0,firstChapterEmphasized=false;
+      let start=continueFromNode?performance.now():null,last=0,firstChapterEmphasized=false;
       function tick(now){
         if(token!==cameraMotion)return;
         if(start===null)start=now;
@@ -517,6 +531,7 @@
         const part=segments[i]?Math.max(0,Math.min(1,(distance-lengths[i])/segments[i])):1;
         const a=points[i],b=points[Math.min(i+1,points.length-1)];
         frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},progress);
+        onProgress?.(progress);
         if(!firstChapterEmphasized&&(now-start)>=1000&&selected!==null&&nodes[selected].kind==='chapter'&&nodes[selected].chapter===1){firstChapterEmphasized=true;markStepArrival(selected,true)}
         if(t<1)requestAnimationFrame(tick);
         else{done();if(selected!==null&&stepHistory[stepIndex]?.selected===selected){stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
@@ -543,22 +558,24 @@
     }
     function followReadableRoute(from,to,guided,after){
       const route=guided?readableWaypoints(from,to):[to];
-      let index=0,previous=from;
+      const trace=guided?beginReadableTrace(from,route,to):null;
+      let index=0,previous=from,readingDeparture=false;
       function next(){
         const target=route[index];cameraReadingNode=target;cameraReadingCentered=false;
-        const timeline=followConnectionToLabel(previous,target,()=>{
-          const motion=cameraMotion;markStepArrival(target,true);centerReadingText(target);
-          if(index===route.length-1){stage.classList.remove('guided-transition');after();return}
-          // Pause only when entering a deeper node; retracing parents back to a person continues immediately.
-          const enteringDeeper=previous!==null&&nodes[target].parent===previous;
-          const resume=()=>{if(cameraMotion!==motion||selected!==to)return;previous=target;index++;next()};
-          if(!reducedMotion&&enteringDeeper)setTimeout(resume,NODE_READING_HOLD_MS);else resume();
-        });
-        if(guided&&timeline)traceRoute(previous,target,null,timeline.duration,true,timeline.progressAt);
+        const passThrough=index<route.length-1;
+        const readingArrival=passThrough&&previous!==null&&nodes[target].parent===previous;
+        const legIndex=index;
+        followConnectionToLabel(previous,target,()=>{
+          markStepArrival(target,true);
+          if(!passThrough){trace?.finish();stage.classList.remove('guided-transition');after();return}
+          // Move through intermediate nodes at a reduced, nonzero speed.
+          readingDeparture=readingArrival;previous=target;index++;next();
+        },{continueFromNode:index>0,passThrough,readingArrival,readingDeparture,onProgress:p=>trace?.draw(legIndex,p)});
+        trace?.expectMotion();
       }
       next();
     }
-    function followConnectionToLabel(previous,id,after){
+    function followConnectionToLabel(previous,id,after,flow={}){
       cameraMotion++;
       if(depthEnabled){
         lastManual3D=performance.now();
@@ -592,9 +609,9 @@
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
         const goalFocus={x:threeProjected[focusId].x,y:threeProjected[focusId].y};
         threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
-        const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();centerReadingText(id);after()};
+        const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
-        const timeline=overviewTravelTimeline(previous,id);
+        const timeline=overviewTravelTimeline(previous,id,flow);
         const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
         if(wideTransit){
           const sourcePoint=sourceId!==undefined&&sourceId!==null?threeProjected[sourceId]:null;
@@ -621,7 +638,7 @@
               threePanX=midpoint.x+(goal.x-midpoint.x)*t;threePanY=midpoint.y+(goal.y-midpoint.y)*t;
             }
             render3D();
-          },finish,timeline.progressAt);
+          },finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
         }else{
           travel([start,goal],timeline.duration,(p,progress)=>{
             lastManual3D=performance.now();
@@ -637,7 +654,7 @@
               threePanX+=desiredX-currentX;threePanY+=desiredY-currentY;
               render3D();
             }
-          },finish,timeline.progressAt);
+          },finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
         }
         return timeline;
       }
@@ -650,18 +667,18 @@
         k=Math.max(fitK*.45,Math.min(k,width*.56/Math.max(1,maxx-minx),height*.50/Math.max(1,maxy-miny)));
         ox=width/2-(minx+maxx)*k/2;oy=height/2-(miny+maxy)*k/2;render();
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
-        const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();centerReadingText(id);after()};
+        const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
-        const timeline=overviewTravelTimeline(previous,id);
-        travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish,timeline.progressAt);
+        const timeline=overviewTravelTimeline(previous,id,flow);
+        travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
         return timeline;
       }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
       const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
-      const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();centerReadingText(id);after()};
+      const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
       if(reducedMotion){finish();return}
-      const timeline=overviewTravelTimeline(previous,id);
-      travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish,timeline.progressAt);
+      const timeline=overviewTravelTimeline(previous,id,flow);
+      travel([start,goal],timeline.duration,(p,progress)=>{ox=p.x;oy=p.y;k=start.k+(goal.k-start.k)*progress;render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
       return timeline;
     }
     function showDetail(n,openQuestion=true){
