@@ -455,7 +455,10 @@
         followConnectionToLabel(previous,target,()=>{
           const motion=cameraMotion;markStepArrival(target,true);centerReadingText(target);
           if(index===route.length-1){after();return}
-          setTimeout(()=>{if(cameraMotion!==motion||selected!==to)return;previous=target;index++;next()},reducedMotion?0:NODE_READING_HOLD_MS);
+          // Pause only when entering a deeper node; retracing parents back to a person continues immediately.
+          const enteringDeeper=previous!==null&&nodes[target].parent===previous;
+          const resume=()=>{if(cameraMotion!==motion||selected!==to)return;previous=target;index++;next()};
+          if(!reducedMotion&&enteringDeeper)setTimeout(resume,NODE_READING_HOLD_MS);else resume();
         },movingMs);
         if(guided)traceRoute(previous,target,null,movingMs,true);
       }
