@@ -662,7 +662,7 @@
           // Move through intermediate nodes at a reduced, nonzero speed.
           readingDeparture=readingArrival;previous=target;index++;next();
         },{continueFromNode:index>0,passThrough,readingArrival,readingDeparture,onProgress:p=>{
-          if(routeBranchPreview===previous&&nodes[previous].kind==='person'&&nodes[target].parent===previous&&p>=.45){
+          if(previous!==null&&routeBranchPreview===previous&&nodes[previous].kind==='person'&&nodes[target].parent===previous&&p>=.45){
             routeBranchPreview=forwardFork?target:null;nodeBranchReveal=forwardFork?{id:target,start:null}:null;render();
           }
           if(forwardFork&&p>=.65){
