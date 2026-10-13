@@ -97,15 +97,41 @@
     let epilogueRoam=null;
     function stopEpilogueRoam(){
       if(!epilogueRoam)return;
-      epilogueRoam=null;idleYaw=0;idleElevation=0;idleStrength=0;lastManual3D=performance.now();
+      epilogueRoam=null;epilogueMapAnchor=null;idleYaw=0;idleElevation=0;idleStrength=0;lastManual3D=performance.now();
     }
     function startEpilogueRoam(){
       selected=null;cameraReadingNode=null;cameraReadingCentered=false;fullReveal=null;showDetail(null);
       if(!depthEnabled){setDepthEnabled(true);threeYaw=-.34;threeElevation=.82;threeZoom=1;epilogueMapAnchor={x:.5,y:.5};}
       autoCentered3D=false;idleYaw=0;idleElevation=0;idleStrength=0;threeZoom*=.94;
       render3D();
-      if(!reducedMotion)epilogueRoam={start:performance.now(),yaw:threeYaw,elevation:threeElevation,zoom:threeZoom};
-      q('#map-status').textContent='에필로그 · 창작의 지형을 천천히 탐색합니다';save();
+      if(!reducedMotion){
+        const visits=[['최고은',null],['권현빈','물질'],['민지희','리서치'],null,['박재영','창작 플랫폼'],['류성실','세계관'],['강인애',null],null,['안정환',null],['최지혜',null],['서해영','함께하는 조각'],null,['권현빈',null],['채길원',null]];
+        const route=[{node:threeCenter,weight:0,zoom:1,elevation:threeElevation}];
+        for(const [i,visit] of visits.entries()){
+          if(!visit){route.push({node:threeCenter,weight:0,zoom:1,elevation:1.18});continue;}
+          const [name,term]=visit;
+          const person=points.find(n=>n.kind==='person'&&n.label===name);
+          const node=term?points.find(n=>visible.has(n.id)&&n.person===name&&['concept','subconcept'].includes(n.kind)&&n.label.includes(term))||person:person;
+          if(node)route.push({node,weight:1,zoom:term?4.1:3.25,elevation:[.72,.48,.88,.58][i%4]});
+        }
+        const now=performance.now();
+        epilogueRoam={elapsed:0,lastTick:now,yaw:threeYaw,zoom:threeZoom,panX:threePanX/width,panY:threePanY/height,route,focus:null,focusId:null};
+        epilogueMapAnchor=null;
+      }
+      q('#map-status').textContent='에필로그 · 노드 사이를 유영하며 창작의 지형을 탐색합니다';save();
+    }
+    function advanceEpilogueRoam(now){
+      const roam=epilogueRoam;if(!roam)return;
+      roam.elapsed+=Math.min(100,Math.max(0,now-roam.lastTick));roam.lastTick=now;
+      const step=roam.elapsed/14000,index=Math.floor(step),t=step-index,count=roam.route.length;
+      const at=i=>{const item=roam.route[((i%count)+count)%count],node=item.node;return {id:node.id,x:node.x,y:node.y,z:threeHeight(node),weight:item.weight,logZoom:Math.log(item.zoom),elevation:item.elevation,yaw:roam.yaw+i/count*Math.PI*2};};
+      const a=at(index-1),b=at(index),c=at(index+1),d=at(index+2);
+      const blend=key=>{const p=a[key],q=b[key],r=c[key],s=d[key];return .5*((2*q)+(-p+r)*t+(2*p-5*q+4*r-s)*t*t+(-p+3*q-3*r+s)*t*t*t);};
+      threeYaw=blend('yaw');threeElevation=Math.max(.32,Math.min(1.42,blend('elevation')));
+      threeZoom=Math.max(.65,Math.min(6.5,roam.zoom*Math.exp(blend('logZoom'))));
+      roam.focus={x:blend('x'),y:blend('y'),z:blend('z'),weight:Math.max(0,Math.min(1,blend('weight')))};
+      roam.focusId=roam.focus.weight>.35?(t<.5?b.id:c.id):null;
+      idleYaw=0;idleElevation=0;render3D();
     }
     root.addEventListener('pointerdown',stopEpilogueRoam,true);
     root.addEventListener('wheel',stopEpilogueRoam,{capture:true,passive:true});
@@ -1198,6 +1224,11 @@
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
       if(autoCentered3D){threePanX=(midx-centerPoint.x)*scale;threePanY=(midy-centerPoint.y)*scale}
+      if(epilogueRoam?.focus){
+        const roam=epilogueRoam,focus=roam.focus,aim=rawXYZ(focus.x,focus.y,focus.z),weight=focus.weight,ratio=threeZoom/roam.zoom;
+        threePanX=roam.panX*width*ratio*(1-weight)+(midx-aim.x)*scale*weight;
+        threePanY=roam.panY*height*ratio*(1-weight)+(midy-aim.y)*scale*weight;
+      }
       const project=(x,y,z=0)=>{const p=rawXYZ(x,y,z);return {x:width/2+threePanX+(p.x-midx)*scale,y:height/2+threePanY+(p.y-midy)*scale,d:p.d}};
       const pos=nodes.map(n=>project(n.x,n.y,threeHeight(n)));
       threeProjected=pos;
@@ -1229,7 +1260,7 @@
         else currentLinks+=markup;
       }
       threeSvg.innerHTML=ground+stems+`<g class="person-past-layer">${pastLinks}</g><g class="person-cross-layer">${crossLinks}</g><g class="person-current-layer">${currentLinks}</g>`;
-      if(epilogueMapAnchor&&allConnected&&selected===null&&!aligningEpilogueMap){
+      if(epilogueMapAnchor&&!epilogueRoam&&allConnected&&selected===null&&!aligningEpilogueMap){
         const box=threeSvg.querySelector('.three-volume.outer')?.getBBox();
         if(box){const dx=width*epilogueMapAnchor.x-box.x-box.width/2,dy=height*epilogueMapAnchor.y-box.y-box.height/2;
           if(Math.abs(dx)+Math.abs(dy)>.05){autoCentered3D=false;threePanX+=dx;threePanY+=dy;aligningEpilogueMap=true;try{render3D()}finally{aligningEpilogueMap=false}return}
@@ -1257,7 +1288,7 @@
         b.style.left=chosen.x+'px';b.style.top=chosen.y+'px';pinReadingHeading(b,n.id);b.style.zIndex=String(Math.round(10000-p.d));setRevealOpacity(b,n);boxes.push(chosen.box);
       }
       const selectedQuestionParent=selected!==null&&nodes[selected].kind==='question'?nodes[selected].parent:null;
-      const labelPriority=n=>n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.id===selectedQuestionParent?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
+      const labelPriority=n=>n.id===epilogueRoam?.focusId?-2:n.id===(cameraReadingNode??selected)?-1:n.id===selected?0:n.id===selectedQuestionParent?1:n.kind==='person'?2:n.kind==='concept'?3:selectedBranch.has(n.id)?4:connectedQuestions.has(n.id)?5:n.kind==='subconcept'?6:7;
       for(const n of [...points].sort((a,b)=>labelPriority(a)-labelPriority(b))){
         const b=threeNodes.get(n.id),label=b.querySelector('.node-label'),p=pos[n.id],x=p.x,y=p.y,show=visible.has(n.id)&&x>=0&&x<=width&&y>=0&&y<=height;
         b.hidden=!show;if(!show)continue;b.style.left=x+'px';b.style.top=y+'px';b.style.zIndex=String(Math.round(20000-p.d));setRevealOpacity(b,n);b.classList.toggle('reading-node',cameraReadingCentered&&cameraReadingNode===n.id);b.classList.toggle('selected',selected===n.id);b.classList.toggle('person-current',focusedPerson!==null&&n.person===focusedPerson);b.classList.toggle('person-past',focusedPerson!==null&&n.person!==focusedPerson);b.classList.toggle('chapter-past',activeChapter!==null&&n.chapter!==activeChapter);b.classList.toggle('branch-past',branchKeep!==null&&n.person===focusedPerson&&!branchKeep.has(n.id));b.classList.toggle('branch-other-chapter',branchKeep!==null&&n.chapter!==personChapter);b.classList.toggle('connected',connectedQuestions.has(n.id));if(n.kind!=='question')b.setAttribute('aria-expanded',String(expanded.has(n.id)));
@@ -1408,15 +1439,11 @@
     stage.addEventListener('pointerup',endPointer);stage.addEventListener('pointercancel',endPointer);
     stage.addEventListener('auxclick',e=>{if(depthEnabled&&e.button===1)e.preventDefault()});
     function idleMotionTick(now){
-      setTimeout(()=>requestAnimationFrame(idleMotionTick),70);
-      if(!depthEnabled||prologueOpen||document.hidden||reducedMotion||!q('.intro').hidden)return;
-      if(now-lastIdleFrame<70)return;lastIdleFrame=now;
+      if(epilogueRoam)requestAnimationFrame(idleMotionTick);else setTimeout(()=>requestAnimationFrame(idleMotionTick),70);
+      if(!depthEnabled||prologueOpen||dialog.open||document.hidden||reducedMotion||!q('.intro').hidden)return;
+      if(now-lastIdleFrame<(epilogueRoam?32:70))return;lastIdleFrame=now;
       if(epilogueRoam&&!dialog.open){
-        const t=now-epilogueRoam.start;
-        threeYaw=epilogueRoam.yaw+.28*Math.sin(t/18000);
-        threeElevation=Math.max(.28,Math.min(1.45,epilogueRoam.elevation+.055*(Math.cos(t/23000)-1)));
-        threeZoom=epilogueRoam.zoom*(1+.025*Math.sin(t/26000));
-        idleYaw=0;idleElevation=0;render3D();return;
+        advanceEpilogueRoam(now);return;
       }
       const target=now-lastManual3D>1800&&pointers.size===0&&!(selected!==null&&cameraReadingNode!==null)?1:0;
       idleStrength+=(target-idleStrength)*.14;
@@ -1426,7 +1453,7 @@
     }
     function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:4,presentationMode,depthEnabled}))}catch{}}
     function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===4&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?cues.findIndex(c=>c.id===selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
-    new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(epilogueMapView){restoreEpilogueMapView();return}if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
+    new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(epilogueMapView){restoreEpilogueMapView();return}if(epilogueRoam){render();return}if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
     fit();showDetail(null);restore();updateCue();resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
 
