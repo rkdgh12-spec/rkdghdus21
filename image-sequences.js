@@ -149,8 +149,26 @@ window.FORUM_IMAGE_INSERTS = {
     "start": 5.2052,
     "images": [
       {
-        "src": "images/interview-works/ryu-sungsil-1-detail-safe.svg",
-        "caption": "<BigKing Travel -Series of victorious Return> 2017, digital print, 30.5X42cm"
+        "src": "images/interview-works/ryu-sungsil-1-restored-grain.jpg",
+        "caption": "<BigKing Travel -Series of victorious Return> 2017, digital print, 30.5X42cm",
+        "restored": true,
+        "imageFilter": "none",
+        "originalText": {
+          "src": "images/interview-works/ryu-sungsil-1.jpg",
+          "width": 1504,
+          "height": 1090,
+          "filter": "none",
+          "feather": 2,
+          "paths": [
+            "M0 0H1504V195H0Z",
+            "M0 195H190V795H0Z",
+            "M1335 195H1504V795H1335Z",
+            "M386 236H562V477H386Z",
+            "M997 235H1191V478H997Z",
+            "M675 335H890V625H675Z",
+            "M170 560H260V658H170Z"
+          ]
+        }
       },
       {
         "src": "images/interview-works/ryu-sungsil-2-official-2500.jpg",

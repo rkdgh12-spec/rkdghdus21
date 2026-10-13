@@ -44,10 +44,19 @@
         const defs=document.createElementNS(ns,'defs'),clip=document.createElementNS(ns,'clipPath');
         const clipId='work-original-text-'+overlay.childElementCount;clip.setAttribute('id',clipId);
         for(const d of sourceText.paths){const path=document.createElementNS(ns,'path');path.setAttribute('d',d);clip.append(path);}
-        defs.append(clip);svg.append(defs);
+        defs.append(clip);
+        if(sourceText.feather){
+          const filter=document.createElementNS(ns,'filter');filter.setAttribute('id',clipId+'-soft');filter.setAttribute('color-interpolation-filters','sRGB');
+          const blur=document.createElementNS(ns,'feGaussianBlur');blur.setAttribute('stdDeviation',sourceText.feather);filter.append(blur);defs.append(filter);
+          const mask=document.createElementNS(ns,'mask');mask.setAttribute('id',clipId+'-mask');mask.setAttribute('maskUnits','userSpaceOnUse');mask.setAttribute('x','0');mask.setAttribute('y','0');mask.setAttribute('width',sourceText.width);mask.setAttribute('height',sourceText.height);
+          const group=document.createElementNS(ns,'g');group.setAttribute('fill','white');group.setAttribute('filter','url(#'+clipId+'-soft)');
+          for(const d of sourceText.paths){const path=document.createElementNS(ns,'path');path.setAttribute('d',d);group.append(path)}
+          mask.append(group);defs.append(mask);
+        }
+        svg.append(defs);
         const original=document.createElementNS(ns,'image');
         original.setAttribute('href',sourceText.src);original.setAttribute('width',sourceText.width);
-        original.setAttribute('height',sourceText.height);original.setAttribute('clip-path','url(#'+clipId+')');
+        original.setAttribute('height',sourceText.height);original.setAttribute(sourceText.feather?'mask':'clip-path','url(#'+clipId+(sourceText.feather?'-mask':'')+')');
         svg.append(original);figure.append(svg);
       }
       const caption=document.createElement('figcaption');caption.textContent=work.caption;if(work.caption.includes('\n'))caption.style.whiteSpace='pre-line';
