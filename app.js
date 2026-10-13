@@ -640,6 +640,7 @@
     function configureInterviewAudio(media){
       cancelAnimationFrame(interviewAudioFrame);interviewAudioFrame=0;
       interviewAudioBounds=media?.speechBounds||null;interviewAppliedVolume=0;video.volume=0;
+      interviewStartWash.hidden=false;interviewStartWash.style.background='#000';
     }
     video.addEventListener('volumechange',()=>{
       if(Math.abs(video.volume-interviewAppliedVolume)<.0001)return;
@@ -825,7 +826,7 @@
     q('.interview-media').append(interviewStartWash);
     function updateInterviewStartVisuals(){
       const time=video.currentTime||0;
-      const active=dialog.open&&videoStarted&&!dialog.classList.contains('question-intro')&&time<1.25;
+      const active=dialog.open&&!!video.getAttribute('src')&&(!videoStarted||time<1.25);
       interviewStartWash.hidden=!active;
       if(!active)return;
       const progress=audioSmooth((time-.12)/1.13),radius=progress*115;
