@@ -261,3 +261,14 @@
 /* Raise the first-slide diagram one line without moving its title. */
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(45px)}
 @media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(22px)}}
+
+/* Enlarge only first-page lettering at its existing anchors, retaining layout spacing. */
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis-label strong,
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-term-title,
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-term-value,
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis p,
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade-range>span{scale:1.2;transform-origin:center}
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-axis-label strong{display:inline-block}
+/* Move the full diagram ten percent of its own height, keeping all internal gaps. */
+#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(calc(45px + 10%))}
+@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{transform:translateY(calc(22px + 10%))}}
