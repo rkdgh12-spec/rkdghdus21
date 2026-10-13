@@ -717,7 +717,7 @@
     function updateIntroCaption(){
       const caption=q('#interview-intro-caption');
       const first=lectureOrder.flatMap(group=>group.people).find(item=>item[0]===currentQuestion?.person)?.[1]?.[0];
-      const show=dialog.open&&interviewMode!=='epilogue'&&currentQuestion?.label===first&&!!video.getAttribute('src')&&videoStarted&&video.currentTime<7+(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.timelineOffset||0)&&!video.ended&&!dialog.classList.contains('question-intro');
+      const show=dialog.open&&interviewMode!=='epilogue'&&currentQuestion?.label===first&&!!video.getAttribute('src')&&videoStarted&&video.currentTime<(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.introEnd??(7+(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.timelineOffset||0)))&&!video.ended&&!dialog.classList.contains('question-intro');
       caption.hidden=!show;
     }
     for(const event of ['playing','timeupdate','seeked','pause','ended','loadedmetadata'])video.addEventListener(event,updateIntroCaption);

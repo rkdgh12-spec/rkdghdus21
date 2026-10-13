@@ -128,17 +128,18 @@ window.FORUM_MEDIA = {
   },
   "강인애/Q3": {
     "title": "강인애 인터뷰 Q3 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kang-inae-q3-intro-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kang-replacement-20261013/kang-inae-q3-intro-replacement-web.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kang-inae-q3-intro.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/kang-inae-q3-replacement.ko.vtt?v=kang-replacement-subtitles-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
     "transcript": "",
-    "timelineOffset": 0.33366666666666667
+    "timelineOffset": 0.33366666666666667,
+    "introEnd": 9.45
   },
   "강인애/Q6": {
     "title": "",
@@ -149,11 +150,11 @@ window.FORUM_MEDIA = {
   },
   "강인애/Q5": {
     "title": "강인애 인터뷰 Q5",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/kang-inae-q5-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-kang-replacement-20261013/kang-inae-q5-replacement-web.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/kang-inae-q5.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/kang-inae-q5-replacement.ko.vtt?v=kang-replacement-subtitles-1",
         "label": "한국어",
         "language": "ko"
       }
