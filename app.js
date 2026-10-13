@@ -436,7 +436,7 @@
         for(const arrival of arrivals)if(routeLength>0&&progress>=arrival.distance/routeLength&&!reached.has(arrival.id)){reached.add(arrival.id);markStepArrival(arrival.id,true)}
       }
       function tick(now){if(token!==cameraMotion){overlay.remove();if(activeRoute===overlay)activeRoute=null;return}if(start===null)start=now;
-        const t=Math.min(1,(now-start)/duration);draw(t*t*(3-2*t));
+        const t=Math.min(1,(now-start)/duration);draw(nodeTravelProgress(t,duration));
         if(t<1)requestAnimationFrame(tick);else{stage.classList.remove('guided-transition');overlay.classList.add('finish');onComplete?.();setTimeout(()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null},330)}}
       requestAnimationFrame(tick);
     }
@@ -447,9 +447,41 @@
       const box=element.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
       return {x:box.left+box.width/2-stageBox.left,y:box.top+box.height/2-stageBox.top};
     }
-    // Keep camera travel and connection tracing synchronized at 1.05x speed.
+    // Calibrate cruise speed to the existing Ryu -> platform leg in the lecture route.
     const NODE_TRAVEL_MS=2352;
     const NODE_READING_HOLD_MS=1200;
+    const NODE_TRAVEL_RAMP_MS=120;
+    let travelReference=null;
+    function hierarchyRoute(from,to){
+      const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
+      const a=chain(from),b=chain(to),join=a.find(id=>b.includes(id));
+      return join===undefined?[to]:[...a.slice(1,a.indexOf(join)+1),...b.slice(0,b.indexOf(join)).reverse()];
+    }
+    function getTravelReference(){
+      if(travelReference)return travelReference;
+      const from=nodes.find(n=>n.kind==='person'&&n.label==='류성실');
+      const to=nodes.find(n=>n.person==='류성실'&&n.kind==='concept'&&n.label==='플랫폼');
+      const cueIndex=cues.findIndex(c=>c.id===to.id),previous=nodes[cues[cueIndex-1]?.id];
+      const count=previous&&previous.person===to.person?hierarchyRoute(previous.id,to.id).length:1;
+      travelReference={from:from.id,to:to.id,duration:count>1?Math.max(850,Math.round(NODE_TRAVEL_MS/count)):NODE_TRAVEL_MS};
+      return travelReference;
+    }
+    function nodeTravelDistance(from,to){
+      const a=nodes[from],b=nodes[to];
+      return Math.hypot(b.x-a.x,b.y-a.y,depthEnabled?threeHeight(b)-threeHeight(a):0);
+    }
+    function nodeTravelDuration(from,to){
+      if(from===null||from===undefined)return NODE_TRAVEL_MS;
+      const reference=getTravelReference(),referenceDistance=nodeTravelDistance(reference.from,reference.to);
+      const cruiseMs=nodeTravelDistance(from,to)/referenceDistance*(reference.duration-NODE_TRAVEL_RAMP_MS);
+      return Math.max(1,cruiseMs+Math.min(NODE_TRAVEL_RAMP_MS,cruiseMs*.25));
+    }
+    function nodeTravelProgress(t,duration){
+      const elapsed=Math.max(0,Math.min(1,t))*duration,ramp=Math.min(NODE_TRAVEL_RAMP_MS,duration*.2),cruise=duration-ramp;
+      if(elapsed<ramp)return elapsed*elapsed/(2*ramp*cruise);
+      if(elapsed>duration-ramp)return 1-(duration-elapsed)**2/(2*ramp*cruise);
+      return (elapsed-ramp/2)/cruise;
+    }
     let cameraReadingNode=null,cameraReadingCentered=false;
     function travel(points,duration,frame,done){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
@@ -460,11 +492,11 @@
         if(start===null)start=now;
         const t=Math.min(1,(now-start)/duration);
         if(t<1&&now-last<24){requestAnimationFrame(tick);return}last=now;
-        const distance=total*(t*t*(3-2*t));let i=0;
+        const progress=nodeTravelProgress(t,duration),distance=total*progress;let i=0;
         while(i<segments.length-1&&lengths[i+1]<distance)i++;
         const part=segments[i]?Math.max(0,Math.min(1,(distance-lengths[i])/segments[i])):1;
         const a=points[i],b=points[Math.min(i+1,points.length-1)];
-        frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},t*t*(3-2*t));
+        frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},progress);
         if(!firstChapterEmphasized&&(now-start)>=1000&&selected!==null&&nodes[selected].kind==='chapter'&&nodes[selected].chapter===1){firstChapterEmphasized=true;markStepArrival(selected,true)}
         if(t<1)requestAnimationFrame(tick);
         else{done();if(selected!==null&&stepHistory[stepIndex]?.selected===selected){stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
@@ -487,19 +519,14 @@
     function readableWaypoints(from,to){
       if(from===null||from===to||nodes[from].person!==nodes[to].person||!nodes[to].person)return [to];
       // ancestors() is root-first, so walk the actual parent chain for the return leg.
-      const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
-      const a=chain(from),b=chain(to),join=a.find(nid=>b.includes(nid));
-      if(join===undefined)return [to];
-      return [...a.slice(1,a.indexOf(join)+1),...b.slice(0,b.indexOf(join)).reverse()].filter(nid=>visible.has(nid));
+      return hierarchyRoute(from,to).filter(nid=>visible.has(nid));
     }
     function followReadableRoute(from,to,guided,after){
       const route=guided?readableWaypoints(from,to):[to];
-      const movingMs=route.length>1?Math.max(850,Math.round(NODE_TRAVEL_MS/route.length)):NODE_TRAVEL_MS;
       let index=0,previous=from;
       function next(){
         const target=route[index];cameraReadingNode=target;cameraReadingCentered=false;
-        const enteringQuestion=previous!==null&&nodes[previous].kind==='subconcept'&&nodes[target].kind==='question'&&nodes[target].parent===previous;
-        const legMs=enteringQuestion?Math.round(movingMs*.8):movingMs;
+        const legMs=nodeTravelDuration(previous,target);
         followConnectionToLabel(previous,target,()=>{
           const motion=cameraMotion;markStepArrival(target,true);centerReadingText(target);
           if(index===route.length-1){after();return}
