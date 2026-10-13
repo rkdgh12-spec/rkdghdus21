@@ -149,12 +149,25 @@ window.FORUM_IMAGE_INSERTS = {
     "start": 5.2052,
     "images": [
       {
-        "src": "images/interview-works/ryu-sungsil-1.jpg",
+        "src": "images/interview-works/ryu-sungsil-1-detail-safe.svg",
         "caption": "<BigKing Travel -Series of victorious Return> 2017, digital print, 30.5X42cm"
       },
       {
-        "src": "images/interview-works/ryu-sungsil-2.jpg",
+        "src": "images/interview-works/ryu-sungsil-2-detail-safe.svg",
         "caption": "《The Burning Love Song》 exhibition display, 2022 (Photo : Sangtae Kim)"
+      }
+    ]
+  },
+  "강인애/Q3": {
+    "start": 9.876533333333333,
+    "images": [
+      {
+        "src": "images/interview-works/kang-inae-1-detail-safe.svg",
+        "caption": "I AM NOT ALONE, noudit hondae seoul, STICKY MONSTER LAB artworks"
+      },
+      {
+        "src": "images/interview-works/kang-inae-2-detail-safe.svg",
+        "caption": "Luna Project_installation on Seokchon Lake, STICKY MONSTER LAB collaboration"
       }
     ]
   }
