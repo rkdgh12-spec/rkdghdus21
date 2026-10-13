@@ -5,6 +5,9 @@
     // Separate this branch in the tilted view so its progress line remains visible.
     const materialExperienceNode=data.nodes.find(n=>n.person==='최고은'&&n.kind==='subconcept'&&n.label==='물질을 직접 다루는 경험');
     if(materialExperienceNode){materialExperienceNode.x=1268;materialExperienceNode.y=985;}
+    // Keep Chae's final question below the name and its role/career text in the tilted view.
+    const chaeFinalQuestionNode=data.nodes.find(n=>n.person==='채길원'&&n.kind==='question'&&n.label==='Q4');
+    if(chaeFinalQuestionNode){chaeFinalQuestionNode.x=1660;chaeFinalQuestionNode.y=1630;}
     const nodes=data.nodes,edges=data.edges.filter(e=>{
       if(nodes[e.source].kind==='chapter'&&nodes[e.source].chapter!==5)return false;
       const a=nodes[e.source],b=nodes[e.target];
