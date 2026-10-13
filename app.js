@@ -701,6 +701,19 @@
       if(reducedMotion&&motion===cameraMotion)openEpilogue();
     }
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
+    let epilogueMapView=null;
+    function rememberEpilogueMapView(){
+      epilogueMapView={k,fitK,ox,oy,width,height,threeYaw,threeElevation,threeZoom,threePanX,threePanY,autoCentered3D,scrollX:window.scrollX,scrollY:window.scrollY,rootScrollLeft:root.scrollLeft,rootScrollTop:root.scrollTop};
+    }
+    function restoreEpilogueMapView(){
+      const view=epilogueMapView;if(!view)return;
+      width=stage.clientWidth;height=stage.clientHeight;
+      k=view.k;fitK=view.fitK;ox=view.ox+(width-view.width)/2;oy=view.oy+(height-view.height)/2;
+      threeYaw=view.threeYaw;threeElevation=view.threeElevation;threeZoom=view.threeZoom;
+      threePanX=view.threePanX;threePanY=view.threePanY;autoCentered3D=view.autoCentered3D;
+      root.scrollLeft=view.rootScrollLeft;root.scrollTop=view.rootScrollTop;
+      window.scrollTo({left:view.scrollX,top:view.scrollY,behavior:'instant'});render();
+    }
     function positionEpilogueTitle(){
       const rect=stage.getBoundingClientRect(),inset=window.innerWidth<=700?12:18,leftInset=window.innerWidth<=700?12:20;
       dialog.style.setProperty('--epilogue-title-top',(rect.top+inset)+'px');
@@ -709,6 +722,7 @@
     window.addEventListener('resize',positionEpilogueTitle);
     document.addEventListener('fullscreenchange',()=>requestAnimationFrame(positionEpilogueTitle));
     function openInterviewStep(n,mode='person'){
+      if(mode==='epilogue'&&!dialog.open)rememberEpilogueMapView();
       currentQuestion=n;stopVideo();videoStarted=false;
       dialog.classList.add('question-cinema');
       interviewMode=mode;const isEpilogue=mode==='epilogue';q('#epilogue-collection').hidden=true;dialog.classList.toggle('epilogue-mode',isEpilogue);
@@ -792,7 +806,16 @@
     }
     function changeQuestion(delta){if(!currentQuestion)return;if(interviewMode==='epilogue')return;const plannedStep=presentationMode?cues.findIndex(c=>c.id===currentQuestion.id):-1;if(plannedStep>=0){runCue(plannedStep+delta);return}const qs=personQuestions(currentQuestion.person),index=qs.findIndex(x=>x.id===currentQuestion.id),next=qs[index+delta];if(next){if(next.kind==='introduction')openInterview(next);else select(next.id)}}
     q('#question-prev').addEventListener('click',()=>changeQuestion(-1));q('#question-next').addEventListener('click',()=>changeQuestion(1));
-    function closeInterview(){recordStep(()=>{if(dialog.open)interviewClosedAt=performance.now();stopVideo();dialog.close()})}
+    function closeInterview(){recordStep(()=>{
+      const returningToEpilogueMap=dialog.open&&interviewMode==='epilogue';
+      if(dialog.open)interviewClosedAt=performance.now();stopVideo();dialog.close();
+      if(returningToEpilogueMap){
+        q('#forum-fit').focus({preventScroll:true});restoreEpilogueMapView();
+        const returnMotion=cameraMotion,returnCue=cueIndex,returnView=epilogueMapView;
+        const canRestore=()=>!dialog.open&&cueIndex===returnCue&&cameraMotion===returnMotion&&epilogueMapView===returnView;
+        requestAnimationFrame(()=>{if(canRestore())restoreEpilogueMapView();requestAnimationFrame(()=>{if(canRestore())restoreEpilogueMapView();if(epilogueMapView===returnView)epilogueMapView=null})});
+      }
+    })}
     q('#interview-close').addEventListener('click',closeInterview);dialog.addEventListener('close',()=>{if(!dialog.open)stopVideo()});dialog.addEventListener('cancel',e=>{e.preventDefault();closeInterview()});dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeInterview()}});
     video.addEventListener('error',()=>{if(video.getAttribute('src'))q('#video-error').hidden=false});
     q('#interview-play').addEventListener('click',()=>{
@@ -818,6 +841,7 @@
         updateEpilogueVisuals();const token=questionScreenToken;
         await new Promise(resolve=>setTimeout(resolve,350));
         if(!dialog.open||token!==questionScreenToken)return;
+        restoreEpilogueMapView();
         if(!reducedMotion){const fade=dialog.animate([{opacity:1},{opacity:0}],{duration:900,easing:'ease-in-out'});await fade.finished;if(dialog.open&&token===questionScreenToken)closeInterview();fade.cancel()}
         else closeInterview();return;
       }
@@ -1331,7 +1355,7 @@
     }
     function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:3,presentationMode,depthEnabled}))}catch{}}
     function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;const cueOffset=s.cueVersion===3||s.cueIndex<0?0:s.cueVersion===2?(s.cueIndex>=prologueSlides.length?1:0):prologueSlides.length+1;cueIndex=Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex+cueOffset)):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
-    new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
+    new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(epilogueMapView){restoreEpilogueMapView();return}if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
     fit();showDetail(null);restore();updateCue();resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
 

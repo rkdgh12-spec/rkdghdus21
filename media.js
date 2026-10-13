@@ -2,11 +2,11 @@
 window.FORUM_MEDIA = {
   "epilogue/film": {
     "title": "에필로그 · 조각교육의 방향",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-150s.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-context.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/epilogue-education-150s.ko.vtt?v=epilogue-education-150s-1",
+        "src": "captions/epilogue-education-context.ko.vtt?v=epilogue-framing-context-1",
         "label": "한국어",
         "language": "ko"
       }
@@ -16,67 +16,67 @@ window.FORUM_MEDIA = {
       {
         "person": "최고은",
         "start": 0.5005000000000001,
-        "end": 20.854166666666664,
-        "identityEnd": 7.5005
+        "end": 31.998633333333334,
+        "identityEnd": 31.998633333333334
       },
       {
         "person": "류성실",
-        "start": 21.488133333333327,
-        "end": 32.2322,
-        "identityEnd": 28.488133333333327
+        "start": 32.6326,
+        "end": 43.37666666666667,
+        "identityEnd": 43.37666666666667
       },
       {
         "person": "강인애",
-        "start": 32.86616666666666,
-        "end": 48.1481,
-        "identityEnd": 39.86616666666666
+        "start": 44.01063333333333,
+        "end": 59.29256666666666,
+        "identityEnd": 59.29256666666666
       },
       {
         "person": "박재영",
-        "start": 48.78206666666666,
-        "end": 61.96189999999999,
-        "identityEnd": 55.78206666666666
+        "start": 59.92653333333333,
+        "end": 73.10636666666667,
+        "identityEnd": 73.10636666666667
       },
       {
         "person": "민지희",
-        "start": 62.595866666666666,
-        "end": 79.4794,
-        "identityEnd": 69.59586666666667
+        "start": 73.74033333333334,
+        "end": 90.62386666666669,
+        "identityEnd": 90.62386666666669
       },
       {
         "person": "안정환",
-        "start": 80.11336666666666,
-        "end": 92.45903333333334,
-        "identityEnd": 87.11336666666666
+        "start": 91.25783333333334,
+        "end": 103.6035,
+        "identityEnd": 103.6035
       },
       {
         "person": "최지혜",
-        "start": 93.093,
-        "end": 107.30720000000001,
-        "identityEnd": 100.093
+        "start": 104.23746666666668,
+        "end": 118.4516666666667,
+        "identityEnd": 118.4516666666667
       },
       {
         "person": "서해영",
-        "start": 107.94116666666667,
-        "end": 122.22210000000001,
-        "identityEnd": 114.94116666666667
+        "start": 119.08563333333335,
+        "end": 133.36656666666667,
+        "identityEnd": 133.36656666666667
       },
       {
         "person": "권현빈",
-        "start": 122.85606666666668,
-        "end": 131.59813333333332,
-        "identityEnd": 129.85606666666666
+        "start": 134.00053333333338,
+        "end": 142.74260000000007,
+        "identityEnd": 142.74260000000007
       },
       {
         "person": "채길원",
-        "start": 132.19873333333334,
-        "end": 149.01553333333337,
-        "identityEnd": 139.19873333333334
+        "start": 143.34320000000002,
+        "end": 160.16,
+        "identityEnd": 160.16
       }
     ],
     "speechBounds": {
-      "firstSpeech": 0.69,
-      "lastSpeech": 149.01
+      "firstSpeech": 0.517,
+      "lastSpeech": 160.157
     }
   },
   "최고은/Q4": {
