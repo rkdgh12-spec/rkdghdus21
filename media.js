@@ -2,7 +2,7 @@
 window.FORUM_MEDIA = {
   "epilogue/film": {
     "title": "에필로그 · 조각교육의 방향",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-real-motion-close.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-native-ambience-close.mp4",
     "poster": "",
     "captions": [
       {
