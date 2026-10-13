@@ -455,6 +455,7 @@
     const NODE_TRAVEL_MS=2352;
     const NODE_READING_HOLD_MS=1200;
     const NODE_TRAVEL_RAMP_MS=120;
+    const CHAPTER_TRAVEL_SPEED_MULTIPLIER=1.5;
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
       const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
@@ -487,7 +488,9 @@
       const reference=getTravelReference(),referenceLength=overviewTravelDistance(reference.from,reference.to);
       const unitsPerMs=Math.max(.000001,referenceLength/(reference.duration-NODE_TRAVEL_RAMP_MS));
       const cruiseMs=overviewTravelDistance(from,to)/unitsPerMs;
-      const duration=Math.max(1,cruiseMs+Math.min(NODE_TRAVEL_RAMP_MS,cruiseMs*.25));
+      const acrossChapters=from!==null&&from!==undefined&&nodes[from].chapter!==nodes[to].chapter;
+      const speedMultiplier=acrossChapters?CHAPTER_TRAVEL_SPEED_MULTIPLIER:1;
+      const duration=Math.max(1,(cruiseMs+Math.min(NODE_TRAVEL_RAMP_MS,cruiseMs*.25))/speedMultiplier);
       return {duration,progressAt:t=>nodeTravelProgress(t,duration)};
     }
     function nodeTravelProgress(t,duration){
