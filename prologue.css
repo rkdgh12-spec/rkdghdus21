@@ -285,3 +285,6 @@
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-content{position:static}
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{top:50%;left:50%;width:min(900px,calc(100% - clamp(48px,10vw,140px)));transform:translate(-50%,-50%)}
 @media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{width:calc(100% - 36px)}}
+
+/* Enlarge bridge slides as a whole, retaining their centre and proportional spaces/dashes. */
+#forum-source-network .prologue-question-only .prologue-bridge{scale:1.2;transform-origin:center}
