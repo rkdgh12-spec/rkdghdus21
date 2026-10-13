@@ -569,8 +569,9 @@
     // Tune Ryu first: move time from the reading tail into the Q approach.
     const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800,anchorCamera:true,continuousReturn:true}};
     const PERSON_CONTEXT_SCALE={'최고은':.765};
-    const PERSON_CONCEPT_TRAVEL_SCALE={'강인애':1.5625,'박재영':1.25};
+    const PERSON_CONCEPT_TRAVEL_SCALE={'강인애':1.953125,'박재영':1.5625};
     const PERSON_SUBCONCEPT_TRAVEL_SCALE={'최고은':1.35,'강인애':1.2273,'박재영':.9091};
+    const PERSON_SUBCONCEPT_ENTRY_SPEED={'강인애':1.2,'박재영':1.2};
     const PERSON_QUESTION_TRAVEL_SCALE={'최고은/Q4':1.2,'최고은/Q7':2,'강인애':1.1111,'박재영':1.1111};
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
@@ -639,7 +640,7 @@
       };
       if(!returning&&flow.readingArrival&&nodes[from]?.kind==='concept'&&nodes[to].kind==='subconcept'){
         // Finish framing first, then keep the word steady while the line still glides in.
-        const readingMs=readingPace?.readingMs??1600,totalDuration=duration+readingMs,arrival=.84,tailSpeed=(1-arrival)/readingMs;
+        const readingMs=(readingPace?.readingMs??1600)/(PERSON_SUBCONCEPT_ENTRY_SPEED[nodes[to].person]||1),totalDuration=duration+readingMs,arrival=.84,tailSpeed=(1-arrival)/readingMs;
         return {duration:totalDuration,readingStartsAt:duration/totalDuration,
           cameraProgressAt:t=>smooth(Math.min(1,t*totalDuration/duration)),
           progressAt:t=>{
