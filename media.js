@@ -72,11 +72,11 @@ window.FORUM_MEDIA = {
   },
   "류성실/Q5": {
     "title": "류성실 인터뷰 Q5 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/ryu-sungsil-q5-intro-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-replacement-20261013/ryu-sungsil-q5-intro-replacement-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/ryu-sungsil-q5-intro.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/ryu-sungsil-q5-replacement.ko.vtt?v=ryu-replacement-subtitles-1",
         "label": "한국어",
         "language": "ko"
       }
@@ -86,11 +86,11 @@ window.FORUM_MEDIA = {
   },
   "류성실/Q6": {
     "title": "류성실 인터뷰 Q6",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/ryu-sungsil-q6-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-replacement-20261013/ryu-sungsil-q6-replacement-flow.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/ryu-sungsil-q6.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/ryu-sungsil-q6-replacement.ko.vtt?v=ryu-replacement-subtitles-1",
         "label": "한국어",
         "language": "ko"
       }
