@@ -378,6 +378,8 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 @keyframes epilogue-light-bloom{0%{opacity:0;transform:translate(-50%,-50%) scale(.02)}18%{opacity:.65}48%{opacity:1;transform:translate(-50%,-50%) scale(.55)}100%{opacity:1;transform:translate(-50%,-50%) scale(2.5)}}
 @keyframes epilogue-white-fill{0%,48%{opacity:0}100%{opacity:1}}
 .epilogue-map-reveal::before{animation:none;transform:translate(-50%,-50%) scale(2.5);opacity:1}
+.epilogue-center-white::before,#interview-dialog .epilogue-video-wash::before{will-change:transform,opacity}
+.epilogue-center-white::after,#interview-dialog .epilogue-video-wash::after{will-change:opacity}
 .epilogue-map-reveal::after{animation:none;opacity:1}
 .epilogue-map-reveal.revealing::before{animation:epilogue-map-unveil 2400ms ease-in-out forwards}
 .epilogue-map-reveal.revealing::after{animation:epilogue-map-unfill 2400ms ease-in-out forwards}
