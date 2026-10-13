@@ -205,24 +205,22 @@
       for(const [name,questionLabels] of lectureOrder.find(group=>group.chapter===c.chapter).people){
         const person=children(c.id).find(n=>n.label===name);
         if(!person)throw new Error('강연 순서에 없는 인물: '+name);
-        cues.push({id:person.id,label:name});
         for(const questionLabel of questionLabels){
           const question=points.find(n=>n.kind==='question'&&n.person===name&&n.label===questionLabel);
           if(!question)throw new Error('강연 순서에 없는 질문: '+name+' '+questionLabel);
-          const questionPath=ancestors(question.id).slice(2);
-          const singleRoute=questionPath.slice(0,-1).every(id=>children(id).length===1);
-          for(const id of questionPath){
-            const n=nodes[id];
-            // A linear concept -> subconcept -> Q chain advances with one cue.
-            // The camera still visits each node for reading through followReadableRoute().
-            if(n.kind==='subconcept'||singleRoute&&n.kind!=='question')continue;
-            cues.push({id,label:name+' · '+(n.kind==='question'?nodes[n.parent].label+' · '+n.label+' '+n.topic:n.label)});
-          }
+          // One question is one cue, including its person and all intermediate branches.
+          cues.push({id:question.id,label:name+' · '+nodes[question.parent].label+' · '+question.label+' '+question.topic});
         }
       }
     }
     cues.push({all:true,label:'다시, 조각으로 · 전체 연결'});
     cues.push({epilogue:true,label:'에필로그 · 조소과 교육의 앞으로'});
+    function presentationCueForNode(id){
+      const exact=cues.findIndex(cue=>cue.id===id);
+      if(exact>=0)return exact;
+      const question=cues.findIndex(cue=>nodes[cue.id]?.kind==='question'&&ancestors(cue.id).includes(id));
+      return question>=0?question-1:-1;
+    }
     const epilogueNav=document.createElement('button');epilogueNav.type='button';epilogueNav.className='control epilogue-nav';epilogueNav.textContent='에필로그';epilogueNav.title='조소과 교육의 앞으로';epilogueNav.addEventListener('click',()=>{if(!prologueOpen&&points.every(n=>visible.has(n.id))){transitionToEpilogue();return}showAll();const motion=cameraMotion;setTimeout(()=>{if(motion===cameraMotion)transitionToEpilogue()},reducedMotion?0:6800)});q('.tool-flow').append(epilogueNav);
     const outerOutline=document.createElementNS(NS,'path');outerOutline.setAttribute('class','outer-outline');outerOutline.setAttribute('aria-hidden','true');svg.append(outerOutline);
     let coreHalo=null;
@@ -347,9 +345,10 @@
       for(const n of points)if(n.kind!=='person'&&visible.has(n.parent)&&expanded.has(n.parent))visible.add(n.id);
     }
     function select(id){return recordStep(()=>selectStep(id))}
-    let personBranchReveal=null;
+    let personBranchReveal=null,routePersonPreview=null;
+    const showingPersonBranches=()=>routePersonPreview!==null&&stage.classList.contains('guided-transition');
     function personBranchState(e){
-      if(!personBranchReveal||selected!==personBranchReveal.id)return null;
+      if(!personBranchReveal||selected!==personBranchReveal.id&&(!showingPersonBranches()||routePersonPreview!==personBranchReveal.id))return null;
       const person=nodes[personBranchReveal.id],a=nodes[e.source],b=nodes[e.target];
       const branch=e.kind==='hierarchy'&&a.id===person.id&&b.kind==='concept';
       const related=[a,b].some(n=>n.person===person.label&&n.kind==='concept');
@@ -361,7 +360,7 @@
     function revealPersonBranches(id){
       if(!personBranchReveal||personBranchReveal.id!==id||personBranchReveal.start!==null)return;
       const reveal=personBranchReveal;reveal.start=performance.now();
-      function tick(){if(personBranchReveal!==reveal||selected!==id)return;render();if(performance.now()-reveal.start<1400)requestAnimationFrame(tick)}
+      function tick(){if(personBranchReveal!==reveal||selected!==id&&(!showingPersonBranches()||routePersonPreview!==id))return;render();if(performance.now()-reveal.start<1400)requestAnimationFrame(tick)}
       requestAnimationFrame(tick);
     }
     function markStepArrival(id,append=false){
@@ -370,10 +369,11 @@
       const n=nodes[id];
       (n.kind==='chapter'?areas.get(id)?.heading:elems.get(id)?.b)?.classList.add('step-arrived');
       threeNodes.get(id)?.classList.add('step-arrived');
-      if(selected===id&&nodes[id].kind==='person')revealPersonBranches(id);
+      if(nodes[id].kind==='person'&&(selected===id||showingPersonBranches()&&routePersonPreview===id))revealPersonBranches(id);
     }
     function selectStep(id){
       stopEpilogueRoam();
+      routePersonPreview=null;
       cameraReadingNode=null;cameraReadingCentered=false;idleYaw=0;idleElevation=0;idleStrength=0;
       markStepArrival(null);
       setPrologueView(null);
@@ -387,6 +387,10 @@
         const upcoming=cues.findIndex((cue,index)=>index>=cueIndex&&cue.id===id);
         const planned=upcoming>=0?upcoming:cues.findIndex(cue=>cue.id===id);
         if(planned>=0){cueIndex=planned;updateCue()}
+        else{
+          const beforeQuestion=presentationCueForNode(id);
+          if(beforeQuestion>=0){cueIndex=beforeQuestion;updateCue()}
+        }
       }
       if(['chapter','person'].includes(nodes[id].kind))for(const n of points)if(n.chapter!==nodes[id].chapter)for(const animation of elems.get(n.id).b.getAnimations())animation.cancel();
       if(['concept','subconcept','question'].includes(nodes[id].kind)){const keep=new Set([...ancestors(id),...descendants(id)]);for(const n of points)if(n.chapter!==nodes[id].chapter||(n.person===nodes[id].person&&!keep.has(n.id)))for(const animation of elems.get(n.id).b.getAnimations())animation.cancel()}
@@ -552,6 +556,10 @@
       if(depthEnabled)render3D();else render();
     }
     function readableWaypoints(from,to){
+      if(nodes[to].kind==='question'&&(from===null||nodes[from].person!==nodes[to].person)){
+        const path=ancestors(to),personIndex=path.findIndex(id=>nodes[id].kind==='person');
+        return path.slice(personIndex).filter(nid=>visible.has(nid));
+      }
       if(from===null||from===to||nodes[from].person!==nodes[to].person||!nodes[to].person)return [to];
       // ancestors() is root-first, so walk the actual parent chain for the return leg.
       return hierarchyRoute(from,to).filter(nid=>visible.has(nid));
@@ -563,14 +571,24 @@
       function next(){
         const target=route[index];cameraReadingNode=target;cameraReadingCentered=false;
         const passThrough=index<route.length-1;
+        if(nodes[target].kind==='person'&&passThrough){routePersonPreview=target;personBranchReveal={id:target,start:null};render()}
+        else if(previous!==null&&nodes[previous].kind==='person'&&passThrough){
+          routePersonPreview=previous;
+          if(personBranchReveal?.id!==previous)personBranchReveal={id:previous,start:performance.now()};
+          render();
+        }
         const readingArrival=passThrough&&previous!==null&&nodes[target].parent===previous;
         const legIndex=index;
         followConnectionToLabel(previous,target,()=>{
           markStepArrival(target,true);
-          if(!passThrough){trace?.finish();stage.classList.remove('guided-transition');after();return}
+          if(!passThrough){routePersonPreview=null;trace?.finish();stage.classList.remove('guided-transition');after();return}
           // Move through intermediate nodes at a reduced, nonzero speed.
           readingDeparture=readingArrival;previous=target;index++;next();
-        },{continueFromNode:index>0,passThrough,readingArrival,readingDeparture,onProgress:p=>trace?.draw(legIndex,p)});
+        },{continueFromNode:index>0,passThrough,readingArrival,readingDeparture,onProgress:p=>{
+          if(routePersonPreview===target&&nodes[target].kind==='person'&&p>=.65)revealPersonBranches(target);
+          if(routePersonPreview===previous&&nodes[target].kind==='concept'&&p>=.45){routePersonPreview=null;personBranchReveal=null;render()}
+          trace?.draw(legIndex,p);
+        }});
         trace?.expectMotion();
       }
       next();
@@ -994,7 +1012,7 @@
       }exitVideoFullscreen();q('#interview-play').hidden=false
     });
     q('.detail-close').addEventListener('click',()=>recordStep(()=>{panel.hidden=true}));
-    function updateCue(){const start=prologueSlides.length+1;q('#sequence-count').textContent=prologueOpen?'프롤로그':cues[cueIndex]?.overview?'지형도':Math.max(0,cueIndex-start+1)+' / '+(cues.length-start);q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!(dialog.open&&dialog.classList.contains('question-intro'))&&(!presentationMode||prologueOpen||cueIndex>=cues.length-1);q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
+    function updateCue(){const start=prologueSlides.length+1;q('#sequence-count').textContent=prologueOpen?'프롤로그':cues[cueIndex]?.overview?'지형도':Math.max(0,cueIndex-start+1)+' / '+(cues.length-start);q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':selected!==null&&cues[cueIndex]?.id!==selected?displayLabel(nodes[selected]):cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!(dialog.open&&dialog.classList.contains('question-intro'))&&(!presentationMode||prologueOpen||cueIndex>=cues.length-1);q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
       stopEpilogueRoam();
@@ -1294,7 +1312,7 @@
       const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
-      const branchKeep=focusedPerson!==null&&['concept','subconcept','question'].includes(nodes[selected].kind)?new Set([...ancestors(selected),...descendants(selected)]):null;
+      const branchKeep=!showingPersonBranches()&&focusedPerson!==null&&['concept','subconcept','question'].includes(nodes[selected].kind)?new Set([...ancestors(selected),...descendants(selected)]):null;
       stage.classList.toggle('chapter-focus',activeChapter!==null);
       stage.classList.toggle('high-zoom-labels',threeZoom>=3);
       threeScene.style.setProperty('--three-label-zoom',labelZoom(threeZoom).toFixed(2));
@@ -1397,7 +1415,7 @@
       const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
-      const branchKeep=focusedPerson!==null&&['concept','subconcept','question'].includes(nodes[selected].kind)?new Set([...ancestors(selected),...descendants(selected)]):null;
+      const branchKeep=!showingPersonBranches()&&focusedPerson!==null&&['concept','subconcept','question'].includes(nodes[selected].kind)?new Set([...ancestors(selected),...descendants(selected)]):null;
       stage.classList.toggle('chapter-focus',activeChapter!==null);
       stage.classList.toggle('branch-focus',branchKeep!==null);
       stage.classList.toggle('all-connected',allConnected);
@@ -1543,8 +1561,8 @@
       if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.00015)return;
       idleYaw=yaw;idleElevation=elevation;render3D();
     }
-    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:5,presentationMode,depthEnabled}))}catch{}}
-    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===5&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?cues.findIndex(c=>c.id===selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
+    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:6,presentationMode,depthEnabled}))}catch{}}
+    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===6&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?presentationCueForNode(selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
     new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(epilogueMapView){restoreEpilogueMapView();return}if(epilogueRoam){render();return}if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
     fit();showDetail(null);restore();updateCue();resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
