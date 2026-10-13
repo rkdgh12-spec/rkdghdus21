@@ -278,8 +278,8 @@
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{position:absolute;top:50%;left:0;margin-top:0;transform:translateY(-50%)}
 
 /* Enlarge the first-page stage title without shifting its upper-left anchor. */
-#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{font-size:16.8px}
-@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{font-size:14.4px}}
+#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title,#forum-source-network .stage .map-caption{font-size:16.8px}
+@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title,#forum-source-network .stage .map-caption{font-size:14.4px}}
 
 /* Use the stage between the header and footer rules as the centring reference. */
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-content{position:static}
