@@ -276,3 +276,7 @@
 /* Centre the first-page diagram in the stage without changing its internal layout. */
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-content{position:relative;padding-bottom:0}
 #forum-source-network .prologue-screen:not(.prologue-question-only) .prologue-decade{position:absolute;top:50%;left:0;margin-top:0;transform:translateY(-50%)}
+
+/* Enlarge the first-page stage title without shifting its upper-left anchor. */
+#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{font-size:16.8px}
+@media(max-width:700px){#forum-source-network .prologue-screen:not(.prologue-question-only) #prologue-title{font-size:14.4px}}
