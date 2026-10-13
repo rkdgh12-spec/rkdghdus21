@@ -378,21 +378,22 @@ window.FORUM_MEDIA = {
   },
   "민지희/Q3 후속질문": {
     "title": "민지희 인터뷰 Q3 후속질문",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/min-jihee-q3-followup-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-min-seo-concise-20261013/min-jihee-q3-followup-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/min-jihee-q3-followup.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/min-jihee-q3-followup-concise.ko.vtt?v=lecture-explanation-17min-1",
         "label": "한국어",
         "language": "ko"
       }
     ],
     "transcript": "",
-    "timelineOffset": 0.33366666666666667,
+    "timelineOffset": 0.4337666666666667,
     "speechBounds": {
-      "firstSpeech": 0.954,
-      "lastSpeech": 37.934
-    }
+      "firstSpeech": 0.7403666666666671,
+      "lastSpeech": 31.11036666666667
+    },
+    "duration": 32.66596666666667
   },
   "민지희/Q3": {
     "title": "",
@@ -528,11 +529,11 @@ window.FORUM_MEDIA = {
   },
   "서해영/Q2": {
     "title": "서해영 인터뷰 Q2 · 자기소개 포함",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-natural-flow-20261013/seo-haeyoung-q2-intro-flow.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-min-seo-concise-20261013/seo-haeyoung-q2-concise.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/seo-haeyoung-q2.ko.vtt?v=interview-natural-flow-1",
+        "src": "captions/seo-haeyoung-q2-concise.ko.vtt?v=lecture-explanation-17min-1",
         "label": "한국어",
         "language": "ko"
       }
@@ -541,8 +542,9 @@ window.FORUM_MEDIA = {
     "timelineOffset": 0.33366666666666667,
     "speechBounds": {
       "firstSpeech": 0.794,
-      "lastSpeech": 44.854
-    }
+      "lastSpeech": 36.40866666666667
+    },
+    "duration": 38.00463333333333
   },
   "서해영/Q3": {
     "title": "",
