@@ -569,7 +569,7 @@
     const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800,anchorCamera:true,continuousReturn:true}};
     const PERSON_CONTEXT_SCALE={'최고은':.765};
     const PERSON_SUBCONCEPT_TRAVEL_SCALE={'최고은':1.35};
-    const PERSON_QUESTION_TRAVEL_SCALE={'최고은/Q4':1.2};
+    const PERSON_QUESTION_TRAVEL_SCALE={'최고은/Q4':1.2,'최고은/Q7':2};
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
       const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
