@@ -569,10 +569,10 @@
     // Tune Ryu first: move time from the reading tail into the Q approach.
     const PERSON_READING_PACE={'류성실':{readingMs:800,questionExtraMs:800,anchorCamera:true,continuousReturn:true}};
     const PERSON_CONTEXT_SCALE={'최고은':.765};
-    const PERSON_CONCEPT_TRAVEL_SCALE={'강인애':1.953125,'박재영':1.5625};
-    const PERSON_SUBCONCEPT_TRAVEL_SCALE={'최고은':1.35,'강인애':1.2273,'박재영':.9091};
-    const PERSON_SUBCONCEPT_ENTRY_SPEED={'강인애':1.2,'박재영':1.2};
-    const PERSON_QUESTION_TRAVEL_SCALE={'최고은/Q4':1.2,'최고은/Q7':2,'강인애':1.1111,'박재영':1.1111};
+    const PERSON_CONCEPT_TRAVEL_SCALE={'강인애':1.953125,'박재영':1.5625,'민지희':1.953125};
+    const PERSON_SUBCONCEPT_TRAVEL_SCALE={'최고은':1.35,'강인애':1.2273,'박재영':.9091,'민지희':1.2273};
+    const PERSON_SUBCONCEPT_ENTRY_SPEED={'강인애':1.2,'박재영':1.2,'민지희':1.2};
+    const PERSON_QUESTION_TRAVEL_SCALE={'최고은/Q4':1.2,'최고은/Q7':2,'강인애':1.1111,'박재영':1.1111,'민지희':1.1111};
     let travelReference=null,overviewTravelPoints=null;
     function hierarchyRoute(from,to){
       const chain=id=>{const ids=[];while(id!==null&&id!==undefined){ids.push(id);id=nodes[id].parent}return ids};
