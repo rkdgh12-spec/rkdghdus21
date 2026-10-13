@@ -349,6 +349,7 @@
     const showingNodeBranches=()=>routeBranchPreview!==null&&stage.classList.contains('guided-transition');
     // Reveal every child branch with a Q, including Qs outside the lecture order.
     const questionRouteNodes=new Set(nodes.filter(n=>n.kind==='question').flatMap(n=>ancestors(n.id)));
+    const lectureQuestionIds=new Set(cues.filter(cue=>nodes[cue.id]?.kind==='question').map(cue=>cue.id));
     const hasQuestionRoute=id=>questionRouteNodes.has(id);
     function branchChildren(id){
       const kind=nodes[id].kind;
@@ -361,7 +362,7 @@
       const keep=new Set([...ancestors(selected),...descendants(selected)]);
       if(showingNodeBranches()&&nodes[routeBranchPreview].kind==='concept'){
         for(const id of ancestors(routeBranchPreview))keep.add(id);
-        for(const n of branchChildren(routeBranchPreview))for(const id of descendants(n.id))keep.add(id);
+        for(const n of branchChildren(routeBranchPreview))keep.add(n.id);
       }
       return keep;
     }
@@ -455,21 +456,19 @@
         if(forks.some(fork=>fork.sourceId===sourceId))return;
         const started=performance.now(),arms=[];
         for(const child of branchChildren(sourceId)){
-          expanded.add(child.id);
-          for(const questionId of descendants(child.id)){
-            if(nodes[questionId].kind!=='question'||questionId===to)continue;
-            const chain=ancestors(questionId),armIds=chain.slice(chain.indexOf(sourceId));
-            const armLine=document.createElementNS(NS,'path'),armHead=document.createElementNS(NS,'circle');
-            armLine.setAttribute('class','lecture-route-line lecture-route-fork');
-            armLine.dataset.forkSource=String(sourceId);armLine.dataset.forkTarget=String(questionId);
-            armHead.setAttribute('class','lecture-route-head');armHead.setAttribute('r','2.7');
-            overlay.append(armLine,armHead);
-            const timelines=armIds.slice(1).map((id,i)=>overviewTravelTimeline(armIds[i],id,{
-              continueFromNode:true,passThrough:i<armIds.length-2,
-              readingDeparture:true,readingArrival:i<armIds.length-2
-            }));
-            arms.push({ids:armIds,line:armLine,head:armHead,timelines,duration:timelines.reduce((sum,item)=>sum+item.duration,0)});
-          }
+          // The selected interview continues on the main trace; other arms end at their subconcept.
+          if(ancestors(to).includes(child.id))continue;
+          const armIds=[sourceId,child.id];
+          const armLine=document.createElementNS(NS,'path'),armHead=document.createElementNS(NS,'circle');
+          armLine.setAttribute('class','lecture-route-line lecture-route-fork');
+          armLine.dataset.forkSource=String(sourceId);armLine.dataset.forkTarget=String(child.id);
+          armHead.setAttribute('class','lecture-route-head');armHead.setAttribute('r','2.7');
+          overlay.append(armLine,armHead);
+          const timelines=armIds.slice(1).map((id,i)=>overviewTravelTimeline(armIds[i],id,{
+            continueFromNode:true,passThrough:i<armIds.length-2,
+            readingDeparture:true,readingArrival:i<armIds.length-2
+          }));
+          arms.push({ids:armIds,line:armLine,head:armHead,timelines,duration:timelines.reduce((sum,item)=>sum+item.duration,0)});
         }
         forks.push({sourceId,started,arms});updateVisible();render();drawForks();
       }
@@ -549,6 +548,9 @@
       return Math.hypot(b.x-a.x,b.y-a.y);
     }
     function overviewTravelTimeline(from,to,flow={}){
+      // Restore the original 2.352-second ease for overview -> chapter 1 only.
+      if(from===null&&nodes[to].kind==='chapter'&&nodes[to].chapter===1)
+        return {duration:2352,progressAt:t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}};
       const reference=getTravelReference(),referenceLength=overviewTravelDistance(reference.from,reference.to);
       const unitsPerMs=Math.max(.000001,referenceLength/(reference.duration-NODE_TRAVEL_RAMP_MS));
       const acrossChapters=from!==null&&from!==undefined&&nodes[from].chapter!==nodes[to].chapter;
@@ -1505,7 +1507,9 @@
       const connectedQuestions=new Set();
       const futureBranch=branchKeep!==null?descendants(selected):new Set();
       edges.forEach((e,i)=>{
-        const l=paths[i],a=nodes[e.source],b=nodes[e.target],shown=visible.has(e.source)&&visible.has(e.target)&&!(allConnected&&thinnedCrossEdges.has(i));
+        const l=paths[i],a=nodes[e.source],b=nodes[e.target];
+        const unusedQuestionEdge=presentationMode&&focusedPerson!==null&&e.kind==='hierarchy'&&b.kind==='question'&&!lectureQuestionIds.has(b.id)&&selected!==b.id;
+        const shown=visible.has(e.source)&&visible.has(e.target)&&!unusedQuestionEdge&&!(allConnected&&thinnedCrossEdges.has(i));
         const linkedMeaning=e.kind!=='hierarchy'&&(e.source===emphasis||e.target===emphasis);
         if(shown&&linkedMeaning){if(a.kind==='question')connectedQuestions.add(e.source);if(b.kind==='question')connectedQuestions.add(e.target)}
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
