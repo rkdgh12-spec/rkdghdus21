@@ -97,6 +97,7 @@
     const depthButton=q('#forum-depth');
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
     const OVERVIEW_3D_VIEW={yaw:0,elevation:1.38};
+    const OPENING_3D_VIEW={yaw:-.34,elevation:.82,zoom:1};
     const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false,chapterElevationBeforeFocus=null;
     let epilogueRoam=null;
     function stopEpilogueRoam(){
@@ -1280,7 +1281,7 @@
       setPrologueView(null);
       if(leavingPrologue){selected=null;expanded.clear();updateVisible();autoCentered3D=depthEnabled;threePanX=0;threePanY=0;threeZoom=1;idleYaw=0;idleElevation=0;fit()}
       if(!cue){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);fit();updateCue();save();return}
-      if(cue.overview){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);fit();updateCue();save();q('#map-status').textContent=cue.label;return}
+      if(cue.overview){cameraMotion++;selected=null;expanded.clear();updateVisible();showDetail(null);resetOpeningCamera();fit();updateCue();save();q('#map-status').textContent=cue.label;return}
       if(cue.epilogue&&points.every(n=>visible.has(n.id))){
         stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;
         if(selected!==null){selected=null;showDetail(null);render()}
@@ -1322,7 +1323,16 @@
     });
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
     function showAll(){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?createFullReveal(before,anchorPerson):null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
-    function reset(startAtPrologue=true){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;nodeBranchReveal=null;routeBranchPreview=null;activeForkBranches=null;unfoldedBranchSources.clear();selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);if(startAtPrologue!==false&&presentationMode&&prologueSlides.length&&q('.intro').hidden)runCue(0);updateCue();save()})}
+    function resetOpeningCamera(){
+      // Starting the map must not inherit an interrupted orbit or an interview frame.
+      window.scrollTo({left:0,top:0,behavior:'instant'});root.scrollLeft=0;root.scrollTop=0;
+      threeYaw=OPENING_3D_VIEW.yaw;threeElevation=OPENING_3D_VIEW.elevation;threeZoom=OPENING_3D_VIEW.zoom;
+      threePanX=0;threePanY=0;idleYaw=0;idleElevation=0;idleStrength=0;
+      autoCentered3D=depthEnabled;lastManual3D=performance.now();chapterElevationBeforeFocus=null;
+      cameraReadingNode=null;cameraReadingCentered=false;openingChapterEntrance=null;
+      readingProjectionBounds=null;lastProjectionBounds=null;settledContextFrame=null;personContextZoom.clear();
+    }
+    function reset(startAtPrologue=true){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;nodeBranchReveal=null;routeBranchPreview=null;activeForkBranches=null;unfoldedBranchSources.clear();selected=null;cueIndex=-1;expanded.clear();updateVisible();resetOpeningCamera();fit();showDetail(null);if(startAtPrologue!==false&&presentationMode&&prologueSlides.length&&q('.intro').hidden)runCue(0);updateCue();save()})}
     function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset(false);threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(mode==='presentation'&&prologueSlides.length)runCue(0);else if(mode==='resume'){setPrologueView(cues[cueIndex]?.prologue);updateCue()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
     q('#intro-next').addEventListener('click',()=>enter('presentation'));q('#intro-fullscreen').addEventListener('click',()=>q('#forum-fullscreen').click());
     // Empty-space clicks share the existing stage controls; panning never advances.
