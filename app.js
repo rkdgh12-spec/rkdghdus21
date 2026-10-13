@@ -1004,6 +1004,30 @@
     function reset(startAtPrologue=true){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);if(startAtPrologue!==false&&presentationMode&&prologueSlides.length&&q('.intro').hidden)runCue(0);updateCue();save()})}
     function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset(false);threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(mode==='presentation'&&prologueSlides.length)runCue(0);else if(mode==='resume'){setPrologueView(cues[cueIndex]?.prologue);updateCue()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
     q('#intro-next').addEventListener('click',()=>enter('presentation'));q('#intro-fullscreen').addEventListener('click',()=>q('#forum-fullscreen').click());
+    // Empty-space clicks share the existing stage controls; panning never advances.
+    let blankPointer=null,lastBlankStepAt=0;
+    const blankExcluded='button,a,input,textarea,select,video,audio,summary,[role=button],[contenteditable=true],.detail-panel,.header,.sequence-controls,.interview-history,.node-label,.area-heading,h1,h2,h3,p,strong,span,small';
+    function isBlankStepTarget(target){
+      if(!(target instanceof Element)||target.closest(blankExcluded))return false;
+      if(dialog.open)return dialog.classList.contains('question-intro')&&dialog.contains(target);
+      if(!q('.intro').hidden)return q('.intro').contains(target);
+      return presentationMode&&stage.contains(target);
+    }
+    root.addEventListener('pointerdown',e=>{
+      blankPointer=isBlankStepTarget(e.target)&&e.isPrimary&&(e.button===0||e.button===2)?{id:e.pointerId,x:e.clientX,y:e.clientY,moved:false}:null;
+    },true);
+    root.addEventListener('pointermove',e=>{if(blankPointer?.id===e.pointerId&&Math.hypot(e.clientX-blankPointer.x,e.clientY-blankPointer.y)>6)blankPointer.moved=true},true);
+    root.addEventListener('pointercancel',()=>{blankPointer=null},true);
+    function moveFromBlank(e,direction){
+      if(!isBlankStepTarget(e.target)||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
+      if(direction<0)e.preventDefault();
+      if(!blankPointer||blankPointer.moved||Math.hypot(e.clientX-blankPointer.x,e.clientY-blankPointer.y)>6||performance.now()-lastBlankStepAt<350)return;
+      const control=!q('.intro').hidden?(direction>0?q('#intro-next'):null):dialog.open?(direction>0?q('#interview-stage-next'):q('#sequence-prev')):q(direction>0?'#sequence-next':'#sequence-prev');
+      if(!control||control.disabled||control.hidden)return;
+      lastBlankStepAt=performance.now();blankPointer=null;control.click();
+    }
+    root.addEventListener('click',e=>{if(e.button===0&&e.detail===1)moveFromBlank(e,1)});
+    root.addEventListener('contextmenu',e=>moveFromBlank(e,-1));
     q('#forum-home').addEventListener('click',()=>recordStep(()=>{cameraMotion++;if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}q('.intro').hidden=false;q('.intro').inert=false;q('.map-shell').inert=true;q('#intro-next').focus()}));
     q('#forum-fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await root.requestFullscreen()}catch{q('#map-status').textContent='이 브라우저에서는 전체 화면을 사용할 수 없습니다.'}});
     document.addEventListener('fullscreenchange',()=>{q('#forum-fullscreen').textContent=document.fullscreenElement?'전체 화면 닫기':'전체 화면';q('#intro-fullscreen').textContent=document.fullscreenElement?'전체 화면 닫기':'전체 화면'});
