@@ -698,6 +698,7 @@
     }
     function readingContext(){return cameraReadingNode===null?null:contextFrameIds(cameraReadingNode)}
     const usesMaxPersonFrame=contextIds=>nodes[contextIds[1]].person!=='류성실';
+    const contextVerticalOffset=contextIds=>nodes[contextIds[1]].person==='최고은'?-height*.06:0;
     let settledContextFrame=null;
     const contextCameraStamp=()=>[width,height,depthEnabled?1:0,...(depthEnabled?[threePanX,threePanY,threeZoom,threeYaw,idleYaw,threeElevation,idleElevation]:[ox,oy,k])];
     function rememberContextFrame(contextIds){
@@ -875,6 +876,7 @@
             threePanX+=width/2-anchor.x;threePanY+=height/2-anchor.y;render3D();
             const textPoint=selectedTextPoint(contextIds[1]);threePanX+=width/2-textPoint.x;threePanY+=height/2-textPoint.y;render3D();
           });
+          const offsetY=contextVerticalOffset(contextIds);if(offsetY){threePanY+=offsetY;render3D()}
         }
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
         const goalFocus={x:threeProjected[focusId].x,y:threeProjected[focusId].y};
@@ -914,6 +916,7 @@
           k=scale;ox=width/2-anchor.x*k;oy=height/2-anchor.y*k;render();
           const textPoint=selectedTextPoint(contextIds[1]);ox+=width/2-textPoint.x;oy+=height/2-textPoint.y;render();
         });
+        const offsetY=contextVerticalOffset(contextIds);if(offsetY){oy+=offsetY;render()}
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
         const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);rememberContextFrame(contextIds);after()};
         if(reducedMotion){finish();return}
