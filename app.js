@@ -978,7 +978,7 @@
       const first=interviewAudioBounds?.firstSpeech??.45;
       const fadeInEnd=Math.max(.08,first-.04),fadeInStart=Math.max(0,fadeInEnd-.28);
       const incoming=audioSmooth((t-fadeInStart)/(fadeInEnd-fadeInStart));
-      if(!Number.isFinite(duration))return incoming;
+      if(interviewMode==='epilogue'||!Number.isFinite(duration))return incoming;
       const last=interviewAudioBounds?.lastSpeech??Math.max(0,duration-.55);
       const fadeOutStart=Math.min(last+.10,duration-.30);
       const fadeOutEnd=Math.min(fadeOutStart+.25,duration-.04);
