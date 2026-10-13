@@ -634,7 +634,7 @@
       const target=Math.max(0,Math.min(1,interviewUserVolume*interviewAudioFactor()));
       if(Math.abs(video.volume-target)>.0001){interviewAppliedVolume=target;video.volume=target}
       updateEpilogueVisuals();
-      updateInterviewStartVisuals();
+      updateInterviewEdgeVisuals();
       if(!video.paused&&!video.ended)interviewAudioFrame=requestAnimationFrame(updateInterviewAudio);
     }
     function configureInterviewAudio(media){
@@ -824,11 +824,19 @@
     const interviewStartWash=document.createElement('div');
     interviewStartWash.className='interview-start-wash';interviewStartWash.setAttribute('aria-hidden','true');interviewStartWash.hidden=true;
     q('.interview-media').append(interviewStartWash);
-    function updateInterviewStartVisuals(){
-      const time=video.currentTime||0;
-      const active=dialog.open&&!!video.getAttribute('src')&&(!videoStarted||time<1.25);
+    function updateInterviewEdgeVisuals(){
+      const time=video.currentTime||0,duration=video.duration;
+      const last=interviewAudioBounds?.lastSpeech??Math.max(0,(duration||0)-.6);
+      const fadeOutStart=Math.min(last+.06,(duration||0)-.35);
+      const outgoing=interviewMode!=='epilogue'&&Number.isFinite(duration)?audioSmooth((time-fadeOutStart)/Math.max(.08,duration-.04-fadeOutStart)):0;
+      const active=dialog.open&&!!video.getAttribute('src')&&(!videoStarted||time<1.25||outgoing>0);
       interviewStartWash.hidden=!active;
       if(!active)return;
+      if(outgoing>0){
+        const radius=outgoing*115;
+        interviewStartWash.style.background=outgoing===1?'#000':`radial-gradient(circle at center,#000 ${Math.max(0,radius-22)}vmax,transparent ${radius}vmax)`;
+        return;
+      }
       const progress=audioSmooth((time-.12)/1.13),radius=progress*115;
       interviewStartWash.style.background=progress===0?'#000':`radial-gradient(circle at center,transparent ${Math.max(0,radius-22)}vmax,#000 ${radius}vmax)`;
     }
@@ -881,7 +889,7 @@
       if(interviewMode==='epilogue'&&dialog.classList.contains('question-cinema')){
         updateEpilogueVisuals();const token=questionScreenToken;
         await new Promise(resolve=>setTimeout(resolve,350));
-        if(!dialog.open||token!==questionScreenToken)return;
+        if(!dialog.open||token!==questionScreenToken||!video.ended)return;
         const reveal=document.createElement('div');reveal.className='epilogue-center-white epilogue-map-reveal';reveal.setAttribute('aria-hidden','true');
         (document.fullscreenElement||document.body).append(reveal);
         const returnMotion=cameraMotion;
@@ -892,7 +900,11 @@
         if(!reducedMotion)await new Promise(resolve=>setTimeout(resolve,2400));
         reveal.remove();return;
       }
-      if(dialog.classList.contains('question-cinema')){closeInterview();return}exitVideoFullscreen();q('#interview-play').hidden=false
+      if(dialog.classList.contains('question-cinema')){
+        const token=questionScreenToken;updateInterviewEdgeVisuals();
+        await new Promise(resolve=>setTimeout(resolve,220));
+        if(dialog.open&&token===questionScreenToken&&video.ended)closeInterview();return;
+      }exitVideoFullscreen();q('#interview-play').hidden=false
     });
     q('.detail-close').addEventListener('click',()=>recordStep(()=>{panel.hidden=true}));
     function updateCue(){const start=prologueSlides.length+1;q('#sequence-count').textContent=prologueOpen?'프롤로그':cues[cueIndex]?.overview?'지형도':Math.max(0,cueIndex-start+1)+' / '+(cues.length-start);q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!(dialog.open&&dialog.classList.contains('question-intro'))&&(!presentationMode||prologueOpen||cueIndex>=cues.length-1);q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
