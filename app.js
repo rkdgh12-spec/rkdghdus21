@@ -403,6 +403,11 @@
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
       fullReveal=null;
       const previous=selected,before=new Set(visible);selected=id;
+      openingChapterEntrance=previous===null&&nodes[id].kind==='chapter'&&nodes[id].chapter===1?{id,started:performance.now()}:null;
+      if(openingChapterEntrance){
+        const entrance=openingChapterEntrance;
+        setTimeout(()=>{if(openingChapterEntrance===entrance&&selected===id)markStepArrival(id,true)},reducedMotion?0:1000);
+      }
       nodeBranchReveal=isBranchSource(id)?{id,start:null}:null;
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
       if(guided)for(const line of paths)for(const animation of line.getAnimations())animation.cancel();
@@ -429,6 +434,7 @@
         setTimeout(()=>{if(selected===id&&cameraMotion===arrivalMotion&&!dialog.open)showDetail(nodes[id])},2000);
       };
       followReadableRoute(previous,id,guided,()=>{
+        if(openingChapterEntrance?.id===id)openingChapterEntrance=null;
         cameraArrived=true;routeArrived=true;markStepArrival(id,true);revealQuestion();
       });
       save();
@@ -550,7 +556,7 @@
     function overviewTravelTimeline(from,to,flow={}){
       // Restore the original 2.352-second ease for overview -> chapter 1 only.
       if(from===null&&nodes[to].kind==='chapter'&&nodes[to].chapter===1)
-        return {duration:2352,progressAt:t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}};
+        return {duration:flow.openingDuration??2352,progressAt:t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}};
       const reference=getTravelReference(),referenceLength=overviewTravelDistance(reference.from,reference.to);
       const unitsPerMs=Math.max(.000001,referenceLength/(reference.duration-NODE_TRAVEL_RAMP_MS));
       const acrossChapters=from!==null&&from!==undefined&&nodes[from].chapter!==nodes[to].chapter;
@@ -584,7 +590,7 @@
       if(elapsed>duration-ramp)return 1-(duration-elapsed)**2/(2*ramp*cruise);
       return (elapsed-ramp/2)/cruise;
     }
-    let cameraReadingNode=null,cameraReadingCentered=false;
+    let cameraReadingNode=null,cameraReadingCentered=false,openingChapterEntrance=null;
     function travel(points,duration,frame,done,progressAt,onProgress,continueFromNode=false){
       const token=++cameraMotion,segments=[],lengths=[0];let total=0;
       for(let i=1;i<points.length;i++){const length=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);segments.push(length);total+=length;lengths.push(total)}
@@ -1641,7 +1647,23 @@
     }
     function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:6,presentationMode,depthEnabled}))}catch{}}
     function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===6&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?presentationCueForNode(selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
-    new ResizeObserver(()=>{cameraMotion++;width=stage.clientWidth;height=stage.clientHeight;if(epilogueMapView){restoreEpilogueMapView();return}if(epilogueRoam){render();return}if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit()}).observe(stage);
+    new ResizeObserver(()=>{
+      const nextWidth=stage.clientWidth,nextHeight=stage.clientHeight;
+      if(width===nextWidth&&height===nextHeight)return;
+      cameraMotion++;width=nextWidth;height=nextHeight;
+      if(epilogueMapView){restoreEpilogueMapView();return}
+      if(epilogueRoam){render();return}
+      const entrance=openingChapterEntrance;
+      if(entrance&&selected===entrance.id){
+        autoCentered3D=false;
+        followConnectionToLabel(null,entrance.id,()=>{
+          if(openingChapterEntrance!==entrance)return;
+          openingChapterEntrance=null;markStepArrival(entrance.id,true);
+        },{openingDuration:Math.max(120,2352-(performance.now()-entrance.started))});
+        return;
+      }
+      if(depthEnabled){autoCentered3D=true;threePanX=0;threePanY=0}fit();
+    }).observe(stage);
     fit();showDetail(null);restore();updateCue();resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
 
