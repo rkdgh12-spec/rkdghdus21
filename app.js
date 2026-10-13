@@ -686,7 +686,14 @@
         }
         requestAnimationFrame(drawRoute);
         await new Promise(resolve=>setTimeout(resolve,6300));
-        if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');await new Promise(resolve=>setTimeout(resolve,500))}
+        if(motion===cameraMotion){
+          const white=document.createElement('div');white.className='epilogue-center-white';white.setAttribute('aria-hidden','true');
+          (document.fullscreenElement||document.body).append(white);
+          await new Promise(resolve=>setTimeout(resolve,900));
+          if(motion===cameraMotion){openEpilogue();overlay.classList.add('handoff');wash.classList.add('handoff');}
+          white.remove();
+          await new Promise(resolve=>setTimeout(resolve,500));
+        }
         overlay.remove();wash.remove();stage.classList.remove('epilogue-tracing');if(epilogueOverlay===overlay){epilogueOverlay=null;epilogueEchoes=null;epilogueContours=null;epilogueOrigin=null}
       }
       epilogueTransitioning=false;
@@ -752,8 +759,7 @@
     }
     function updateIntroCaption(){
       const caption=q('#interview-intro-caption');
-      const first=lectureOrder.flatMap(group=>group.people).find(item=>item[0]===currentQuestion?.person)?.[1]?.[0];
-      const show=dialog.open&&interviewMode!=='epilogue'&&currentQuestion?.label===first&&!!video.getAttribute('src')&&videoStarted&&video.currentTime<(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.introEnd??(7+(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.timelineOffset||0)))&&!video.ended&&!dialog.classList.contains('question-intro');
+      const show=dialog.open&&interviewMode!=='epilogue'&&!!currentQuestion?.person&&!!video.getAttribute('src')&&videoStarted&&video.currentTime<(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.introEnd??(7+(window.FORUM_MEDIA?.[currentQuestion.person+'/'+currentQuestion.label]?.timelineOffset||0)))&&!video.ended&&!dialog.classList.contains('question-intro');
       caption.hidden=!show;
     }
     for(const event of ['playing','timeupdate','seeked','pause','ended','loadedmetadata'])video.addEventListener(event,updateIntroCaption);
