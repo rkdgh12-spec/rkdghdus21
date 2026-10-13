@@ -129,7 +129,8 @@
       const blend=key=>{const p=a[key],q=b[key],r=c[key],s=d[key];return .5*((2*q)+(-p+r)*t+(2*p-5*q+4*r-s)*t*t+(-p+3*q-3*r+s)*t*t*t);};
       threeYaw=blend('yaw');threeElevation=Math.max(.32,Math.min(1.42,blend('elevation')));
       threeZoom=Math.max(.65,Math.min(6.5,roam.zoom*Math.exp(blend('logZoom'))));
-      roam.focus={x:blend('x'),y:blend('y'),z:blend('z'),weight:Math.max(0,Math.min(1,blend('weight')))};
+      const focusEase=t*t*t*(10+t*(-15+6*t));
+      roam.focus={x:blend('x'),y:blend('y'),z:blend('z'),weight:b.weight+(c.weight-b.weight)*focusEase};
       roam.focusId=roam.focus.weight>.35?(t<.5?b.id:c.id):null;
       idleYaw=0;idleElevation=0;render3D();
     }
