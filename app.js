@@ -346,6 +346,7 @@
     }
     function select(id){return recordStep(()=>selectStep(id))}
     let nodeBranchReveal=null,routeBranchPreview=null,activeForkBranches=null;
+    const unfoldedBranchSources=new Set();
     const visibleForkBranches=()=>activeForkBranches&&activeRoute===activeForkBranches.overlay&&activeForkBranches.overlay.isConnected?activeForkBranches:null;
     const showingNodeBranches=()=>routeBranchPreview!==null&&stage.classList.contains('guided-transition');
     // Reveal every child branch with a Q, including Qs outside the lecture order.
@@ -357,6 +358,11 @@
       return children(id).filter(n=>kind==='person'?n.kind==='concept':kind==='concept'&&n.kind==='subconcept'&&hasQuestionRoute(n.id));
     }
     const isBranchSource=id=>id!==null&&id!==undefined&&['person','concept'].includes(nodes[id].kind)&&branchChildren(id).length>0;
+    const branchReveal=(id,start=null)=>isBranchSource(id)&&!unfoldedBranchSources.has(id)?{id,start}:null;
+    function rememberUnfoldedBranch(id){
+      if(unfoldedBranchSources.has(id))return;
+      unfoldedBranchSources.add(id);save();
+    }
     function focusedBranchNodes(focusedPerson){
       if(showingNodeBranches()&&nodes[routeBranchPreview].kind==='person')return null;
       if(focusedPerson===null||!['concept','subconcept','question'].includes(nodes[selected].kind))return null;
@@ -378,6 +384,8 @@
       const forkBranches=visibleForkBranches(),forkParent=nodes[e.source].parent;
       if(e.kind==='hierarchy'&&forkBranches&&(forkBranches.sources.get(e.source)?.has(e.target)||nodes[e.target].kind==='question'&&forkBranches.sources.get(forkParent)?.has(e.source)))
         return {opacity:0,progress:0,reverse:false,trace:false};
+      if(e.kind==='hierarchy'&&unfoldedBranchSources.has(e.source)&&branchChildren(e.source).some(n=>n.id===e.target))
+        return {opacity:1,progress:1,reverse:false,trace:false};
       if(!nodeBranchReveal||selected!==nodeBranchReveal.id&&(!showingNodeBranches()||routeBranchPreview!==nodeBranchReveal.id))return null;
       const source=nodes[nodeBranchReveal.id],a=nodes[e.source],b=nodes[e.target];
       const branchIds=new Set(branchChildren(source.id).map(n=>n.id));
@@ -392,9 +400,15 @@
       return branch?{opacity:progress>0?1:0,progress,reverse:false,trace:true}:{opacity:elapsed<1000?0:Math.min(1,(elapsed-1000)/350),progress:1,reverse:false,trace:false};
     }
     function revealNodeBranches(id){
-      if(!nodeBranchReveal||nodeBranchReveal.id!==id||nodeBranchReveal.start!==null)return;
+      if(unfoldedBranchSources.has(id)||!nodeBranchReveal||nodeBranchReveal.id!==id||nodeBranchReveal.start!==null)return;
       const reveal=nodeBranchReveal;reveal.start=performance.now();
-      function tick(){if(nodeBranchReveal!==reveal||selected!==id&&(!showingNodeBranches()||routeBranchPreview!==id))return;render();if(performance.now()-reveal.start<1400)requestAnimationFrame(tick)}
+      const revealMotion=cameraMotion;
+      function tick(){
+        if(cameraMotion!==revealMotion||nodeBranchReveal!==reveal||selected!==id&&(!showingNodeBranches()||routeBranchPreview!==id))return;
+        render();
+        if(performance.now()-reveal.start<1400)requestAnimationFrame(tick);
+        else if(!visibleForkBranches()?.sources.has(id)){rememberUnfoldedBranch(id);render()}
+      }
       requestAnimationFrame(tick);
     }
     function markStepArrival(id,append=false){
@@ -420,7 +434,7 @@
         const entrance=openingChapterEntrance;
         setTimeout(()=>{if(openingChapterEntrance===entrance&&selected===id)markStepArrival(id,true)},reducedMotion?0:1000);
       }
-      nodeBranchReveal=isBranchSource(id)?{id,start:null}:null;
+      nodeBranchReveal=branchReveal(id);
       const guided=presentationMode&&previous!==null&&previous!==id&&!reducedMotion;
       if(guided)for(const line of paths)for(const animation of line.getAnimations())animation.cancel();
       if(presentationMode&&!applyingCue){
@@ -472,7 +486,7 @@
       const remove=()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null;if(activeForkBranches===forkBranches){activeForkBranches=null;render()}};
       const point=id=>depthEnabled?threeProjected[id]:{x:nodes[id].x*k+ox,y:nodes[id].y*k+oy};
       function startFork(sourceId){
-        if(forks.some(fork=>fork.sourceId===sourceId))return;
+        if(unfoldedBranchSources.has(sourceId)||forks.some(fork=>fork.sourceId===sourceId))return;
         const started=performance.now(),arms=[];
         forkBranches.sources.set(sourceId,new Set(branchChildren(sourceId).map(child=>child.id)));
         for(const child of branchChildren(sourceId)){
@@ -490,7 +504,7 @@
           }));
           arms.push({ids:armIds,line:armLine,head:armHead,timelines,duration:timelines.reduce((sum,item)=>sum+item.duration,0)});
         }
-        forks.push({sourceId,started,arms});updateVisible();render();drawForks();
+        forks.push({sourceId,started,arms,mainComplete:false});updateVisible();render();drawForks();
       }
       function drawForks(){
         const now=performance.now();let complete=true;
@@ -504,6 +518,9 @@
           arm.line.setAttribute('d',points.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(''));
           arm.head.setAttribute('cx',tip.x);arm.head.setAttribute('cy',tip.y);
         }
+        // Remember only a fully drawn fork, including its selected main arm.
+        if(activeRoute===overlay&&overlay.isConnected&&selected===to&&motion===cameraMotion)
+          for(const fork of forks)if(fork.mainComplete&&fork.arms.every(arm=>now-fork.started>=arm.duration))rememberUnfoldedBranch(fork.sourceId);
         return complete;
       }
       function draw(index,progress){
@@ -515,6 +532,7 @@
         // Keep one path for the entire journey; only its travelled portion is drawn.
         line.setAttribute('d',points.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(''));
         head.setAttribute('cx',tip.x);head.setAttribute('cy',tip.y);
+        if(progress>=1)for(const fork of forks)if(fork.sourceId===ids[index]&&nodes[ids[index+1]].parent===fork.sourceId)fork.mainComplete=true;
         drawForks();
       }
       const fade=()=>{finished=true;overlay.classList.add('finish');setTimeout(remove,330)};
@@ -606,6 +624,19 @@
         const part=(target-cost[lo])/Math.max(.000001,cost[hi]-cost[lo]);
         return Math.max(0,Math.min(1,(lo+part)/count));
       };
+      if(!returning&&flow.readingArrival&&nodes[from]?.kind==='concept'&&nodes[to].kind==='subconcept'){
+        // Finish framing first, then keep the word steady while the line still glides in.
+        const readingMs=1600,totalDuration=duration+readingMs,arrival=.84,tailSpeed=(1-arrival)/readingMs;
+        return {duration:totalDuration,readingStartsAt:duration/totalDuration,
+          cameraProgressAt:t=>smooth(Math.min(1,t*totalDuration/duration)),
+          progressAt:t=>{
+            if(t>=1)return 1;
+            const elapsed=Math.max(0,Math.min(1,t))*totalDuration;
+            if(elapsed>=duration)return arrival+tailSpeed*(elapsed-duration);
+            const u=elapsed/duration,u2=u*u,u3=u2*u;
+            return (u3-2*u2+u)*.6+(-2*u3+3*u2)*arrival+(u3-u2)*duration*tailSpeed;
+          }};
+      }
       return {duration,progressAt};
     }
     function nodeTravelProgress(t,duration){
@@ -628,7 +659,7 @@
         while(i<segments.length-1&&lengths[i+1]<distance)i++;
         const part=segments[i]?Math.max(0,Math.min(1,(distance-lengths[i])/segments[i])):1;
         const a=points[i],b=points[Math.min(i+1,points.length-1)];
-        frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},progress);
+        frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},progress,t);
         onProgress?.(progress);
         if(!firstChapterEmphasized&&(now-start)>=1000&&selected!==null&&nodes[selected].kind==='chapter'&&nodes[selected].chapter===1){firstChapterEmphasized=true;markStepArrival(selected,true)}
         if(t<1)requestAnimationFrame(tick);
@@ -679,16 +710,16 @@
         const forwardFork=!returning&&passThrough&&isBranchSource(target)&&nodes[route[index+1]].parent===target;
         // Returning along the previous interview's path never unfolds branch previews.
         if(returning){routeBranchPreview=null;nodeBranchReveal=null;render()}
-        else if(nodes[target].kind==='person'&&passThrough){routeBranchPreview=target;nodeBranchReveal={id:target,start:null};render()}
-        else if(forwardFork&&routeBranchPreview===null){routeBranchPreview=target;nodeBranchReveal={id:target,start:null};render()}
+        else if(nodes[target].kind==='person'&&passThrough){routeBranchPreview=target;nodeBranchReveal=branchReveal(target);render()}
+        else if(forwardFork&&routeBranchPreview===null){routeBranchPreview=target;nodeBranchReveal=branchReveal(target);render()}
         else if(previous!==null&&nodes[previous].kind==='person'&&passThrough){
           routeBranchPreview=previous;
-          if(nodeBranchReveal?.id!==previous)nodeBranchReveal={id:previous,start:performance.now()};
+          if(nodeBranchReveal?.id!==previous)nodeBranchReveal=branchReveal(previous,performance.now());
           render();
         }
         // Names and concepts use the same simultaneous departure from one source point.
         if(isBranchSource(previous)&&nodes[target].parent===previous){
-          routeBranchPreview=previous;nodeBranchReveal={id:previous,start:performance.now()};
+          routeBranchPreview=previous;nodeBranchReveal=branchReveal(previous,performance.now());
           readingDeparture=true;trace?.startFork(previous);render();
         }
         const readingArrival=passThrough&&!returning;
@@ -700,10 +731,10 @@
           readingDeparture=readingArrival;previous=target;index++;next();
         },{continueFromNode:index>0,passThrough,returning,readingArrival,readingDeparture:!returning&&readingDeparture,onProgress:p=>{
           if(previous!==null&&routeBranchPreview===previous&&nodes[previous].kind==='person'&&nodes[target].parent===previous&&p>=.45){
-            routeBranchPreview=forwardFork?target:null;nodeBranchReveal=forwardFork?{id:target,start:null}:null;render();
+            routeBranchPreview=forwardFork?target:null;nodeBranchReveal=forwardFork?branchReveal(target):null;render();
           }
           if(forwardFork&&p>=.65){
-            if(routeBranchPreview!==target){routeBranchPreview=target;nodeBranchReveal={id:target,start:null};render()}
+            if(routeBranchPreview!==target){routeBranchPreview=target;nodeBranchReveal=branchReveal(target);render()}
           }
           trace?.draw(legIndex,p);
         }});
@@ -726,16 +757,17 @@
         const goalElevation=start.elevation;
         threeZoom=goalZoom;threeYaw=goalYaw;threeElevation=goalElevation;render3D();
         if(contextIds){
-          const xs=contextIds.map(nid=>threeProjected[nid].x),ys=contextIds.map(nid=>threeProjected[nid].y);
-          const fitGroup=Math.min(1,Math.max(180,width-340)/Math.max(1,Math.max(...xs)-Math.min(...xs)),Math.max(160,height-240)/Math.max(1,Math.max(...ys)-Math.min(...ys)));
+          const anchor=threeProjected[contextIds[1]];
+          const spanX=2*Math.max(...contextIds.map(nid=>Math.abs(threeProjected[nid].x-anchor.x)));
+          const spanY=2*Math.max(...contextIds.map(nid=>Math.abs(threeProjected[nid].y-anchor.y)));
+          const fitGroup=Math.min(1,Math.max(180,width-340)/Math.max(1,spanX),Math.max(160,height-240)/Math.max(1,spanY));
           goalZoom=Math.max(.45,goalZoom*fitGroup);threeZoom=goalZoom;render3D();
         }
-        const p=threeProjected[focusId];
+        const p=threeProjected[contextIds?contextIds[1]:focusId];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
-        if(contextIds){
-          const xs=contextIds.map(nid=>threeProjected[nid].x),ys=contextIds.map(nid=>threeProjected[nid].y);
-          threePanX+=width/2-(Math.min(...xs)+Math.max(...xs))/2;
-          threePanY+=height/2-(Math.min(...ys)+Math.max(...ys))/2;
+        if(contextIds||kind==='subconcept'){
+          const textPoint=selectedTextPoint(contextIds?contextIds[1]:id);
+          threePanX+=width/2-textPoint.x;threePanY+=height/2-textPoint.y;
           render3D();
         }
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
@@ -744,15 +776,16 @@
         const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
         const timeline=overviewTravelTimeline(previous,id,flow);
-          travel([start,goal],timeline.duration,(_p,lineProgress)=>{
+          travel([start,goal],timeline.duration,(_p,lineProgress,elapsedProgress)=>{
             lastManual3D=performance.now();
-            const progress=cameraTravelProgress(previous,node,lineProgress);
+            const progress=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,lineProgress);
+            if(timeline.cameraProgressAt)cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;
             threePanX=start.x+(goal.x-start.x)*progress;threePanY=start.y+(goal.y-start.y)*progress;
             threeZoom=start.zoom*Math.pow(goal.zoom/start.zoom,progress);
             render3D();
             const from=previous!==null?threeProjected[previous]:null,to=threeProjected[focusId];
             // The broad structure stays fixed while the line advances from name to concept.
-            if(to&&!contextIds){
+            if(to&&!contextIds&&!timeline.cameraProgressAt){
               const currentX=(from?from.x:startFocus.x)*(1-progress)+to.x*progress;
               const currentY=(from?from.y:startFocus.y)*(1-progress)+to.y*progress;
               const desiredX=startFocus.x+(goalFocus.x-startFocus.x)*progress;
@@ -766,10 +799,12 @@
       const start={x:ox,y:oy,k},node=nodes[id],contextIds=contextFrameIds(id);
       k=fitK*(contextIds?2.8:nodeZoomLevel(node));
       if(contextIds){
-        const xs=contextIds.map(nid=>nodes[nid].x),ys=contextIds.map(nid=>nodes[nid].y);
-        const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
-        k=Math.max(fitK*.45,Math.min(k,Math.max(180,width-340)/Math.max(1,maxx-minx),Math.max(160,height-240)/Math.max(1,maxy-miny)));
-        ox=width/2-(minx+maxx)*k/2;oy=height/2-(miny+maxy)*k/2;render();
+        const anchor=nodes[contextIds[1]];
+        const spanX=2*Math.max(...contextIds.map(nid=>Math.abs(nodes[nid].x-anchor.x)));
+        const spanY=2*Math.max(...contextIds.map(nid=>Math.abs(nodes[nid].y-anchor.y)));
+        k=Math.max(fitK*.45,Math.min(k,Math.max(180,width-340)/Math.max(1,spanX),Math.max(160,height-240)/Math.max(1,spanY)));
+        ox=width/2-anchor.x*k;oy=height/2-anchor.y*k;render();
+        const textPoint=selectedTextPoint(contextIds[1]);ox+=width/2-textPoint.x;oy+=height/2-textPoint.y;render();
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
         const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
         if(reducedMotion){finish();return}
@@ -778,11 +813,12 @@
         return timeline;
       }
       ox=width/2-node.x*k;oy=height/2-node.y*k;render();
+      if(node.kind==='subconcept'){const textPoint=selectedTextPoint(id);ox+=width/2-textPoint.x;oy+=height/2-textPoint.y;render()}
       const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
       const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
       if(reducedMotion){finish();return}
       const timeline=overviewTravelTimeline(previous,id,flow);
-      travel([start,goal],timeline.duration,(_p,t)=>{const p=cameraTravelProgress(previous,node,t);ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+      travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);if(timeline.cameraProgressAt)cameraReadingCentered=elapsedProgress>=timeline.readingStartsAt;ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
       return timeline;
     }
     function showDetail(n,openQuestion=true){
@@ -1169,7 +1205,7 @@
     });
     q('#sequence-next').addEventListener('click',()=>runCue(cueIndex+1));q('#sequence-prev').addEventListener('click',()=>runCue(cueIndex-1));
     function showAll(){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;const before=new Set(visible),anchorPerson=selected!==null?nodes[selected].person:'채길원';selected=null;cueIndex=cues.findIndex(c=>c.all);expanded=new Set(nodes.filter(n=>n.kind!=='question').map(n=>n.id));fullReveal=!reducedMotion?createFullReveal(before,anchorPerson):null;updateVisible();fitWholeConnection();showDetail(null);animateNodes(before);updateCue();save()})}
-    function reset(startAtPrologue=true){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);if(startAtPrologue!==false&&presentationMode&&prologueSlides.length&&q('.intro').hidden)runCue(0);updateCue();save()})}
+    function reset(startAtPrologue=true){return recordStep(()=>{setPrologueView(null);if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}interviewClosedAt=0;cameraMotion++;stage.classList.remove('guided-transition');activeRoute?.remove();activeRoute=null;nodeBranchReveal=null;routeBranchPreview=null;activeForkBranches=null;unfoldedBranchSources.clear();selected=null;cueIndex=-1;expanded.clear();updateVisible();fit();showDetail(null);if(startAtPrologue!==false&&presentationMode&&prologueSlides.length&&q('.intro').hidden)runCue(0);updateCue();save()})}
     function enter(mode){recordStep(()=>{if(mode!=='resume'){presentationMode=mode==='presentation';reset(false);threePanX=0;threeZoom=1;idleYaw=0;idleElevation=0}q('.sequence-controls').hidden=!presentationMode;q('.map-shell').classList.toggle('explore',!presentationMode);q('.map-shell').inert=false;q('.intro').inert=true;q('.intro').hidden=true;if(mode!=='resume'){width=stage.clientWidth;height=stage.clientHeight;autoCentered3D=depthEnabled;threePanY=0;fit()}if(mode==='presentation'&&prologueSlides.length)runCue(0);else if(mode==='resume'){setPrologueView(cues[cueIndex]?.prologue);updateCue()}if(!reducedMotion)q('.map-shell').animate([{opacity:0},{opacity:1}],{duration:250,easing:'ease-out'});q(presentationMode?'#sequence-next':'#forum-fit').focus({preventScroll:true});save()})}
     q('#intro-next').addEventListener('click',()=>enter('presentation'));q('#intro-fullscreen').addEventListener('click',()=>q('#forum-fullscreen').click());
     // Empty-space clicks share the existing stage controls; panning never advances.
@@ -1656,8 +1692,8 @@
       if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.00015)return;
       idleYaw=yaw;idleElevation=elevation;render3D();
     }
-    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],cueIndex,cueVersion:6,presentationMode,depthEnabled}))}catch{}}
-    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===6&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?presentationCueForNode(selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
+    function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],unfoldedBranchSources:[...unfoldedBranchSources],cueIndex,cueVersion:6,presentationMode,depthEnabled}))}catch{}}
+    function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));unfoldedBranchSources.clear();if(Array.isArray(s.unfoldedBranchSources))for(const id of s.unfoldedBranchSources)if(Number.isInteger(id)&&nodes[id]&&isBranchSource(id))unfoldedBranchSources.add(id);updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===6&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?presentationCueForNode(selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
     new ResizeObserver(()=>{
       const nextWidth=stage.clientWidth,nextHeight=stage.clientHeight;
       if(width===nextWidth&&height===nextHeight)return;
