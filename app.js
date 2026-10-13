@@ -640,7 +640,7 @@
     function configureInterviewAudio(media){
       cancelAnimationFrame(interviewAudioFrame);interviewAudioFrame=0;
       interviewAudioBounds=media?.speechBounds||null;interviewAppliedVolume=0;video.volume=0;
-      interviewStartWash.hidden=false;interviewStartWash.style.background='#000';
+      interviewStartWash.hidden=false;interviewStartWash.style.background='#000';interviewStartWash.style.opacity='1';
     }
     video.addEventListener('volumechange',()=>{
       if(Math.abs(video.volume-interviewAppliedVolume)<.0001)return;
@@ -832,13 +832,9 @@
       const active=dialog.open&&!!video.getAttribute('src')&&(!videoStarted||time<1.25||outgoing>0);
       interviewStartWash.hidden=!active;
       if(!active)return;
-      if(outgoing>0){
-        const radius=outgoing*115;
-        interviewStartWash.style.background=outgoing===1?'#000':`radial-gradient(circle at center,#000 ${Math.max(0,radius-22)}vmax,transparent ${radius}vmax)`;
-        return;
-      }
-      const progress=audioSmooth((time-.12)/1.13),radius=progress*115;
-      interviewStartWash.style.background=progress===0?'#000':`radial-gradient(circle at center,transparent ${Math.max(0,radius-22)}vmax,#000 ${radius}vmax)`;
+      const incoming=!videoStarted?1:1-audioSmooth((time-.12)/1.13);
+      interviewStartWash.style.background='#000';
+      interviewStartWash.style.opacity=String(Math.max(incoming,outgoing));
     }
     function updateEpilogueVisuals(){
       const active=interviewMode==='epilogue'&&dialog.open&&videoStarted&&!dialog.classList.contains('question-intro');
