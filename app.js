@@ -230,6 +230,7 @@
       k=Math.min((width-36)/(2*rx),(height-48)/(2*ry),1.9);fitK=k;ox=width/2-cx*k;oy=height/2-cy*k;render();
     }
     function fitWholeConnection(instant=false){
+      epilogueMapAnchor=null;
       const ringTransition=depthEnabled&&fullReveal?.anchorPerson==='채길원';
       const start2D={k,ox,oy};
       const start3D={yaw:threeYaw+idleYaw,elevation:threeElevation+idleElevation,zoom:threeZoom,x:threePanX,y:threePanY};
@@ -701,8 +702,10 @@
       if(reducedMotion&&motion===cameraMotion)openEpilogue();
     }
     function openInterview(n,mode='person'){return recordStep(()=>openInterviewStep(n,mode))}
-    let epilogueMapView=null;
+    let epilogueMapView=null,epilogueMapAnchor=null,aligningEpilogueMap=false;
     function rememberEpilogueMapView(){
+      const outline=depthEnabled?threeSvg.querySelector('.three-volume.outer'):null,box=outline?.getBBox();
+      epilogueMapAnchor=box?{x:(box.x+box.width/2)/width,y:(box.y+box.height/2)/height}:null;
       epilogueMapView={k,fitK,ox,oy,width,height,threeYaw,threeElevation,threeZoom,threePanX,threePanY,autoCentered3D,scrollX:window.scrollX,scrollY:window.scrollY,rootScrollLeft:root.scrollLeft,rootScrollTop:root.scrollTop};
     }
     function restoreEpilogueMapView(){
@@ -851,6 +854,7 @@
     function updateCue(){const start=prologueSlides.length+1;q('#sequence-count').textContent=prologueOpen?'프롤로그':cues[cueIndex]?.overview?'지형도':Math.max(0,cueIndex-start+1)+' / '+(cues.length-start);q('#sequence-label').textContent=cueIndex<0?'프롤로그부터 시작':cues[cueIndex].label;q('#sequence-prev').disabled=cueIndex<0||(prologueOpen&&cueIndex===0);q('#sequence-next').disabled=cueIndex>=cues.length-1;q('#sequence-prev').title=cueIndex>0?'이전: '+cues[cueIndex-1].label:'이전 단계가 없습니다';q('#sequence-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다';q('#interview-stage-next').hidden=!(dialog.open&&dialog.classList.contains('question-intro'))&&(!presentationMode||prologueOpen||cueIndex>=cues.length-1);q('#interview-stage-next').title=cueIndex<cues.length-1?'다음: '+cues[cueIndex+1].label:'다음 단계가 없습니다'}
     function runCue(index){return recordStep(()=>runCueStep(index))}
     function runCueStep(index){
+      epilogueMapAnchor=null;
       if(pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null}
       const nextIndex=Math.max(-1,Math.min(cues.length-1,index));
       const upcomingCue=cues[nextIndex];
@@ -1172,6 +1176,12 @@
         else currentLinks+=markup;
       }
       threeSvg.innerHTML=ground+stems+`<g class="person-past-layer">${pastLinks}</g><g class="person-cross-layer">${crossLinks}</g><g class="person-current-layer">${currentLinks}</g>`;
+      if(epilogueMapAnchor&&allConnected&&selected===null&&!aligningEpilogueMap){
+        const box=threeSvg.querySelector('.three-volume.outer')?.getBBox();
+        if(box){const dx=width*epilogueMapAnchor.x-box.x-box.width/2,dy=height*epilogueMapAnchor.y-box.y-box.height/2;
+          if(Math.abs(dx)+Math.abs(dy)>.05){autoCentered3D=false;threePanX+=dx;threePanY+=dy;aligningEpilogueMap=true;try{render3D()}finally{aligningEpilogueMap=false}return}
+        }
+      }
       if(epilogueOverlay)syncEpilogueOverlay();
       const lineage=selected===null?new Set():new Set(ancestors(selected)),selectedBranch=selected===null?new Set():descendants(selected);
       const connectedQuestions=new Set();for(const e of edges)if(e.kind!=='hierarchy'&&(e.source===selected||e.target===selected)){if(nodes[e.source].kind==='question')connectedQuestions.add(e.source);if(nodes[e.target].kind==='question')connectedQuestions.add(e.target)}
@@ -1332,7 +1342,8 @@
     q('#forum-fit').addEventListener('click',showAll);
     depthButton.addEventListener('click',()=>setDepthEnabled(!depthEnabled));
     q('#forum-reset').addEventListener('click',reset);
-    stage.addEventListener('wheel',e=>{if(prologueOpen)return;e.preventDefault();const r=stage.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0014),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+    stage.addEventListener('wheel',e=>{if(prologueOpen)return;epilogueMapAnchor=null;e.preventDefault();const r=stage.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0014),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+    stage.addEventListener('pointerdown',()=>{epilogueMapAnchor=null});
     const pointers=new Map();let pinch=null,framePending=false;
     function scheduleRender(){if(framePending)return;framePending=true;requestAnimationFrame(()=>{framePending=false;render()})}
     stage.addEventListener('wheel',()=>{if(prologueOpen)return;cameraMotion++;cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
