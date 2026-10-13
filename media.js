@@ -2,11 +2,11 @@
 window.FORUM_MEDIA = {
   "epilogue/film": {
     "title": "에필로그 · 조각교육의 방향",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-full-conclusion.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-short-natural-end.mp4",
     "poster": "",
     "captions": [
       {
-        "src": "captions/epilogue-education-full-conclusion.ko.vtt?v=epilogue-full-conclusion-1",
+        "src": "captions/epilogue-education-context.ko.vtt?v=epilogue-framing-context-1",
         "label": "한국어",
         "language": "ko"
       }
@@ -70,13 +70,13 @@ window.FORUM_MEDIA = {
       {
         "person": "채길원",
         "start": 143.34320000000002,
-        "end": 193.660133,
-        "identityEnd": 193.660133
+        "end": 160.4158,
+        "identityEnd": 160.4158
       }
     ],
     "speechBounds": {
       "firstSpeech": 0.517,
-      "lastSpeech": 192.5958
+      "lastSpeech": 160.1358
     }
   },
   "최고은/Q4": {
