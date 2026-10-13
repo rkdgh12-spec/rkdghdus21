@@ -7,7 +7,9 @@
     if(materialExperienceNode){materialExperienceNode.x=1268;materialExperienceNode.y=985;}
     // Keep Chae's final question below the name and its role/career text in the tilted view.
     const chaeFinalQuestionNode=data.nodes.find(n=>n.person==='채길원'&&n.kind==='question'&&n.label==='Q4');
-    if(chaeFinalQuestionNode){chaeFinalQuestionNode.x=1587.12;chaeFinalQuestionNode.y=1556.17;}
+    if(chaeFinalQuestionNode){chaeFinalQuestionNode.x=1587.12;chaeFinalQuestionNode.y=1600;}
+    const chaeFinalTopicNode=data.nodes.find(n=>n.person==='채길원'&&n.kind==='subconcept'&&n.label==='시대와 자기 이해');
+    if(chaeFinalTopicNode){chaeFinalTopicNode.x=1590.03;chaeFinalTopicNode.y=1510;}
     const nodes=data.nodes,edges=data.edges.filter(e=>{
       if(nodes[e.source].kind==='chapter'&&nodes[e.source].chapter!==5)return false;
       const a=nodes[e.source],b=nodes[e.target];
