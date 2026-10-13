@@ -1197,7 +1197,7 @@
       if(!active)return;
       const time=video.currentTime||0,duration=video.duration;
       const speechEnd=interviewAudioBounds?.lastSpeech??Math.max(0,(duration||0)-4);
-      const whiteStart=speechEnd+.8;
+      const whiteStart=speechEnd+2;
       const outgoing=Number.isFinite(duration)?audioSmooth((time-whiteStart)/Math.max(.1,duration-.5-whiteStart)):0;
       const light=outgoing;
       epilogueVideoWash.style.opacity='1';
