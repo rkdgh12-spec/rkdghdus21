@@ -144,5 +144,18 @@ window.FORUM_IMAGE_INSERTS = {
         "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-choe-edited-20261013/choe-goeun-torso-161.jpg"
       }
     ]
+  },
+  "류성실/Q5": {
+    "start": 5.2052,
+    "images": [
+      {
+        "src": "images/interview-works/ryu-sungsil-1.jpg",
+        "caption": "<BigKing Travel -Series of victorious Return> 2017, digital print, 30.5X42cm"
+      },
+      {
+        "src": "images/interview-works/ryu-sungsil-2.jpg",
+        "caption": "《The Burning Love Song》 exhibition display, 2022 (Photo : Sangtae Kim)"
+      }
+    ]
   }
 };
