@@ -592,7 +592,38 @@
       else if(video.webkitDisplayingFullscreen&&typeof video.webkitExitFullscreen==='function')video.webkitExitFullscreen();
     }
     let questionScreenTimer=null,questionScreenToken=0;
-    function stopVideo(){q('#interview-intro-caption').hidden=true;clearTimeout(questionScreenTimer);questionScreenTimer=null;questionScreenToken++;dialog.classList.remove('question-intro','question-playing','play-blocked');exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
+
+    // Only the silent edges ramp; dialogue and room tone keep a constant level.
+    let interviewAudioBounds=null,interviewAudioFrame=0,interviewUserVolume=video.volume,interviewAppliedVolume=video.volume;
+    const audioSmooth=x=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t)};
+    function interviewAudioFactor(){
+      const t=video.currentTime||0,duration=video.duration;
+      const first=interviewAudioBounds?.firstSpeech??.45;
+      const fadeInEnd=Math.max(.08,first-.04),fadeInStart=Math.max(0,fadeInEnd-.18);
+      const incoming=audioSmooth((t-fadeInStart)/(fadeInEnd-fadeInStart));
+      if(!Number.isFinite(duration))return incoming;
+      const last=interviewAudioBounds?.lastSpeech??Math.max(0,duration-.55);
+      const fadeOutStart=Math.min(last+.10,duration-.30);
+      const fadeOutEnd=Math.min(fadeOutStart+.25,duration-.04);
+      return Math.min(incoming,1-audioSmooth((t-fadeOutStart)/Math.max(.04,fadeOutEnd-fadeOutStart)));
+    }
+    function updateInterviewAudio(){
+      cancelAnimationFrame(interviewAudioFrame);interviewAudioFrame=0;
+      const target=Math.max(0,Math.min(1,interviewUserVolume*interviewAudioFactor()));
+      if(Math.abs(video.volume-target)>.0001){interviewAppliedVolume=target;video.volume=target}
+      if(!video.paused&&!video.ended)interviewAudioFrame=requestAnimationFrame(updateInterviewAudio);
+    }
+    function configureInterviewAudio(media){
+      cancelAnimationFrame(interviewAudioFrame);interviewAudioFrame=0;
+      interviewAudioBounds=media?.speechBounds||null;interviewAppliedVolume=0;video.volume=0;
+    }
+    video.addEventListener('volumechange',()=>{
+      if(Math.abs(video.volume-interviewAppliedVolume)<.0001)return;
+      interviewUserVolume=video.volume;updateInterviewAudio();
+    });
+    for(const event of ['play','playing','loadedmetadata','timeupdate','seeking','seeked','pause','ended'])video.addEventListener(event,updateInterviewAudio);
+
+    function stopVideo(){cancelAnimationFrame(interviewAudioFrame);interviewAudioFrame=0;q('#interview-intro-caption').hidden=true;clearTimeout(questionScreenTimer);questionScreenTimer=null;questionScreenToken++;dialog.classList.remove('question-intro','question-playing','play-blocked');exitVideoFullscreen();video.pause();video.removeAttribute('src');video.removeAttribute('poster');video.replaceChildren();video.load();q('#interview-play').hidden=true}
     function openEpilogue(){openInterview(epilogueFilm,'epilogue')}
     let epilogueTransitioning=false,epilogueOverlay=null,epilogueEchoes=null,epilogueContours=null,epilogueOrigin=null;
     function syncEpilogueOverlay(){
@@ -690,7 +721,7 @@
       const src=assetURL(media.src);video.hidden=!src;q('#interview-play').hidden=!src;q('#video-empty').hidden=!!src;q('#video-error').hidden=true;
       q('#video-empty strong').textContent=isEpilogue?'에필로그 영상 준비 중':'영상 준비 중';
       q('#video-empty p').textContent=isEpilogue?'열 명의 답변을 엮은 통합 영상을 이곳에서 보실 수 있습니다.':'인터뷰 영상은 추후 공개됩니다.';
-      if(src){video.src=src;const poster=assetURL(media.poster);if(poster)video.poster=poster;video.style.objectFit=media.fit==='cover'?'cover':'contain';video.style.objectPosition=media.position||'center';
+      if(src){configureInterviewAudio(media);video.src=src;const poster=assetURL(media.poster);if(poster)video.poster=poster;video.style.objectFit=media.fit==='cover'?'cover':'contain';video.style.objectPosition=media.position||'center';
         for(const [i,caption] of (media.captions||[]).entries()){const url=assetURL(caption.src);if(!url)continue;const track=document.createElement('track');track.kind='subtitles';track.label=caption.label||'한국어';track.srclang=caption.language||'ko';track.src=url;track.default=i===0;video.append(track);if(i===0)track.track.mode='showing'}
         video.load();
       }
