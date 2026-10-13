@@ -674,7 +674,9 @@
     }
     // All destinations use the same hierarchy scale, independent of the incoming route.
     const NODE_ZOOM_LEVELS={chapter:1,person:2,concept:4,subconcept:8,question:8};
-    const nodeZoomLevel=node=>NODE_ZOOM_LEVELS[node.kind]||1;
+    const personContextZoom=new Map();
+    const contextZoomKey=person=>[person,depthEnabled,width,height].join('|');
+    const nodeZoomLevel=node=>Math.max(NODE_ZOOM_LEVELS[node.kind]||1,['subconcept','question'].includes(node.kind)?Math.min(maxThreeZoom,(personContextZoom.get(contextZoomKey(node.person))||0)*1.2):0);
     const cameraTravelProgress=(previous,node,t)=>previous===null&&node.kind==='chapter'&&node.chapter===1?t:t*t*(3-2*t);
     const anchorsReadingCamera=(from,to)=>PERSON_READING_PACE[nodes[to].person]?.anchorCamera&&nodes[to].parent===from&&['subconcept','question'].includes(nodes[to].kind);
     function anchoredCameraPan(start,startPoint,goalPoint,scaleRatio,progress,center={x:0,y:0}){
@@ -691,6 +693,44 @@
       return [person.parent,person.id,...children(person.id).filter(n=>n.kind==='concept').map(n=>n.id)];
     }
     function readingContext(){return cameraReadingNode===null?null:contextFrameIds(cameraReadingNode)}
+    let settledContextFrame=null;
+    const contextCameraStamp=()=>[width,height,depthEnabled?1:0,...(depthEnabled?[threePanX,threePanY,threeZoom,threeYaw,idleYaw,threeElevation,idleElevation]:[ox,oy,k])];
+    function rememberContextFrame(contextIds){
+      if(!contextIds)return;
+      settledContextFrame={person:contextIds[1],camera:contextCameraStamp()};
+      personContextZoom.set(contextZoomKey(nodes[contextIds[1]].person),depthEnabled?threeZoom:k/fitK);
+    }
+    function isSettledContextFrame(contextIds){
+      if(settledContextFrame?.person!==contextIds[1])return false;
+      const current=contextCameraStamp(),saved=settledContextFrame.camera;
+      return current.length===saved.length&&current.every((value,index)=>Math.abs(value-saved[index])<.001);
+    }
+    function contextFrameFit(contextIds,point,scale,limit){
+      // Keep the person central; only the name and main concepts constrain the frame.
+      const anchor=point(contextIds[1]),ids=contextIds.slice(1);
+      const spanX=2*Math.max(1,...ids.map(id=>Math.abs(point(id).x-anchor.x)));
+      const spanY=2*Math.max(1,...ids.map(id=>Math.abs(point(id).y-anchor.y)));
+      return Math.min(limit,scale*Math.min(Math.max(40,width-192)/spanX,Math.max(40,height-128)/spanY));
+    }
+    function keepContextLabelsInside(contextIds,scale,apply){
+      const stageBox=stage.getBoundingClientRect(),ids=contextIds.slice(1);
+      for(let attempt=0;attempt<5;attempt++){
+        let ratio=1;
+        for(const id of ids){
+          const button=depthEnabled?threeNodes.get(id):elems.get(id)?.b;
+          const label=button?.querySelector('.node-label-text');
+          if(!label||button.hidden||!label.getClientRects().length){ratio=Math.min(ratio,.9);continue}
+          const box=label.getBoundingClientRect();
+          const x=box.left+box.width/2-stageBox.left,y=box.top+box.height/2-stageBox.top;
+          // Reserve the arrival emphasis as well as the unscaled text.
+          const rx=Math.abs(x-width/2)+box.width*.62+24,ry=Math.abs(y-height/2)+box.height*.62+24;
+          ratio=Math.min(ratio,width/2/rx,height/2/ry);
+        }
+        if(ratio>=.999)break;
+        scale*=Math.max(.5,ratio*.98);apply(scale);
+      }
+      return scale;
+    }
     function pinReadingHeading(button,id){
       if(!cameraReadingCentered||cameraReadingNode!==id||selected===null)return;
       const text=button.querySelector('strong'),box=text.getBoundingClientRect(),area=stage.getBoundingClientRect();
@@ -783,6 +823,15 @@
     }
     function followConnectionToLabel(previous,id,after,flow={}){
       cameraMotion++;
+      const context=contextFrameIds(id),previousContext=previous==null?null:contextFrameIds(previous);
+      if(context&&previousContext&&context[1]===previousContext[1]&&isSettledContextFrame(context)){
+        // Once the complete name/concept frame is in view, only the route advances.
+        const timeline=flow.timeline||overviewTravelTimeline(previous,id,flow);
+        const finish=()=>{if(!flow.passThrough)centerReadingText(id);after()};
+        if(reducedMotion){finish();return}
+        travel([{x:0,y:0},{x:1,y:0}],timeline.duration,()=>{lastManual3D=performance.now();render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
+        return timeline;
+      }
       if(depthEnabled){
         lastManual3D=performance.now();
         const start={x:threePanX,y:threePanY,zoom:threeZoom,yaw:threeYaw,elevation:threeElevation};
@@ -797,11 +846,7 @@
         const goalElevation=start.elevation;
         threeZoom=goalZoom;threeYaw=goalYaw;threeElevation=goalElevation;render3D();
         if(contextIds){
-          const anchor=threeProjected[contextIds[1]];
-          const spanX=2*Math.max(...contextIds.map(nid=>Math.abs(threeProjected[nid].x-anchor.x)));
-          const spanY=2*Math.max(...contextIds.map(nid=>Math.abs(threeProjected[nid].y-anchor.y)));
-          const fitGroup=Math.min(1,Math.max(180,width-340)/Math.max(1,spanX),Math.max(160,height-240)/Math.max(1,spanY));
-          goalZoom=Math.max(.45,goalZoom*fitGroup);threeZoom=goalZoom;render3D();
+          goalZoom=contextFrameFit(contextIds,nid=>threeProjected[nid],goalZoom,maxThreeZoom);threeZoom=goalZoom;render3D();
         }
         const p=threeProjected[contextIds?contextIds[1]:focusId];
         threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
@@ -810,10 +855,17 @@
           threePanX+=width/2-textPoint.x;threePanY+=height/2-textPoint.y;
           render3D();
         }
+        if(contextIds){
+          goalZoom=keepContextLabelsInside(contextIds,goalZoom,zoom=>{
+            threeZoom=zoom;render3D();const anchor=threeProjected[contextIds[1]];
+            threePanX+=width/2-anchor.x;threePanY+=height/2-anchor.y;render3D();
+            const textPoint=selectedTextPoint(contextIds[1]);threePanX+=width/2-textPoint.x;threePanY+=height/2-textPoint.y;render3D();
+          });
+        }
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
         const goalFocus={x:threeProjected[focusId].x,y:threeProjected[focusId].y};
         threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
-        const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();if(!flow.passThrough)centerReadingText(id);after()};
+        const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();if(!flow.passThrough)centerReadingText(id);rememberContextFrame(contextIds);after()};
         if(reducedMotion){finish();return}
         const timeline=flow.timeline||overviewTravelTimeline(previous,id,flow);
           travel([start,goal],timeline.duration,(_p,lineProgress,elapsedProgress)=>{
@@ -841,13 +893,15 @@
       k=fitK*(contextIds?2.8:nodeZoomLevel(node));
       if(contextIds){
         const anchor=nodes[contextIds[1]];
-        const spanX=2*Math.max(...contextIds.map(nid=>Math.abs(nodes[nid].x-anchor.x)));
-        const spanY=2*Math.max(...contextIds.map(nid=>Math.abs(nodes[nid].y-anchor.y)));
-        k=Math.max(fitK*.45,Math.min(k,Math.max(180,width-340)/Math.max(1,spanX),Math.max(160,height-240)/Math.max(1,spanY)));
+        k=contextFrameFit(contextIds,nid=>nodes[nid],1,fitK*maxThreeZoom);
         ox=width/2-anchor.x*k;oy=height/2-anchor.y*k;render();
         const textPoint=selectedTextPoint(contextIds[1]);ox+=width/2-textPoint.x;oy+=height/2-textPoint.y;render();
+        k=keepContextLabelsInside(contextIds,k,scale=>{
+          k=scale;ox=width/2-anchor.x*k;oy=height/2-anchor.y*k;render();
+          const textPoint=selectedTextPoint(contextIds[1]);ox+=width/2-textPoint.x;oy+=height/2-textPoint.y;render();
+        });
         const goal={x:ox,y:oy,k};ox=start.x;oy=start.y;k=start.k;render();
-        const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);after()};
+        const finish=()=>{ox=goal.x;oy=goal.y;k=goal.k;render();if(!flow.passThrough)centerReadingText(id);rememberContextFrame(contextIds);after()};
         if(reducedMotion){finish();return}
         const timeline=flow.timeline||overviewTravelTimeline(previous,id,flow);
         travel([start,goal],timeline.duration,(_p,t,elapsedProgress)=>{const p=timeline.cameraProgressAt?timeline.cameraProgressAt(elapsedProgress):cameraTravelProgress(previous,node,t);ox=start.x+(goal.x-start.x)*p;oy=start.y+(goal.y-start.y)*p;k=flow.continuousReturn?start.k+(goal.k-start.k)*p:start.k*Math.pow(goal.k/start.k,p);render()},finish,timeline.progressAt,flow.onProgress,flow.continueFromNode);
