@@ -102,7 +102,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 #forum-source-network .stage .lecture-route{position:absolute;inset:0;width:100%;height:100%;z-index:26;pointer-events:none;overflow:hidden;filter:drop-shadow(0 0 3px rgba(75,96,171,.52));transition:opacity 320ms ease}
 #forum-source-network .stage .lecture-route.finish{opacity:0}
 #forum-source-network .stage .lecture-route-line{fill:none;stroke:#4b60ab;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
-#forum-source-network .stage .lecture-route-head{fill:#9aa8d9;stroke:#fff;stroke-width:.7}
+#forum-source-network .stage .lecture-route-head{fill:light-dark(#344b98,#b0bef3);stroke:var(--paper);stroke-width:1}
 #forum-source-network .stage .links.active,#forum-source-network .stage .links.branch{transition:stroke 320ms ease,stroke-width 320ms ease,opacity 320ms ease}
 #forum-source-network .stage.guided-transition .links.active,#forum-source-network .stage.guided-transition .links.branch{stroke:var(--secondary)!important;stroke-width:.8!important;opacity:.18!important}
 #forum-source-network .stage .epilogue-network.handoff{opacity:0}
