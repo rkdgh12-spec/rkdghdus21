@@ -1135,7 +1135,7 @@
       q('#video-empty strong').textContent=isEpilogue?'에필로그 영상 준비 중':'영상 준비 중';
       q('#video-empty p').textContent=isEpilogue?'열 명의 답변을 엮은 통합 영상을 이곳에서 보실 수 있습니다.':'인터뷰 영상은 추후 공개됩니다.';
       if(src){configureInterviewAudio(media);video.src=src;const poster=assetURL(media.poster);if(poster)video.poster=poster;video.style.objectFit=media.fit==='cover'?'cover':'contain';video.style.objectPosition=media.position||'center';
-        for(const [i,caption] of (media.captions||[]).entries()){const url=assetURL(caption.src);if(!url)continue;const track=document.createElement('track');track.kind='subtitles';track.label=caption.label||'한국어';track.srclang=caption.language||'ko';track.src=url;track.default=i===0;video.append(track);if(i===0)track.track.mode='showing'}
+        for(const [i,caption] of (media.captions||[]).entries()){const url=assetURL(caption.src);if(!url)continue;const track=document.createElement('track');track.kind='subtitles';track.label=caption.label||'한국어';track.srclang=caption.language||'ko';track.src=url;track.default=i===0;video.append(track);if(i===0)track.track.mode='hidden'}
         video.load();
       }
       q('#transcript-section').hidden=!media.transcript;q('#transcript-section').open=false;q('#interview-transcript').textContent=media.transcript||'';
