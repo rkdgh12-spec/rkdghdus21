@@ -103,7 +103,7 @@
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
     const OVERVIEW_3D_VIEW={yaw:0,elevation:1.38};
     const OPENING_3D_VIEW={yaw:-.34,elevation:.82,zoom:1};
-    const LIVING_DEPTH_GAIN=2.8512;
+    const LIVING_DEPTH_GAIN=3.42144;
     const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=true,chapterElevationBeforeFocus=null;
     let idleAnchorId=null,idleAnchorPoint=null,idleRelease=null,livingClock=performance.now(),livingPace=1,lastLivingTravel=-Infinity;
     function livingAnchor(id){const node=nodes[id]||threeCenter;return {x:node.x,y:node.y,z:threeHeight(node)}}
