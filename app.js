@@ -103,6 +103,7 @@
     const flatPlane=q('.map-plane'),threeScene=q('.three-scene'),threeSvg=q('.three-wires'),threeLayer=q('.three-nodes');
     const OVERVIEW_3D_VIEW={yaw:0,elevation:1.38};
     const OPENING_3D_VIEW={yaw:-.34,elevation:.82,zoom:1};
+    const LIVING_DEPTH_GAIN=2.8512;
     const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=true,chapterElevationBeforeFocus=null;
     let idleAnchorId=null,idleAnchorPoint=null,idleRelease=null,livingClock=performance.now(),livingPace=1,lastLivingTravel=-Infinity;
     function livingAnchor(id){const node=nodes[id]||threeCenter;return {x:node.x,y:node.y,z:threeHeight(node)}}
@@ -112,7 +113,7 @@
       const reading=selected!==null&&cameraReadingNode!==null;
       // Carry the final travel frame into idle breathing instead of stopping on arrival.
       const active=travelling||pointers.size===0&&(now-lastManual3D>1800||now-lastLivingTravel<2000);
-      const target=active?(travelling ? 2.8512/Math.max(1,threeZoom) : reading ? .75/Math.max(1,threeZoom) : 1):0;
+      const target=active?LIVING_DEPTH_GAIN*(reading && !travelling ? .75 : 1)/Math.max(1,threeZoom):0;
       const ease=1-Math.exp(-delta/500);
       livingPace+=((travelling?1.25:1)-livingPace)*ease;
       livingClock+=delta*livingPace;
@@ -123,7 +124,10 @@
         idleAnchorId=id;
       }
       idleStrength+=(target-idleStrength)*ease;
-      const yaw=Math.sin(livingClock/4300)*.06*idleStrength,elevation=Math.cos(livingClock/6100)*.03*idleStrength;
+      // Keep the low-angle full-map sweep above the plane while its depth continues to breathe.
+      const elevationRoom=fullReveal?Math.max(0,Math.min(1,threeElevation/.12)):1;
+      const elevationWeight=elevationRoom*elevationRoom*(3-2*elevationRoom);
+      const yaw=Math.sin(livingClock/4300)*.06*idleStrength,elevation=Math.cos(livingClock/6100)*.03*idleStrength*elevationWeight;
       const changed=Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)>.000001;
       idleYaw=yaw;idleElevation=elevation;
       return changed;
@@ -145,7 +149,7 @@
     let epilogueRoam=null;
     function stopEpilogueRoam(){
       if(!epilogueRoam)return;
-      epilogueRoam=null;epilogueMapAnchor=null;idleYaw=0;idleElevation=0;idleStrength=0;idleRelease=null;lastManual3D=performance.now();
+      epilogueRoam=null;epilogueMapAnchor=null;lastLivingTravel=-Infinity;lastManual3D=performance.now();
     }
     function startEpilogueRoam(){
       selected=null;cameraReadingNode=null;cameraReadingCentered=false;fullReveal=null;showDetail(null);
@@ -179,7 +183,7 @@
       const focusEase=t*t*t*(10+t*(-15+6*t));
       roam.focus={x:blend('x'),y:blend('y'),z:blend('z'),weight:b.weight+(c.weight-b.weight)*focusEase};
       roam.focusId=roam.focus.weight>.35?(t<.5?b.id:c.id):null;
-      idleYaw=0;idleElevation=0;render3D();
+      advanceLivingMotion(now,true);render3D();
     }
     root.addEventListener('pointerdown',stopEpilogueRoam,true);
     root.addEventListener('wheel',stopEpilogueRoam,{capture:true,passive:true});
@@ -315,9 +319,8 @@
       epilogueMapAnchor=null;
       const ringTransition=depthEnabled&&fullReveal?.anchorPerson==='채길원';
       const start2D={k,ox,oy};
-      if(depthEnabled)releaseIdleMotion();
       const start3D={yaw:threeYaw,elevation:threeElevation,zoom:threeZoom,x:threePanX,y:threePanY};
-      if(depthEnabled){autoCentered3D=false;threeYaw=start3D.yaw;threeElevation=start3D.elevation;idleYaw=0;idleElevation=0;lastManual3D=performance.now()}
+      if(depthEnabled){autoCentered3D=false;threeYaw=start3D.yaw;threeElevation=start3D.elevation;lastManual3D=performance.now()}
       fit();
       for(let pass=0;pass<2;pass++){
         render();
@@ -359,7 +362,7 @@
           }else{const orbit=Math.sin(Math.PI*t);threeYaw=start3D.yaw+(goal.yaw-start3D.yaw)*ease+orbit*.55;threeElevation=start3D.elevation+(goal.elevation-start3D.elevation)*ease-orbit*.32}
           const layoutEase=ringTransition?smooth(t/.52):ease;
           threeZoom=start3D.zoom+(goal.zoom-start3D.zoom)*layoutEase+(ringTransition?.18*Math.sin(Math.PI*t):0);
-          threePanX=start3D.x+(goal.x-start3D.x)*layoutEase;threePanY=start3D.y+(goal.y-start3D.y)*layoutEase;lastManual3D=now;render3D();
+          threePanX=start3D.x+(goal.x-start3D.x)*layoutEase;threePanY=start3D.y+(goal.y-start3D.y)*layoutEase;lastManual3D=now;advanceLivingMotion(now,true);render3D();
           if(t<1)requestAnimationFrame(tick);else{fullReveal=null;render3D();stepHistory[stepIndex]=snapshotStep();updateStepControls()}}
         requestAnimationFrame(tick);return;
       }
@@ -1066,7 +1069,7 @@
         for(const path of source.querySelectorAll('.links')){
           if(getComputedStyle(path).display==='none')continue;
           const d=path.getAttribute('d');if(!d)continue;
-          const index=Number(path.dataset.edgeIndex),edge=edges[index],length=path.getTotalLength();if(!edge||!length)continue;
+          const index=Number(path.dataset.edgeIndex),edge=edges[index];if(!edge)continue;
           const echo=document.createElementNS(NS,'path');echo.setAttribute('d',d);echo.setAttribute('class','epilogue-link'+(path.classList.contains('core')?' core':''));
           echo.style.setProperty('animation','none','important');echo.style.setProperty('stroke','var(--accent)','important');echo.style.setProperty('opacity','0','important');
           epilogueEchoes.set(index,echo);
@@ -1077,8 +1080,9 @@
             :Math.max(route.arrival[edge.source],route.arrival[edge.target])+120+(index*71%420);
           echo.classList.add('trace');
           echo.style.setProperty('stroke-width',child>=0?'1.8':'1.35','important');
-          echo.style.strokeDasharray=`${length} ${length}`;
-          routeViews.push({echo,trace:true,length,reverse:edge.target===parent,start,duration:child>=0?Math.max(440,route.arrival[child]-start):620});
+          // Normalized dashes stay attached to the moving geometry without measuring each frame.
+          echo.setAttribute('pathLength','1');echo.style.strokeDasharray='1 1';
+          routeViews.push({echo,trace:true,reverse:edge.target===parent,start,duration:child>=0?Math.max(440,route.arrival[child]-start):620});
           overlay.append(echo);
         }
         epilogueOrigin=document.createElementNS(NS,'circle');epilogueOrigin.setAttribute('class','epilogue-origin');const center=depthEnabled?threeProjected[threeCenter.id]:{x:threeCenter.x*k+ox,y:threeCenter.y*k+oy};epilogueOrigin.setAttribute('cx',center.x);epilogueOrigin.setAttribute('cy',center.y);epilogueOrigin.setAttribute('r','6');overlay.append(epilogueOrigin);
@@ -1093,7 +1097,7 @@
             if(view.trace&&!view.done){
               if(elapsed<view.start){pending=true;continue}
               const progress=smooth((elapsed-view.start)/view.duration);
-              view.echo.style.strokeDashoffset=String((view.reverse?-1:1)*view.length*(1-progress));
+              view.echo.style.strokeDashoffset=String((view.reverse?-1:1)*(1-progress));
               const settle=smooth((elapsed-view.start-view.duration)/280);
               view.echo.style.setProperty('opacity',String(.96-.5*settle),'important');
               view.done=progress===1&&settle===1;if(!view.done)pending=true;
