@@ -1807,10 +1807,13 @@
       stage.classList.toggle('core-chapter-hover',hoverChapter!==null&&nodes[hoverChapter].chapter===5);
       const connectedQuestions=new Set();
       const futureBranch=branchKeep!==null?descendants(selected):new Set();
+      const kwonPresentation=presentationMode&&selected!==null&&(nodes[selected].person==='권현빈'||nodes[selected].kind==='chapter'&&nodes[selected].chapter===5);
       edges.forEach((e,i)=>{
         const l=paths[i],a=nodes[e.source],b=nodes[e.target];
         const unusedQuestionEdge=presentationMode&&focusedPerson!==null&&e.kind==='hierarchy'&&b.kind==='question'&&!lectureQuestionIds.has(b.id)&&selected!==b.id;
-        const shown=visible.has(e.source)&&visible.has(e.target)&&!unusedQuestionEdge&&!(allConnected&&thinnedCrossEdges.has(i));
+        // Keep this supporting relation in the full map, outside Kwon's presentation route.
+        const unrelatedKwonEdge=kwonPresentation&&e.kind!=='hierarchy'&&a.person==='권현빈'&&b.person==='권현빈'&&[a.label,b.label].includes('의도와 물질의 성질')&&[a.label,b.label].includes('우연성');
+        const shown=visible.has(e.source)&&visible.has(e.target)&&!unusedQuestionEdge&&!unrelatedKwonEdge&&!(allConnected&&thinnedCrossEdges.has(i));
         const linkedMeaning=e.kind!=='hierarchy'&&(e.source===emphasis||e.target===emphasis);
         if(shown&&linkedMeaning){if(a.kind==='question')connectedQuestions.add(e.source);if(b.kind==='question')connectedQuestions.add(e.target)}
         const newlyShown=shown&&l.dataset.shown!=='true';l.dataset.shown=String(shown);
