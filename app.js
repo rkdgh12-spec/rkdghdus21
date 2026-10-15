@@ -104,15 +104,30 @@
     const OVERVIEW_3D_VIEW={yaw:0,elevation:1.38};
     const OPENING_3D_VIEW={yaw:-.34,elevation:.82,zoom:1};
     const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false,chapterElevationBeforeFocus=null;
+    let idleAnchorId=null,idleRelease=null;
+    function idleView(now=performance.now()){
+      if(idleRelease){
+        const t=Math.min(1,(now-idleRelease.started)/360);
+        if(t<1){const amount=1-t*t*(3-2*t);return {yaw:idleRelease.yaw*amount,elevation:idleRelease.elevation*amount,anchorId:idleRelease.anchorId}}
+        idleRelease=null;
+      }
+      return {yaw:idleYaw,elevation:idleElevation,anchorId:idleAnchorId};
+    }
+    function releaseIdleMotion(){
+      // Let the current breath settle inside the next journey, without an extra pause.
+      const now=performance.now(),view=idleView(now);
+      idleRelease=Math.abs(view.yaw)+Math.abs(view.elevation)>.000001?{...view,started:now}:null;
+      idleYaw=0;idleElevation=0;idleStrength=0;lastManual3D=now;
+    }
     let epilogueRoam=null;
     function stopEpilogueRoam(){
       if(!epilogueRoam)return;
-      epilogueRoam=null;epilogueMapAnchor=null;idleYaw=0;idleElevation=0;idleStrength=0;lastManual3D=performance.now();
+      epilogueRoam=null;epilogueMapAnchor=null;idleYaw=0;idleElevation=0;idleStrength=0;idleRelease=null;lastManual3D=performance.now();
     }
     function startEpilogueRoam(){
       selected=null;cameraReadingNode=null;cameraReadingCentered=false;fullReveal=null;showDetail(null);
       if(!depthEnabled){setDepthEnabled(true);threeYaw=-.34;threeElevation=.82;threeZoom=1;epilogueMapAnchor={x:.5,y:.5};}
-      autoCentered3D=false;idleYaw=0;idleElevation=0;idleStrength=0;threeZoom*=.94;
+      autoCentered3D=false;idleYaw=0;idleElevation=0;idleStrength=0;idleRelease=null;threeZoom*=.94;
       render3D();
       if(!reducedMotion){
         const visits=[['최고은',null],['권현빈','물질'],['민지희','리서치'],null,['박재영','창작 플랫폼'],['류성실','세계관'],['강인애',null],null,['안정환',null],['최지혜',null],['서해영','함께하는 조각'],null,['권현빈',null],['채길원',null]];
@@ -290,7 +305,8 @@
       epilogueMapAnchor=null;
       const ringTransition=depthEnabled&&fullReveal?.anchorPerson==='채길원';
       const start2D={k,ox,oy};
-      const start3D={yaw:threeYaw+idleYaw,elevation:threeElevation+idleElevation,zoom:threeZoom,x:threePanX,y:threePanY};
+      if(depthEnabled)releaseIdleMotion();
+      const start3D={yaw:threeYaw,elevation:threeElevation,zoom:threeZoom,x:threePanX,y:threePanY};
       if(depthEnabled){autoCentered3D=false;threeYaw=start3D.yaw;threeElevation=start3D.elevation;idleYaw=0;idleElevation=0;lastManual3D=performance.now()}
       fit();
       for(let pass=0;pass<2;pass++){
@@ -309,20 +325,20 @@
       if(depthEnabled){
         const turn=((OVERVIEW_3D_VIEW.yaw-start3D.yaw+Math.PI)%(Math.PI*2)+(Math.PI*2))%(Math.PI*2)-Math.PI;
         const goalYaw=start3D.yaw+turn;
-        threeYaw=goalYaw;threeElevation=OVERVIEW_3D_VIEW.elevation;threeZoom=1.09;render3D();
+        threeYaw=goalYaw;threeElevation=OVERVIEW_3D_VIEW.elevation;threeZoom=1.09;render3D(false,true);
         let region=threeSvg.querySelector('.three-volume.outer');
         if(region){
           const box=region.getBBox();
           const fitScale=Math.min((width-32)/Math.max(1,box.width),(height-24)/Math.max(1,box.height));
-          threeZoom=Math.max(.45,Math.min(maxThreeZoom,threeZoom*fitScale));render3D();
+          threeZoom=Math.max(.45,Math.min(maxThreeZoom,threeZoom*fitScale));render3D(false,true);
           region=threeSvg.querySelector('.three-volume.outer');
           const fitted=region.getBBox();
           threePanX+=width/2-fitted.x-fitted.width/2;
           threePanY+=height/2-fitted.y-fitted.height/2;
-          render3D();
+          render3D(false,true);
         }
         const goal={yaw:threeYaw,elevation:threeElevation,zoom:threeZoom,x:threePanX,y:threePanY};
-        if(reducedMotion||instant)return;
+        if(reducedMotion||instant){render3D();return}
         threeYaw=start3D.yaw;threeElevation=start3D.elevation;threeZoom=start3D.zoom;threePanX=start3D.x;threePanY=start3D.y;render3D();
         function tick(now){if(token!==cameraMotion)return;const t=Math.min(1,(now-start)/duration),ease=t*t*(3-2*t);
           if(ringTransition){
@@ -430,7 +446,7 @@
       stopEpilogueRoam();
       readingProjectionBounds=depthEnabled?lastProjectionBounds:null;
       routeBranchPreview=null;
-      cameraReadingNode=null;cameraReadingCentered=false;idleYaw=0;idleElevation=0;idleStrength=0;
+      releaseIdleMotion();cameraReadingNode=null;cameraReadingCentered=false;
       markStepArrival(null);
       setPrologueView(null);
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
@@ -712,7 +728,8 @@
     const usesMaxPersonFrame=contextIds=>nodes[contextIds[1]].person!=='류성실';
     const contextVerticalOffset=contextIds=>nodes[contextIds[1]].person==='최고은'?-height*.06:0;
     let settledContextFrame=null;
-    const contextCameraStamp=()=>[width,height,depthEnabled?1:0,...(depthEnabled?[threePanX,threePanY,threeZoom,threeYaw,idleYaw,threeElevation,idleElevation]:[ox,oy,k])];
+    // Ambient breathing is visual only and must never invalidate the approved camera frame.
+    const contextCameraStamp=()=>[width,height,depthEnabled?1:0,...(depthEnabled?[threePanX,threePanY,threeZoom,threeYaw,threeElevation]:[ox,oy,k])];
     function rememberContextFrame(contextIds){
       if(!contextIds||!usesMaxPersonFrame(contextIds))return;
       settledContextFrame={person:contextIds[1],camera:contextCameraStamp()};
@@ -861,6 +878,8 @@
       }
       if(depthEnabled){
         lastManual3D=performance.now();
+        // Measure the route against its unchanged camera, then restore breathing before paint.
+        render3D(false,true);
         const start={x:threePanX,y:threePanY,zoom:threeZoom,yaw:threeYaw,elevation:threeElevation};
         const anchored=flow.continuousReturn||anchorsReadingCamera(previous,id),startTarget=anchored?{...threeProjected[id]}:null;
         let startFocus=previous!==null&&threeProjected[previous]?{x:threeProjected[previous].x,y:threeProjected[previous].y}:{x:width/2,y:height/2};
@@ -871,29 +890,30 @@
         let goalZoom=contextIds?2.8:nodeZoomLevel(node);
         const goalYaw=start.yaw;
         const goalElevation=start.elevation;
-        threeZoom=goalZoom;threeYaw=goalYaw;threeElevation=goalElevation;render3D();
+        threeZoom=goalZoom;threeYaw=goalYaw;threeElevation=goalElevation;render3D(false,true);
         if(contextIds){
-          goalZoom=contextFrameFit(contextIds,nid=>threeProjected[nid],goalZoom,maxThreeZoom);threeZoom=goalZoom;render3D();
+          goalZoom=contextFrameFit(contextIds,nid=>threeProjected[nid],goalZoom,maxThreeZoom);threeZoom=goalZoom;render3D(false,true);
         }
         const p=threeProjected[contextIds?contextIds[1]:focusId];
-        threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D();
+        threePanX+=width/2-p.x;threePanY+=height/2-p.y;render3D(false,true);
         if(contextIds||kind==='subconcept'){
           const textPoint=selectedTextPoint(contextIds?contextIds[1]:id);
           threePanX+=width/2-textPoint.x;threePanY+=height/2-textPoint.y;
-          render3D();
+          render3D(false,true);
         }
         if(contextIds){
           goalZoom=keepContextLabelsInside(contextIds,goalZoom,zoom=>{
-            threeZoom=zoom;render3D();const anchor=threeProjected[contextIds[1]];
-            threePanX+=width/2-anchor.x;threePanY+=height/2-anchor.y;render3D();
-            const textPoint=selectedTextPoint(contextIds[1]);threePanX+=width/2-textPoint.x;threePanY+=height/2-textPoint.y;render3D();
+            threeZoom=zoom;render3D(false,true);const anchor=threeProjected[contextIds[1]];
+            threePanX+=width/2-anchor.x;threePanY+=height/2-anchor.y;render3D(false,true);
+            const textPoint=selectedTextPoint(contextIds[1]);threePanX+=width/2-textPoint.x;threePanY+=height/2-textPoint.y;render3D(false,true);
           });
-          const offsetY=contextVerticalOffset(contextIds);if(offsetY){threePanY+=offsetY;render3D()}
+          const offsetY=contextVerticalOffset(contextIds);if(offsetY){threePanY+=offsetY;render3D(false,true)}
         }
         const goal={x:threePanX,y:threePanY,zoom:goalZoom,yaw:goalYaw,elevation:goalElevation};
         const goalFocus={x:threeProjected[focusId].x,y:threeProjected[focusId].y};
-        threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D();
+        threePanX=start.x;threePanY=start.y;threeZoom=start.zoom;threeYaw=start.yaw;threeElevation=start.elevation;render3D(false,true);
         const frameFrom=previous!==null?{...threeProjected[previous]}:null,frameTo={...threeProjected[focusId]};
+        render3D();
         const finish=()=>{threePanX=goal.x;threePanY=goal.y;threeZoom=goal.zoom;threeYaw=goal.yaw;threeElevation=goal.elevation;render3D();if(!flow.passThrough)centerReadingText(id);rememberContextFrame(contextIds);after()};
         if(reducedMotion){finish();return}
         const timeline=flow.timeline||overviewTravelTimeline(previous,id,flow);
@@ -1343,7 +1363,7 @@
       // Starting the map must not inherit an interrupted orbit or an interview frame.
       window.scrollTo({left:0,top:0,behavior:'instant'});root.scrollLeft=0;root.scrollTop=0;
       threeYaw=OPENING_3D_VIEW.yaw;threeElevation=OPENING_3D_VIEW.elevation;threeZoom=OPENING_3D_VIEW.zoom;
-      threePanX=0;threePanY=0;idleYaw=0;idleElevation=0;idleStrength=0;
+      threePanX=0;threePanY=0;idleYaw=0;idleElevation=0;idleStrength=0;idleRelease=null;idleAnchorId=null;
       autoCentered3D=depthEnabled;lastManual3D=performance.now();chapterElevationBeforeFocus=null;
       cameraReadingNode=null;cameraReadingCentered=false;openingChapterEntrance=null;
       readingProjectionBounds=null;lastProjectionBounds=null;settledContextFrame=null;personContextZoom.clear();
@@ -1605,7 +1625,7 @@
       const edgeViews=edges.map((e,i)=>{const group=make('g','',layers.current),path=make('path','three-connection',group);path.dataset.edgeIndex=i;group.style.display='none';return {group,path}});
       return threeDrawing={outer,coreGroup,core,stems,layers,edges:edgeViews};
     }
-    function render3D(){
+    function render3D(ambientOnly=false,neutralProjection=false){
       if(!depthEnabled)return;
       const reveal=fullReveal;
       const revealAmount=(x,y)=>fullRevealAmount(x,y);
@@ -1621,15 +1641,27 @@
       const textScale=Math.max(selected!==null&&nodes[selected].person?1.4:1,labelZoom(threeZoom)).toFixed(2);
       threeScene.style.setProperty('--three-label-zoom',textScale);
       threeSvg.setAttribute('viewBox',`0 0 ${width} ${height}`);
-      const yawCos=Math.cos(threeYaw+idleYaw),yawSin=Math.sin(threeYaw+idleYaw),elevationCos=Math.cos(threeElevation+idleElevation),elevationSin=Math.sin(threeElevation+idleElevation);
-      const rawXYZ=(x,y,z)=>{x-=threeCenter.x;y-=threeCenter.y;const u=x*yawCos-y*yawSin,v=x*yawSin+y*yawCos,d=v*elevationCos-z*elevationSin,p=3200/Math.max(1200,3200+d);return {x:u*p,y:(v*elevationSin-z*elevationCos)*p,d,p}};
+      const projection=(yaw,elevation)=>{
+        const yc=Math.cos(yaw),ys=Math.sin(yaw),ec=Math.cos(elevation),es=Math.sin(elevation);
+        return (x,y,z)=>{x-=threeCenter.x;y-=threeCenter.y;const u=x*yc-y*ys,v=x*ys+y*yc,d=v*ec-z*es,p=3200/Math.max(1200,3200+d);return {x:u*p,y:(v*es-z*ec)*p,d,p}};
+      };
+      const baseXYZ=projection(threeYaw,threeElevation),breath=neutralProjection?{yaw:0,elevation:0}:idleView();
+      let rawXYZ=baseXYZ;
+      if(breath.yaw||breath.elevation){
+        const breathingXYZ=projection(threeYaw+breath.yaw,threeElevation+breath.elevation);
+        const anchor=nodes[breath.anchorId]||threeCenter,z=threeHeight(anchor);
+        const fixed=baseXYZ(anchor.x,anchor.y,z),moving=breathingXYZ(anchor.x,anchor.y,z);
+        // Orbit gently around the reading anchor, keeping its screen position unchanged.
+        rawXYZ=(x,y,z)=>{const p=breathingXYZ(x,y,z);return {...p,x:p.x+fixed.x-moving.x,y:p.y+fixed.y-moving.y}};
+      }
       const boundaryPoints=path=>sampledGeometry(path,64);
       const allConnected=points.every(n=>visible.has(n.id));
       const outerBoundary=boundaryPoints(outerOutline),coreBoundary=allConnected?boundaryPoints(areas.get(threeCenter.id).region):[];
-      const base=nodes.map(n=>rawXYZ(n.x,n.y,threeHeight(n)));
-      for(const p of outerBoundary)base.push(rawXYZ(p[0],p[1],190));
-      for(const p of coreBoundary)base.push(rawXYZ(p[0],p[1],210));
-      if(outerBoundary.length)base.push(rawXYZ(threeCenter.x,threeCenter.y,510),rawXYZ(threeCenter.x,threeCenter.y,-110));
+      // Fit against the neutral geometry so breathing never changes zoom or the opening layout.
+      const base=nodes.map(n=>baseXYZ(n.x,n.y,threeHeight(n)));
+      for(const p of outerBoundary)base.push(baseXYZ(p[0],p[1],190));
+      for(const p of coreBoundary)base.push(baseXYZ(p[0],p[1],210));
+      if(outerBoundary.length)base.push(baseXYZ(threeCenter.x,threeCenter.y,510),baseXYZ(threeCenter.x,threeCenter.y,-110));
       let minx=Math.min(...base.map(p=>p.x)),maxx=Math.max(...base.map(p=>p.x)),miny=Math.min(...base.map(p=>p.y)),maxy=Math.max(...base.map(p=>p.y));
       // Labels and outline shapes may change during a cue; they must not refit the camera.
       if(selected!==null&&readingProjectionBounds&&readingProjectionBounds.yaw===threeYaw&&readingProjectionBounds.elevation===threeElevation){
@@ -1637,7 +1669,7 @@
       }
       lastProjectionBounds={minx,maxx,miny,maxy,yaw:threeYaw,elevation:threeElevation};
       const cameraNode=selected!==null?nodes[cameraReadingNode??selected]:threeCenter;
-      const centerPoint=rawXYZ(cameraNode.x,cameraNode.y,threeHeight(cameraNode));
+      const centerPoint=baseXYZ(cameraNode.x,cameraNode.y,threeHeight(cameraNode));
       const scale=Math.min((width-100)/Math.max(1,maxx-minx),(height-100)/Math.max(1,maxy-miny),1.35)*threeZoom;
       const midx=(minx+maxx)/2,midy=(miny+maxy)/2;
       if(autoCentered3D){threePanX=(midx-centerPoint.x)*scale;threePanY=(midy-centerPoint.y)*scale}
@@ -1712,7 +1744,7 @@
         label.style.display='block';const size=measuredSizes.get(n.id),lw=size?.labelWidth||0,lh=size?.labelHeight||0,candidates=[];
         for(const gap of [10,18,26,36,50,66]){const diagonal=gap*.71;candidates.push([x+gap,y-lh/2],[x-lw-gap,y-lh/2],[x-lw/2,y+gap],[x-lw/2,y-lh-gap],[x+diagonal,y+diagonal],[x-lw-diagonal,y+diagonal],[x+diagonal,y-lh-diagonal],[x-lw-diagonal,y-lh-diagonal])}
         const preferred=threeLabelChoices.get(n.id),indices=candidates.map((_,i)=>i);if(preferred>0){indices.splice(preferred,1);indices.unshift(preferred)}
-        let choice=null;for(const index of indices){const [lx,ly]=candidates[index],box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;threeLabelChoices.set(n.id,index);break}}
+        let choice=null;for(const index of indices){const [lx,ly]=candidates[index],box={x:lx,y:ly,w:lw,h:lh};if(lx<8||ly<8||lx+lw>width-8||ly+lh>height-8)continue;if(ambientOnly&&index===preferred||boxes.every(r=>separated(box,r,6))&&pointBoxes.every(r=>r.id===n.id||separated(box,r))){choice=box;threeLabelChoices.set(n.id,index);break}}
         if(!choice&&(contextSet.has(n.id)||stage.classList.contains('high-zoom-labels')))choice=zoomLabelFallback(x,y,lw,lh);
         if(cameraReadingCentered&&selected!==null&&cameraReadingNode===n.id)choice={x:width/2-lw/2,y:height/2-lh/2,w:lw,h:lh};
         if(choice){label.style.left=choice.x-x+size.width/2+'px';label.style.top=choice.y-y+size.height/2+'px';label.style.width=choice.w+'px';boxes.push(choice);reservePersonMetadata(label,b,choice,boxes,size)}else label.style.display='none';
@@ -1871,11 +1903,13 @@
       }
       // Guided travel already renders this frame; do not layer a second camera update over it.
       if(now-lastManual3D<120)return;
-      const target=now-lastManual3D>1800&&pointers.size===0&&!(selected!==null&&cameraReadingNode!==null)?1:0;
+      const reading=selected!==null&&cameraReadingNode!==null;
+      const target=now-lastManual3D>1800&&pointers.size===0?(reading ? .75/Math.max(1,threeZoom) : 1):0;
+      if(target>0&&idleStrength<.0001)idleAnchorId=reading?(readingContext()?.[1]??cameraReadingNode):selected;
       idleStrength+=(target-idleStrength)*(1-Math.pow(.86,idleDelta/70));
       const yaw=Math.sin(now/4300)*.06*idleStrength,elevation=Math.cos(now/6100)*.03*idleStrength;
-      if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.00015)return;
-      idleYaw=yaw;idleElevation=elevation;render3D();
+      if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.000001&&!idleRelease)return;
+      idleYaw=yaw;idleElevation=elevation;render3D(true);
     }
     function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],unfoldedBranchSources:[...unfoldedBranchSources],cueIndex,cueVersion:6,presentationMode,depthEnabled}))}catch{}}
     function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));unfoldedBranchSources.clear();if(Array.isArray(s.unfoldedBranchSources))for(const id of s.unfoldedBranchSources)if(Number.isInteger(id)&&nodes[id]&&isBranchSource(id))unfoldedBranchSources.add(id);updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===6&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?presentationCueForNode(selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
@@ -1898,6 +1932,7 @@
     }).observe(stage);
     fit();showDetail(null);restore();updateCue();resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
+
 
 
 
