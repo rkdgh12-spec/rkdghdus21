@@ -424,6 +424,8 @@
         return {opacity:1,progress:1,reverse:false,trace:false};
       if(!nodeBranchReveal||selected!==nodeBranchReveal.id&&(!showingNodeBranches()||routeBranchPreview!==nodeBranchReveal.id))return null;
       const source=nodes[nodeBranchReveal.id],a=nodes[e.source],b=nodes[e.target];
+      // Existing semantic connections stay visible while the chapter-five name forks unfold.
+      if(showingNodeBranches()&&source.kind==='person'&&['권현빈','채길원'].includes(source.label)&&e.kind!=='hierarchy')return null;
       const branchIds=new Set(branchChildren(source.id).map(n=>n.id));
       const branch=e.kind==='hierarchy'&&a.id===source.id&&branchIds.has(b.id);
       // The blue fork draws these edges from the common source, without an early preview.
