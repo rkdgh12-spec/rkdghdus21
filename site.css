@@ -418,3 +418,7 @@ html{color-scheme:light dark}body{margin:0;background:light-dark(#fff,#181a1c)}b
 
 /* Guided legs use neutral base edges immediately, including every subconcept -> Q leg. */
 #forum-source-network .stage.guided-transition :is(.wires,.three-wires) .links:is(.active,.branch){transition:none!important}
+
+/* Blend chapter-five emphasis without flashing its dense background connections. */
+#forum-source-network .stage.stable-travel-lines.guided-transition .three-wires .links:not(.branch-upcoming){transition:opacity 240ms ease,stroke 240ms ease,stroke-width 240ms ease!important}
+@media(prefers-reduced-motion:reduce){#forum-source-network .stage.stable-travel-lines.guided-transition .three-wires .links:not(.branch-upcoming){transition:none!important}}

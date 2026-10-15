@@ -573,7 +573,13 @@
         if(progress>=1)for(const fork of forks)if(fork.sourceId===ids[index]&&nodes[ids[index+1]].parent===fork.sourceId)fork.mainComplete=true;
         return drawForks();
       }
-      const fade=()=>{if(fading)return;fading=true;overlay.classList.add('finish');setTimeout(remove,330)};
+      const fade=()=>{
+        if(fading)return;fading=true;
+        // Restore completed base connections beneath the trace before its overlay fades.
+        // Otherwise fork ownership keeps them invisible until the fading trace is removed.
+        if(activeForkBranches===forkBranches){activeForkBranches=null;render()}
+        overlay.classList.add('finish');setTimeout(remove,330);
+      };
       function monitor(){
         if(finished)return;
         if(motion!==cameraMotion||selected!==to||activeRoute!==overlay){remove();return}
@@ -1654,6 +1660,8 @@
       const focusedPerson=selected!==null&&nodes[selected].kind!=='chapter'?nodes[selected].person:null;
       const personChapter=focusedPerson!==null?nodes[selected].chapter:null;
       const activeChapter=selected!==null&&nodes[selected].kind==='chapter'?nodes[selected].chapter:null;
+      const stableTravelLines=['권현빈','채길원'].includes(focusedPerson);
+      stage.classList.toggle('stable-travel-lines',stableTravelLines);
       const branchKeep=focusedBranchNodes(focusedPerson);
       stage.classList.toggle('chapter-focus',activeChapter!==null);
       stage.classList.toggle('high-zoom-labels',threeZoom>=3);
@@ -1723,7 +1731,10 @@
         view.path.style.strokeDashoffset=revealState.trace?String((revealState.reverse?-1:1)*projectedLength*(1-revealState.progress)):'';
         const chapterPersonGuide=start.kind==='chapter'&&e.kind==='hierarchy';
         svgAttribute(view.group,'opacity',chapterPersonGuide?0:revealState.opacity);svgAttribute(view.path,'class',path.getAttribute('class')+' three-connection');svgAttribute(view.path,'d',d);
-        const group=focusedPerson!==null&&branchKeep===null?(path.classList.contains('person-past')?drawing.layers.past:path.classList.contains('person-cross')?drawing.layers.cross:drawing.layers.current):drawing.layers.current;
+        // Keep chapter-five background lines in one layer during travel; changing
+        // parent opacity at each waypoint makes the dense connection mesh flash.
+        const stableLayer=stableTravelLines&&stage.classList.contains('guided-transition');
+        const group=!stableLayer&&focusedPerson!==null&&branchKeep===null?(path.classList.contains('person-past')?drawing.layers.past:path.classList.contains('person-cross')?drawing.layers.cross:drawing.layers.current):drawing.layers.current;
         if(view.group.parentNode!==group)group.append(view.group);
       }
       if(epilogueMapAnchor&&!epilogueRoam&&allConnected&&selected===null&&!aligningEpilogueMap){
