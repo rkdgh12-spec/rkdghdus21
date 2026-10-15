@@ -518,9 +518,9 @@
       line.setAttribute('class','lecture-route-line');head.setAttribute('class','lecture-route-head');head.setAttribute('r','2.7');
       overlay.append(line,head);stage.append(overlay);activeRoute=overlay;
       const forkBranches={overlay,sources:new Map()};activeForkBranches=forkBranches;
-      let motion=cameraMotion,finished=false,finishing=false;
+      let motion=cameraMotion,finished=false,finishing=false,fading=false,lastTrace=null;
       const forks=[];
-      const remove=()=>{overlay.remove();if(activeRoute===overlay)activeRoute=null;if(activeForkBranches===forkBranches){activeForkBranches=null;render()}};
+      const remove=()=>{finished=true;overlay.remove();if(activeRoute===overlay)activeRoute=null;if(activeForkBranches===forkBranches){activeForkBranches=null;render()}};
       const point=id=>depthEnabled?threeProjected[id]:{x:nodes[id].x*k+ox,y:nodes[id].y*k+oy};
       function startFork(sourceId){
         if(unfoldedBranchSources.has(sourceId)||forks.some(fork=>fork.sourceId===sourceId))return;
@@ -562,6 +562,7 @@
       }
       function draw(index,progress){
         if(activeRoute!==overlay)return;
+        lastTrace={index,progress};
         overlay.style.opacity='';
         overlay.setAttribute('viewBox',`0 0 ${width} ${height}`);
         const points=[...prefix,...ids.slice(0,index+1)].map(point),a=point(ids[index]),b=point(ids[index+1]);
@@ -570,13 +571,15 @@
         line.setAttribute('d',points.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(''));
         head.setAttribute('cx',tip.x);head.setAttribute('cy',tip.y);
         if(progress>=1)for(const fork of forks)if(fork.sourceId===ids[index]&&nodes[ids[index+1]].parent===fork.sourceId)fork.mainComplete=true;
-        drawForks();
+        return drawForks();
       }
-      const fade=()=>{finished=true;overlay.classList.add('finish');setTimeout(remove,330)};
+      const fade=()=>{if(fading)return;fading=true;overlay.classList.add('finish');setTimeout(remove,330)};
       function monitor(){
         if(finished)return;
         if(motion!==cameraMotion||selected!==to||activeRoute!==overlay){remove();return}
-        if(drawForks()&&finishing){fade();return}
+        // Keep the completed main route attached while branches finish and its overlay fades.
+        const complete=finishing&&lastTrace?draw(lastTrace.index,lastTrace.progress):drawForks();
+        if(complete&&finishing)fade();
         requestAnimationFrame(monitor);
       }
       requestAnimationFrame(monitor);
@@ -1900,14 +1903,28 @@
     q('#forum-reset').addEventListener('click',reset);
     stage.addEventListener('wheel',e=>{if(prologueOpen)return;epilogueMapAnchor=null;e.preventDefault();const r=stage.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0014),e.clientX-r.left,e.clientY-r.top)},{passive:false});
     stage.addEventListener('pointerdown',()=>{epilogueMapAnchor=null});
-    const pointers=new Map();let pinch=null,framePending=false;
+    const pointers=new Map();let pinch=null,framePending=false,revealTap=null;
     function scheduleRender(){if(framePending)return;framePending=true;requestAnimationFrame(()=>{framePending=false;render()})}
-    stage.addEventListener('wheel',()=>{if(prologueOpen)return;cameraMotion++;stage.classList.remove('guided-transition');cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},{capture:true,passive:true});
-    stage.addEventListener('pointerdown',()=>{if(prologueOpen)return;cameraMotion++;stage.classList.remove('guided-transition');cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}},true);
-    stage.addEventListener('pointermove',()=>{if(depthEnabled&&pointers.size)lastManual3D=performance.now()},true);
+    function interruptStageMotion(){cameraMotion++;stage.classList.remove('guided-transition');cameraReadingCentered=false;if(depthEnabled){autoCentered3D=false;lastManual3D=performance.now()}}
+    stage.addEventListener('wheel',()=>{if(prologueOpen)return;revealTap=null;interruptStageMotion()},{capture:true,passive:true});
+    stage.addEventListener('pointerdown',e=>{
+      if(prologueOpen)return;
+      // A next-step tap must not freeze the full-map sweep before the epilogue begins.
+      if(fullReveal&&e.isPrimary&&e.button===0&&pointers.size===0&&isBlankStepTarget(e.target)){revealTap={id:e.pointerId,x:e.clientX,y:e.clientY};return}
+      revealTap=null;interruptStageMotion();
+    },true);
+    stage.addEventListener('pointermove',e=>{
+      if(revealTap?.id===e.pointerId){
+        if(Math.hypot(e.clientX-revealTap.x,e.clientY-revealTap.y)<=6)return;
+        revealTap=null;interruptStageMotion();
+        // Take over from the current moving camera rather than its pointerdown position.
+        if(drag)drag={...drag,x:e.clientX,y:e.clientY,ox,oy,panX:threePanX,panY:threePanY};
+      }
+      if(depthEnabled&&pointers.size)lastManual3D=performance.now();
+    },true);
     stage.addEventListener('pointerdown',e=>{if(prologueOpen)return;if(e.button!==0&&!(depthEnabled&&e.button===1))return;if(depthEnabled)e.preventDefault();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});stage.setPointerCapture(e.pointerId);if(pointers.size===1)drag={x:e.clientX,y:e.clientY,ox,oy,panX:threePanX,panY:threePanY,rotate:depthEnabled&&e.button===1};else if(pointers.size===2){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;pinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),k:depthEnabled?threeZoom:k,wx:(cx-ox)/k,wy:(cy-oy)/k,cx,cy,panX:threePanX,panY:threePanY};drag=null}});
-    stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const previous=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(depthEnabled){if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;threeZoom=Math.max(.45,Math.min(maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));const ratio=threeZoom/pinch.k;threePanX=pinch.panX+cx-pinch.cx-(pinch.cx-width/2)* (ratio-1)+pinch.panX*(ratio-1);threePanY=pinch.panY+cy-pinch.cy-(pinch.cy-height/2)*(ratio-1)+pinch.panY*(ratio-1);scheduleRender()}else if(drag?.rotate){threeYaw+=(e.clientX-previous.x)*.006;threeElevation=Math.max(.28,Math.min(1.45,threeElevation-(e.clientY-previous.y)*.005));scheduleRender()}else if(drag){threePanX=drag.panX+e.clientX-drag.x;threePanY=drag.panY+e.clientY-drag.y;scheduleRender()}return}if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect();k=Math.max(fitK*.45,Math.min(fitK*maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));ox=(a.x+b.x)/2-r.left-pinch.wx*k;oy=(a.y+b.y)/2-r.top-pinch.wy*k;scheduleRender()}else if(drag){ox=drag.ox+e.clientX-drag.x;oy=drag.oy+e.clientY-drag.y;scheduleRender()}});
-    function endPointer(e){pointers.delete(e.pointerId);pinch=null;drag=null;if(pointers.size===1){const p=[...pointers.values()][0];drag={x:p.x,y:p.y,ox,oy,panX:threePanX,panY:threePanY,rotate:false}}}
+    stage.addEventListener('pointermove',e=>{if(revealTap?.id===e.pointerId||!pointers.has(e.pointerId))return;const previous=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(depthEnabled){if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect(),cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;threeZoom=Math.max(.45,Math.min(maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));const ratio=threeZoom/pinch.k;threePanX=pinch.panX+cx-pinch.cx-(pinch.cx-width/2)* (ratio-1)+pinch.panX*(ratio-1);threePanY=pinch.panY+cy-pinch.cy-(pinch.cy-height/2)*(ratio-1)+pinch.panY*(ratio-1);scheduleRender()}else if(drag?.rotate){threeYaw+=(e.clientX-previous.x)*.006;threeElevation=Math.max(.28,Math.min(1.45,threeElevation-(e.clientY-previous.y)*.005));scheduleRender()}else if(drag){threePanX=drag.panX+e.clientX-drag.x;threePanY=drag.panY+e.clientY-drag.y;scheduleRender()}return}if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],r=stage.getBoundingClientRect();k=Math.max(fitK*.45,Math.min(fitK*maxThreeZoom,pinch.k*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));ox=(a.x+b.x)/2-r.left-pinch.wx*k;oy=(a.y+b.y)/2-r.top-pinch.wy*k;scheduleRender()}else if(drag){ox=drag.ox+e.clientX-drag.x;oy=drag.oy+e.clientY-drag.y;scheduleRender()}});
+    function endPointer(e){if(revealTap?.id===e.pointerId)revealTap=null;pointers.delete(e.pointerId);pinch=null;drag=null;if(pointers.size===1){const p=[...pointers.values()][0];drag={x:p.x,y:p.y,ox,oy,panX:threePanX,panY:threePanY,rotate:false}}}
     stage.addEventListener('pointerup',endPointer);stage.addEventListener('pointercancel',endPointer);
     stage.addEventListener('auxclick',e=>{if(depthEnabled&&e.button===1)e.preventDefault()});
     function idleMotionTick(now){
