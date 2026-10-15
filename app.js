@@ -112,7 +112,7 @@
       const reading=selected!==null&&cameraReadingNode!==null;
       // Carry the final travel frame into idle breathing instead of stopping on arrival.
       const active=travelling||pointers.size===0&&(now-lastManual3D>1800||now-lastLivingTravel<2000);
-      const target=active?(travelling ? 2.376/Math.max(1,threeZoom) : reading ? .75/Math.max(1,threeZoom) : 1):0;
+      const target=active?(travelling ? 2.8512/Math.max(1,threeZoom) : reading ? .75/Math.max(1,threeZoom) : 1):0;
       const ease=1-Math.exp(-delta/500);
       livingPace+=((travelling?1.25:1)-livingPace)*ease;
       livingClock+=delta*livingPace;
