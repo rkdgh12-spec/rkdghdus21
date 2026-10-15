@@ -1811,8 +1811,8 @@
       edges.forEach((e,i)=>{
         const l=paths[i],a=nodes[e.source],b=nodes[e.target];
         const unusedQuestionEdge=presentationMode&&focusedPerson!==null&&e.kind==='hierarchy'&&b.kind==='question'&&!lectureQuestionIds.has(b.id)&&selected!==b.id;
-        // Keep this supporting relation in the full map, outside Kwon's presentation route.
-        const unrelatedKwonEdge=kwonPresentation&&e.kind!=='hierarchy'&&a.person==='권현빈'&&b.person==='권현빈'&&[a.label,b.label].includes('의도와 물질의 성질')&&[a.label,b.label].includes('우연성');
+        // Keep these supporting relations in the full map, outside Kwon's presentation route.
+        const unrelatedKwonEdge=kwonPresentation&&e.kind!=='hierarchy'&&a.person==='권현빈'&&b.person==='권현빈'&&[a.label,b.label].some(label=>label==='의도와 물질의 성질'||label==='Q4')&&[a.label,b.label].includes('우연성');
         const shown=visible.has(e.source)&&visible.has(e.target)&&!unusedQuestionEdge&&!unrelatedKwonEdge&&!(allConnected&&thinnedCrossEdges.has(i));
         const linkedMeaning=e.kind!=='hierarchy'&&(e.source===emphasis||e.target===emphasis);
         if(shown&&linkedMeaning){if(a.kind==='question')connectedQuestions.add(e.source);if(b.kind==='question')connectedQuestions.add(e.target)}
