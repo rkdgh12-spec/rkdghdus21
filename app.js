@@ -104,14 +104,37 @@
     const OVERVIEW_3D_VIEW={yaw:0,elevation:1.38};
     const OPENING_3D_VIEW={yaw:-.34,elevation:.82,zoom:1};
     const threeNodes=new Map();const maxThreeZoom=24,labelZoom=z=>Math.min(8,Math.max(1,z<=6?1+(z-1)*.2:z/3));let threeYaw=-.34,threeElevation=.82,threeZoom=1,threePanX=0,threePanY=0,idleYaw=0,idleElevation=0,idleStrength=0,lastManual3D=0,lastIdleFrame=0,autoCentered3D=false,chapterElevationBeforeFocus=null;
-    let idleAnchorId=null,idleRelease=null;
+    let idleAnchorId=null,idleAnchorPoint=null,idleRelease=null,livingClock=performance.now(),livingPace=1,lastLivingTravel=-Infinity;
+    function livingAnchor(id){const node=nodes[id]||threeCenter;return {x:node.x,y:node.y,z:threeHeight(node)}}
+    function advanceLivingMotion(now,travelling=false){
+      const delta=lastIdleFrame?Math.min(100,Math.max(0,now-lastIdleFrame)):16.667;lastIdleFrame=now;
+      if(travelling)lastLivingTravel=now;
+      const reading=selected!==null&&cameraReadingNode!==null;
+      // Carry the final travel frame into idle breathing instead of stopping on arrival.
+      const active=travelling||pointers.size===0&&(now-lastManual3D>1800||now-lastLivingTravel<2000);
+      const target=active?(travelling ? 1/Math.max(1,threeZoom) : reading ? .75/Math.max(1,threeZoom) : 1):0;
+      const ease=1-Math.exp(-delta/500);
+      livingPace+=((travelling?1.25:1)-livingPace)*ease;
+      livingClock+=delta*livingPace;
+      if(active){
+        const id=reading?(readingContext()?.[1]??cameraReadingNode):selected,anchor=livingAnchor(id);
+        if(!idleAnchorPoint||idleStrength<.0001)idleAnchorPoint=anchor;
+        else{const blend=1-Math.exp(-delta/650);idleAnchorPoint={x:idleAnchorPoint.x+(anchor.x-idleAnchorPoint.x)*blend,y:idleAnchorPoint.y+(anchor.y-idleAnchorPoint.y)*blend,z:idleAnchorPoint.z+(anchor.z-idleAnchorPoint.z)*blend}}
+        idleAnchorId=id;
+      }
+      idleStrength+=(target-idleStrength)*ease;
+      const yaw=Math.sin(livingClock/4300)*.06*idleStrength,elevation=Math.cos(livingClock/6100)*.03*idleStrength;
+      const changed=Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)>.000001;
+      idleYaw=yaw;idleElevation=elevation;
+      return changed;
+    }
     function idleView(now=performance.now()){
       if(idleRelease){
         const t=Math.min(1,(now-idleRelease.started)/360);
-        if(t<1){const amount=1-t*t*(3-2*t);return {yaw:idleRelease.yaw*amount,elevation:idleRelease.elevation*amount,anchorId:idleRelease.anchorId}}
+        if(t<1){const amount=1-t*t*(3-2*t);return {yaw:idleRelease.yaw*amount,elevation:idleRelease.elevation*amount,anchorId:idleRelease.anchorId,anchor:idleRelease.anchor}}
         idleRelease=null;
       }
-      return {yaw:idleYaw,elevation:idleElevation,anchorId:idleAnchorId};
+      return {yaw:idleYaw,elevation:idleElevation,anchorId:idleAnchorId,anchor:idleAnchorPoint};
     }
     function releaseIdleMotion(){
       // Let the current breath settle inside the next journey, without an extra pause.
@@ -446,7 +469,8 @@
       stopEpilogueRoam();
       readingProjectionBounds=depthEnabled?lastProjectionBounds:null;
       routeBranchPreview=null;
-      releaseIdleMotion();cameraReadingNode=null;cameraReadingCentered=false;
+      // Carry the living depth into the journey; waypoint changes blend their pivot below.
+      lastManual3D=performance.now();cameraReadingNode=null;cameraReadingCentered=false;
       markStepArrival(null);
       setPrologueView(null);
       if(!applyingCue&&pendingCueTimer){clearTimeout(pendingCueTimer);pendingCueTimer=null;interviewClosedAt=0}
@@ -696,6 +720,8 @@
         while(i<segments.length-1&&lengths[i+1]<distance)i++;
         const part=segments[i]?Math.max(0,Math.min(1,(distance-lengths[i])/segments[i])):1;
         const a=points[i],b=points[Math.min(i+1,points.length-1)];
+        // Advance depth inside this same frame, before drawing the camera and route together.
+        if(depthEnabled&&!reducedMotion)advanceLivingMotion(now,true);
         frame({x:a.x+(b.x-a.x)*part,y:a.y+(b.y-a.y)*part},progress,t);
         onProgress?.(progress);
         if(!firstChapterEmphasized&&(now-start)>=1000&&selected!==null&&nodes[selected].kind==='chapter'&&nodes[selected].chapter===1){firstChapterEmphasized=true;markStepArrival(selected,true)}
@@ -1363,7 +1389,7 @@
       // Starting the map must not inherit an interrupted orbit or an interview frame.
       window.scrollTo({left:0,top:0,behavior:'instant'});root.scrollLeft=0;root.scrollTop=0;
       threeYaw=OPENING_3D_VIEW.yaw;threeElevation=OPENING_3D_VIEW.elevation;threeZoom=OPENING_3D_VIEW.zoom;
-      threePanX=0;threePanY=0;idleYaw=0;idleElevation=0;idleStrength=0;idleRelease=null;idleAnchorId=null;
+      threePanX=0;threePanY=0;idleYaw=0;idleElevation=0;idleStrength=0;idleRelease=null;idleAnchorId=null;idleAnchorPoint=null;lastLivingTravel=-Infinity;
       autoCentered3D=depthEnabled;lastManual3D=performance.now();chapterElevationBeforeFocus=null;
       cameraReadingNode=null;cameraReadingCentered=false;openingChapterEntrance=null;
       readingProjectionBounds=null;lastProjectionBounds=null;settledContextFrame=null;personContextZoom.clear();
@@ -1649,8 +1675,8 @@
       let rawXYZ=baseXYZ;
       if(breath.yaw||breath.elevation){
         const breathingXYZ=projection(threeYaw+breath.yaw,threeElevation+breath.elevation);
-        const anchor=nodes[breath.anchorId]||threeCenter,z=threeHeight(anchor);
-        const fixed=baseXYZ(anchor.x,anchor.y,z),moving=breathingXYZ(anchor.x,anchor.y,z);
+        const anchor=breath.anchor||livingAnchor(breath.anchorId);
+        const fixed=baseXYZ(anchor.x,anchor.y,anchor.z),moving=breathingXYZ(anchor.x,anchor.y,anchor.z);
         // Orbit gently around the reading anchor, keeping its screen position unchanged.
         rawXYZ=(x,y,z)=>{const p=breathingXYZ(x,y,z);return {...p,x:p.x+fixed.x-moving.x,y:p.y+fixed.y-moving.y}};
       }
@@ -1897,19 +1923,12 @@
     function idleMotionTick(now){
       requestAnimationFrame(idleMotionTick);
       if(!depthEnabled||prologueOpen||dialog.open||document.hidden||reducedMotion||!q('.intro').hidden)return;
-      const idleDelta=lastIdleFrame?Math.min(100,now-lastIdleFrame):16.667;lastIdleFrame=now;
       if(epilogueRoam&&!dialog.open){
         advanceEpilogueRoam(now);return;
       }
       // Guided travel already renders this frame; do not layer a second camera update over it.
       if(now-lastManual3D<120)return;
-      const reading=selected!==null&&cameraReadingNode!==null;
-      const target=now-lastManual3D>1800&&pointers.size===0?(reading ? .75/Math.max(1,threeZoom) : 1):0;
-      if(target>0&&idleStrength<.0001)idleAnchorId=reading?(readingContext()?.[1]??cameraReadingNode):selected;
-      idleStrength+=(target-idleStrength)*(1-Math.pow(.86,idleDelta/70));
-      const yaw=Math.sin(now/4300)*.06*idleStrength,elevation=Math.cos(now/6100)*.03*idleStrength;
-      if(Math.abs(yaw-idleYaw)+Math.abs(elevation-idleElevation)<.000001&&!idleRelease)return;
-      idleYaw=yaw;idleElevation=elevation;render3D(true);
+      if(advanceLivingMotion(now)||idleRelease)render3D(true);
     }
     function save(){try{localStorage.setItem('sculpture-forum-v1',JSON.stringify({selected,expanded:[...expanded],unfoldedBranchSources:[...unfoldedBranchSources],cueIndex,cueVersion:6,presentationMode,depthEnabled}))}catch{}}
     function restore(){try{const s=JSON.parse(localStorage.getItem('sculpture-forum-v1'));if(s&&Array.isArray(s.expanded)){expanded=new Set(s.expanded.filter(id=>Number.isInteger(id)&&nodes[id]));unfoldedBranchSources.clear();if(Array.isArray(s.unfoldedBranchSources))for(const id of s.unfoldedBranchSources)if(Number.isInteger(id)&&nodes[id]&&isBranchSource(id))unfoldedBranchSources.add(id);updateVisible();selected=Number.isInteger(s.selected)&&visible.has(s.selected)?s.selected:null;cueIndex=s.cueVersion===6&&Number.isInteger(s.cueIndex)?Math.max(-1,Math.min(cues.length-1,s.cueIndex)):selected!==null?presentationCueForNode(selected):points.every(n=>visible.has(n.id))?cues.findIndex(c=>c.all):-1;presentationMode=s.presentationMode!==false;depthEnabled=s.depthEnabled===true;autoCentered3D=depthEnabled;stage.classList.toggle('three-view',depthEnabled);flatPlane.hidden=depthEnabled;threeScene.hidden=!depthEnabled;depthButton.setAttribute('aria-pressed',String(depthEnabled));depthButton.textContent=depthEnabled?'2D 보기':'3D 보기';q('.depth-hint').hidden=!depthEnabled;showDetail(null);render()}}catch{}}
