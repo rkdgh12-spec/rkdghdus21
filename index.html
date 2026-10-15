@@ -5,7 +5,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M7 9L24 8L16 25Z' fill='none' stroke='%234b60ab' stroke-width='1.4'/%3E%3Ccircle cx='7' cy='9' r='3'/%3E%3Ccircle cx='24' cy='8' r='3'/%3E%3Ccircle cx='16' cy='25' r='3' fill='%234b60ab'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="map.css?v=readable-node-centered-3"><link rel="stylesheet" href="site.css?v=transparent-dialogue-captions-1"><link rel="stylesheet" href="prologue.css?v=map-title-matched-prologue-1">
-<script src="data.js?v=click-nav-2" defer></script><script src="media.js?v=epilogue-half-close-1" defer></script><script src="profiles.js?v=epilogue-framing-context-2" defer></script><script src="epilogue.js?v=click-nav-2" defer></script><script src="prologue.js?v=prologue-wide-long-dashes-1" defer></script><script src="app.js?v=map-travel-living-depth-1" defer></script>
+<script src="data.js?v=click-nav-2" defer></script><script src="media.js?v=epilogue-half-close-1" defer></script><script src="profiles.js?v=epilogue-framing-context-2" defer></script><script src="epilogue.js?v=click-nav-2" defer></script><script src="prologue.js?v=prologue-wide-long-dashes-1" defer></script><script src="app.js?v=map-always-3d-1" defer></script>
 <script src="image-sequences.js?v=ryu-first-restored-grain-1" defer></script><script src="representative-images.js?v=ryu-first-restored-grain-1" defer></script>
 <script src="dialogue-captions.js?v=transparent-dialogue-captions-1" defer></script>
 </head><body><main id="forum-source-network">
@@ -23,18 +23,18 @@
       <button type="button" class="control" id="forum-minus" aria-label="축소">−</button>
       <button type="button" class="control" id="forum-plus" aria-label="확대">＋</button>
       <div class="tool-group tool-flow" aria-label="발표 구간"><button type="button" class="control fit" id="forum-fit">전체 연결</button></div>
-      <div class="tool-group tool-view" aria-label="화면 보기"><button type="button" class="control" id="forum-depth" aria-pressed="false">3D 보기</button><button type="button" class="control" id="forum-fullscreen">전체 화면</button></div>
+      <div class="tool-group tool-view" aria-label="화면 보기"><button type="button" class="control" id="forum-fullscreen">전체 화면</button></div>
     </div>
   </div>
   <nav class="chapter-nav" aria-label="심포지엄 주제"></nav>
-  <div class="stage" aria-label="심포지엄 주제와 인물, 개념어, 하위개념어, 인터뷰 질문의 연결 지도">
+  <div class="stage three-view" aria-label="심포지엄 주제와 인물, 개념어, 하위개념어, 인터뷰 질문의 입체 연결 지도">
     <h2 class="map-caption">조소과 졸업생 10인 활동 지형도</h2>
-    <div class="map-plane">
+    <div class="map-plane" hidden>
       <svg class="wires" role="img" aria-label="항목별 소속, 인물 간 관련성, 개념과 질문 사이의 의미 연결"></svg>
       <div class="node-layer"></div>
     </div>
-    <div class="three-scene" hidden><svg class="three-wires" aria-hidden="true"></svg><div class="three-nodes"></div></div>
-    <p class="depth-hint" hidden>드래그하여 이동 · 휠 버튼 드래그로 회전 · 휠로 확대</p>
+    <div class="three-scene"><svg class="three-wires" aria-hidden="true"></svg><div class="three-nodes"></div></div>
+    <p class="depth-hint">드래그하여 이동 · 휠 버튼 드래그로 회전 · 휠로 확대</p>
   </div>
   <div class="presentation-bar"><div><span class="mode-label">클릭 단계</span><span id="cue-label" aria-live="polite">주제 선택</span></div><div class="presentation-actions"><button type="button" id="cue-prev" data-history="-1" disabled>뒤로가기</button><span id="cue-count">0 / 0</span><button type="button" id="cue-next" data-history="1" disabled>앞으로가기</button></div></div>
   <div class="sequence-controls" aria-label="강연 인터뷰 순서"><span>강연 순서</span><span id="sequence-label" aria-live="polite">제1장부터 시작</span><div><button type="button" id="sequence-prev" disabled>이전 단계</button><span id="sequence-count">0 / 0</span><button type="button" id="sequence-next">다음 단계</button></div></div>
