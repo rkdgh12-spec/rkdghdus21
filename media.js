@@ -2,7 +2,7 @@
 window.FORUM_MEDIA = {
   "epilogue/film": {
     "title": "에필로그 · 조각교육의 방향",
-    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-no-two-breaths.mp4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-epilogue-150s-20261013/epilogue-education-half-close.mp4",
     "poster": "",
     "captions": [
       {
@@ -70,13 +70,19 @@ window.FORUM_MEDIA = {
       {
         "person": "채길원",
         "start": 143.34320000000002,
-        "end": 165.899067,
-        "identityEnd": 165.899067
+        "end": 162.89606666666668,
+        "identityEnd": 162.89606666666668
       }
     ],
     "speechBounds": {
       "firstSpeech": 0.517,
       "lastSpeech": 159.7632
+    },
+    "duration": 162.89606666666668,
+    "ending": {
+      "whiteStart": 160.82813333333334,
+      "whiteFadeSeconds": 1.8179333333333432,
+      "whiteHoldSeconds": 0.25
     }
   },
   "최고은/Q4": {

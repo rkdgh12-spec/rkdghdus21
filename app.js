@@ -1203,8 +1203,10 @@
       if(!active)return;
       const time=video.currentTime||0,duration=video.duration;
       const speechEnd=interviewAudioBounds?.lastSpeech??Math.max(0,(duration||0)-4);
-      const whiteStart=speechEnd+2;
-      const outgoing=Number.isFinite(duration)?audioSmooth((time-whiteStart)/Math.max(.1,duration-.5-whiteStart)):0;
+      const ending=window.FORUM_MEDIA?.['epilogue/film']?.ending||{};
+      const whiteStart=Number.isFinite(ending.whiteStart)?ending.whiteStart:speechEnd+2;
+      const whiteFadeSeconds=Number.isFinite(ending.whiteFadeSeconds)?ending.whiteFadeSeconds:Math.max(.1,duration-.5-whiteStart);
+      const outgoing=Number.isFinite(duration)?audioSmooth((time-whiteStart)/Math.max(.1,whiteFadeSeconds)):0;
       const light=outgoing;
       epilogueVideoWash.style.opacity='1';
       epilogueVideoWash.style.setProperty('--epilogue-light-opacity',String(light));
@@ -1896,6 +1898,7 @@
     }).observe(stage);
     fit();showDetail(null);restore();updateCue();resetStepHistory();requestAnimationFrame(idleMotionTick);
   })();
+
 
 
 
