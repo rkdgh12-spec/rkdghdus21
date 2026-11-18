@@ -207,32 +207,60 @@ window.FORUM_MEDIA = {
     "duration": 31.498133333333335
   },
   "류성실/Q3": {
-    "title": "",
-    "src": "",
+    "title": "류성실 인터뷰 Q3",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/ryu-sungsil-q3-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.4,
+      "lastSpeech": 67.33000000000001
+    },
+    "embeddedCaptions": true
   },
   "류성실/Q2": {
-    "title": "",
-    "src": "",
+    "title": "류성실 인터뷰 Q2",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/ryu-sungsil-q2-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.865479,
+      "lastSpeech": 55.29
+    },
+    "embeddedCaptions": true
   },
   "류성실/Q4": {
-    "title": "",
-    "src": "",
+    "title": "류성실 인터뷰 Q4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/ryu-sungsil-q4-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.887583,
+      "lastSpeech": 65.93
+    },
+    "embeddedCaptions": true
   },
   "강인애/Q2": {
-    "title": "",
-    "src": "",
+    "title": "강인애 인터뷰 Q2",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/kang-inae-q2-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.703646,
+      "lastSpeech": 62.9
+    },
+    "embeddedCaptions": true
   },
   "강인애/Q3": {
     "title": "강인애 인터뷰 Q3 · 자기소개 포함",
@@ -254,11 +282,18 @@ window.FORUM_MEDIA = {
     }
   },
   "강인애/Q6": {
-    "title": "",
-    "src": "",
+    "title": "강인애 인터뷰 Q6",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/kang-inae-q6-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.5522290000000001,
+      "lastSpeech": 65.26
+    },
+    "embeddedCaptions": true
   },
   "강인애/Q5": {
     "title": "강인애 인터뷰 Q5",
@@ -279,18 +314,32 @@ window.FORUM_MEDIA = {
     }
   },
   "강인애/Q4": {
-    "title": "",
-    "src": "",
+    "title": "강인애 인터뷰 Q4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/kang-inae-q4-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.6150420000000001,
+      "lastSpeech": 66.63000000000001
+    },
+    "embeddedCaptions": true
   },
   "강인애/Q7": {
-    "title": "",
-    "src": "",
+    "title": "강인애 인터뷰 Q7",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/kang-inae-q7-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.7895620000000001,
+      "lastSpeech": 84.25
+    },
+    "embeddedCaptions": true
   },
   "박재영/Q4": {
     "title": "박재영 인터뷰 Q4",
@@ -311,11 +360,18 @@ window.FORUM_MEDIA = {
     }
   },
   "박재영/Q5": {
-    "title": "",
-    "src": "",
+    "title": "박재영 인터뷰 Q5",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/park-jaeyoung-q5-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.8312710000000001,
+      "lastSpeech": 93.56
+    },
+    "embeddedCaptions": true
   },
   "박재영/Q2": {
     "title": "박재영 인터뷰 Q2 · 자기소개 포함",
@@ -337,39 +393,74 @@ window.FORUM_MEDIA = {
     "duration": 38.4384
   },
   "박재영/Q3": {
-    "title": "",
-    "src": "",
+    "title": "박재영 인터뷰 Q3",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/park-jaeyoung-q3-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.717667,
+      "lastSpeech": 78.34
+    },
+    "embeddedCaptions": true
   },
   "박재영/Q6": {
-    "title": "",
-    "src": "",
+    "title": "박재영 인터뷰 Q6",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/park-jaeyoung-q6-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.871229,
+      "lastSpeech": 77.21000000000001
+    },
+    "embeddedCaptions": true
   },
   "박재영/Q7": {
-    "title": "",
-    "src": "",
+    "title": "박재영 인터뷰 Q7",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/park-jaeyoung-q7-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.552646,
+      "lastSpeech": 75.21000000000001
+    },
+    "embeddedCaptions": true
   },
   "민지희/Q2": {
-    "title": "",
-    "src": "",
+    "title": "민지희 인터뷰 Q2",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/min-jihee-q2-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.4,
+      "lastSpeech": 88.52000000000001
+    },
+    "embeddedCaptions": true
   },
   "민지희/Q4": {
-    "title": "",
-    "src": "",
+    "title": "민지희 인터뷰 Q4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/min-jihee-q4-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.679458,
+      "lastSpeech": 80.45
+    },
+    "embeddedCaptions": true
   },
   "민지희/Q5": {
     "title": "민지희 인터뷰 Q5 · 자기소개 포함",
@@ -416,11 +507,18 @@ window.FORUM_MEDIA = {
     "transcript": ""
   },
   "안정환/Q3": {
-    "title": "",
-    "src": "",
+    "title": "안정환 인터뷰 Q3",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/an-junghwan-q3-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.4,
+      "lastSpeech": 97.26
+    },
+    "embeddedCaptions": true
   },
   "안정환/Q4": {
     "title": "안정환 인터뷰 Q4 · 자기소개 포함",
@@ -459,32 +557,60 @@ window.FORUM_MEDIA = {
     }
   },
   "안정환/Q6": {
-    "title": "",
-    "src": "",
+    "title": "안정환 인터뷰 Q6",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/an-junghwan-q6-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.958979,
+      "lastSpeech": 91.86000000000001
+    },
+    "embeddedCaptions": true
   },
   "안정환/Q7": {
-    "title": "",
-    "src": "",
+    "title": "안정환 인터뷰 Q7",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/an-junghwan-q7-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.4,
+      "lastSpeech": 93.93
+    },
+    "embeddedCaptions": true
   },
   "최지혜/Q2": {
-    "title": "",
-    "src": "",
+    "title": "최지혜 인터뷰 Q2",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/choi-jihye-q2-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.628,
+      "lastSpeech": 92.89000000000001
+    },
+    "embeddedCaptions": true
   },
   "최지혜/Q6": {
-    "title": "",
-    "src": "",
+    "title": "최지혜 인터뷰 Q6",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/choi-jihye-q6-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.640958,
+      "lastSpeech": 105.67000000000002
+    },
+    "embeddedCaptions": true
   },
   "최지혜/Q3": {
     "title": "최지혜 인터뷰 Q3",
@@ -560,11 +686,18 @@ window.FORUM_MEDIA = {
     "duration": 38.00463333333333
   },
   "서해영/Q3": {
-    "title": "",
-    "src": "",
+    "title": "서해영 인터뷰 Q3",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/seo-haeyoung-q3-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.5562290000000001,
+      "lastSpeech": 77.28
+    },
+    "embeddedCaptions": true
   },
   "서해영/Q5": {
     "title": "서해영 인터뷰 Q5",
@@ -603,18 +736,32 @@ window.FORUM_MEDIA = {
     }
   },
   "서해영/Q7": {
-    "title": "",
-    "src": "",
+    "title": "서해영 인터뷰 Q7",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/seo-haeyoung-q7-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.4,
+      "lastSpeech": 102.13
+    },
+    "embeddedCaptions": true
   },
   "서해영/Q4": {
-    "title": "",
-    "src": "",
+    "title": "서해영 인터뷰 Q4",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/seo-haeyoung-q4-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.577646,
+      "lastSpeech": 109.28
+    },
+    "embeddedCaptions": true
   },
   "권현빈/Q4": {
     "title": "권현빈 인터뷰 Q4 · 자기소개 포함",
@@ -654,11 +801,18 @@ window.FORUM_MEDIA = {
     }
   },
   "권현빈/Q2": {
-    "title": "",
-    "src": "",
+    "title": "권현빈 인터뷰 Q2",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/kwon-hyunbin-q2-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.870271,
+      "lastSpeech": 99.2
+    },
+    "embeddedCaptions": true
   },
   "권현빈/Q6": {
     "title": "권현빈 인터뷰 Q6",
@@ -697,11 +851,18 @@ window.FORUM_MEDIA = {
     }
   },
   "채길원/Q7": {
-    "title": "",
-    "src": "",
+    "title": "채길원 인터뷰 Q7",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/chae-gilwon-q7-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.691479,
+      "lastSpeech": 79.75
+    },
+    "embeddedCaptions": true
   },
   "채길원/Q4": {
     "title": "채길원 인터뷰 Q4",
@@ -722,18 +883,18 @@ window.FORUM_MEDIA = {
     }
   },
   "채길원/Q8": {
-    "title": "",
-    "src": "",
+    "title": "채길원 인터뷰 Q8",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-expanded-20261118/chae-gilwon-q8-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
-  },
-  "채길원/Q9": {
-    "title": "",
-    "src": "",
-    "poster": "",
-    "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.6990419999999999,
+      "lastSpeech": 97.83000000000001
+    },
+    "embeddedCaptions": true
   },
   "최고은/Q1": {
     "title": "자기소개",
