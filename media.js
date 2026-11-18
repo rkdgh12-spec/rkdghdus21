@@ -135,13 +135,6 @@ window.FORUM_MEDIA = {
       "lastSpeech": 39.714
     }
   },
-  "최고은/Q9": {
-    "title": "",
-    "src": "",
-    "poster": "",
-    "captions": [],
-    "transcript": ""
-  },
   "최고은/Q7": {
     "title": "최고은 인터뷰 Q7",
     "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interviews-ryu-choe-concise-20261013/choe-goeun-q7-concise.mp4",
@@ -162,11 +155,18 @@ window.FORUM_MEDIA = {
     "duration": 41.875166666666665
   },
   "최고은/Q2": {
-    "title": "",
-    "src": "",
+    "title": "최고은 인터뷰 Q2",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-choe-q2-20261118/choe-goeun-q2-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.661521,
+      "lastSpeech": 45.281417
+    },
+    "embeddedCaptions": true
   },
   "류성실/Q5": {
     "title": "류성실 인터뷰 Q5 · 자기소개 포함",

@@ -11,6 +11,7 @@
     const chaeFinalTopicNode=data.nodes.find(n=>n.person==='채길원'&&n.kind==='subconcept'&&n.label==='시대와 자기 이해');
     if(chaeFinalTopicNode){chaeFinalTopicNode.x=1590.03;chaeFinalTopicNode.y=1510;}
     const nodes=data.nodes,edges=data.edges.filter(e=>{
+      if(nodes[e.source].retired||nodes[e.target].retired)return false;
       if(nodes[e.source].kind==='chapter'&&nodes[e.source].chapter!==5)return false;
       const a=nodes[e.source],b=nodes[e.target];
       return !(a.person==='권현빈'&&b.person==='권현빈'&&
@@ -88,14 +89,14 @@
     const crossChapterPairs=new Map(),thinnedCrossEdges=new Set();
     edges.forEach((e,i)=>{const a=nodes[e.source],b=nodes[e.target];if(e.kind==='hierarchy'||a.chapter===b.chapter||a.chapter===5||b.chapter===5)return;const pair=[a.chapter,b.chapter].sort((x,y)=>x-y).join('-');if(!crossChapterPairs.has(pair))crossChapterPairs.set(pair,[]);crossChapterPairs.get(pair).push(i)});
     for(const pairEdges of crossChapterPairs.values())pairEdges.forEach((i,j)=>{if(j%2===1)thinnedCrossEdges.add(i)});
-    const chapters=nodes.filter(n=>n.kind==='chapter'),points=nodes.filter(n=>n.kind!=='chapter');
+    const chapters=nodes.filter(n=>n.kind==='chapter'),points=nodes.filter(n=>n.kind!=='chapter'&&!n.retired);
     const stage=root.querySelector('.stage'),svg=root.querySelector('.wires'),layer=root.querySelector('.node-layer'),detail=root.querySelector('.detail');
     const kindNames={chapter:'주제 영역',person:'인물',concept:'개념어',subconcept:'하위개념어',question:'인터뷰 질문'};
     const NS='http://www.w3.org/2000/svg';
     let width=stage.clientWidth,height=stage.clientHeight,k=1,fitK=1,ox=0,oy=0,selected=null,hovered=null,drag=null;
     const depthEnabled=true;
     let expanded=new Set(),visible=new Set(chapters.map(n=>n.id)),cueIndex=-1,currentQuestion=null,presentationMode=true,cameraMotion=0,threeProjected=[];
-    const children=id=>nodes.filter(n=>n.parent===id);
+    const children=id=>nodes.filter(n=>n.parent===id&&!n.retired);
     const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elems=new Map(),paths=[],areas=new Map();
     let guidedStep=false,activeRoute=null,fullReveal=null;
@@ -189,7 +190,7 @@
     root.addEventListener('wheel',stopEpilogueRoam,{capture:true,passive:true});
     root.addEventListener('keydown',stopEpilogueRoam,true);
     const ancestors=id=>{const arr=[];while(id!==null){arr.unshift(id);id=nodes[id].parent;}return arr};
-    const descendants=id=>{const set=new Set([id]);for(const n of nodes)if(n.parent!==null&&set.has(n.parent))set.add(n.id);return set};
+    const descendants=id=>{const set=new Set([id]);for(const n of nodes)if(!n.retired&&n.parent!==null&&set.has(n.parent))set.add(n.id);return set};
     function setHovered(id){
       const next=points.every(n=>visible.has(n.id))?id:null;
       if(hovered===next)return;
@@ -386,7 +387,7 @@
     const visibleForkBranches=()=>activeForkBranches&&activeRoute===activeForkBranches.overlay&&activeForkBranches.overlay.isConnected?activeForkBranches:null;
     const showingNodeBranches=()=>routeBranchPreview!==null&&stage.classList.contains('guided-transition');
     // Reveal every child branch with a Q, including Qs outside the lecture order.
-    const questionRouteNodes=new Set(nodes.filter(n=>n.kind==='question').flatMap(n=>ancestors(n.id)));
+    const questionRouteNodes=new Set(nodes.filter(n=>n.kind==='question'&&!n.retired).flatMap(n=>ancestors(n.id)));
     const lectureQuestionIds=new Set(cues.filter(cue=>nodes[cue.id]?.kind==='question').map(cue=>cue.id));
     const hasQuestionRoute=id=>questionRouteNodes.has(id);
     function branchChildren(id){
@@ -458,6 +459,7 @@
       if(isBranchSource(id)&&(selected===id||showingNodeBranches()&&routeBranchPreview===id))revealNodeBranches(id);
     }
     function selectStep(id){
+      if(!nodes[id]||nodes[id].retired)return;
       stopEpilogueRoam();
       readingProjectionBounds=depthEnabled?lastProjectionBounds:null;
       routeBranchPreview=null;
@@ -1604,6 +1606,7 @@
     const threeHeight=n=>({chapter:0,person:120,concept:210,subconcept:300,question:355})[n.kind]+(n.coreLayout?40:0);
     const zoomLabelFallback=(x,y,w,h)=>({x:w>width-16?Math.min(width-8,x+12):Math.max(8,Math.min(width-w-8,x+12)),y:Math.max(8,Math.min(height-h-8,y-h/2)),w,h});
     for(const n of nodes){
+      if(n.retired)continue;
       const b=document.createElement('button');b.type='button';b.className='three-node cursor-interaction '+(n.kind==='chapter'?'area-heading'+(n.chapter===5?' core':''):'dot '+n.kind);
       b.setAttribute('aria-label',kindNames[n.kind]+' '+(n.person&&n.kind!=='person'?n.person+' / ':'')+(n.question||n.label));b.title=n.question||displayLabel(n);
       if(n.kind==='chapter')b.innerHTML='<span class="chapter-number">제'+esc(n.chapter)+'장</span><strong>'+esc(n.label)+'</strong><small hidden>'+esc(n.subtitle)+'</small>';
@@ -1612,6 +1615,7 @@
       b.addEventListener('pointerdown',e=>{if(e.button!==1)e.stopPropagation()});b.addEventListener('pointerenter',()=>setHovered(n.id));b.addEventListener('pointerleave',()=>setHovered(null));b.addEventListener('click',()=>select(n.id));threeLayer.append(b);threeNodes.set(n.id,b);
     }
     for(const n of nodes){
+      if(n.retired)continue;
       const phase=n.id*2.39996,amplitude=n.kind==='chapter'?1.5:n.kind==='person'?1.3:1.05;
       const targets=n.kind==='chapter'?[areas.get(n.id).heading,threeNodes.get(n.id)]:[elems.get(n.id).b,threeNodes.get(n.id)];
       for(const element of targets){element.style.setProperty('--cell-x',(Math.cos(phase)*amplitude).toFixed(2)+'px');element.style.setProperty('--cell-y',(Math.sin(phase)*amplitude).toFixed(2)+'px');element.style.setProperty('--cell-duration',(6.4+(n.id*37%39)/10).toFixed(1)+'s');element.style.setProperty('--cell-delay',(-((n.id*73)%760)/100).toFixed(2)+'s')}
