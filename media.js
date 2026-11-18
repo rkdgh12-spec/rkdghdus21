@@ -104,11 +104,18 @@ window.FORUM_MEDIA = {
     }
   },
   "최고은/Q3": {
-    "title": "",
-    "src": "",
+    "title": "최고은 인터뷰 Q3",
+    "src": "https://github.com/rkdgh12-spec/rkdghdus21/releases/download/interview-choe-q3-20261118/choe-goeun-q3-web.mp4",
     "poster": "",
     "captions": [],
-    "transcript": ""
+    "transcript": "",
+    "timelineOffset": 0.4,
+    "introEnd": 7.4,
+    "speechBounds": {
+      "firstSpeech": 0.716958,
+      "lastSpeech": 104.309125
+    },
+    "embeddedCaptions": true
   },
   "최고은/Q5": {
     "title": "최고은 인터뷰 Q5",
