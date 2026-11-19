@@ -75,6 +75,7 @@
     }
     const edgeKeys=new Set(edges.map(e=>[e.source,e.target].sort((a,b)=>a-b).join(':')));
     for(const [source,target,reason] of [...coreConnections,...crossChapterConnections]){
+      if(nodes[source].retired||nodes[target].retired)continue;
       const key=[source,target].sort((a,b)=>a-b).join(':');
       if(edgeKeys.has(key))continue;
       const kind=nodes[source].kind==='question'?'question-related':'semantic';
